@@ -331,7 +331,7 @@ export class ListenerLayer extends ProfileLayer {
       .exposeFunction(method, (liveLocationChangedEvent: LiveLocation) =>
         fn(liveLocationChangedEvent)
       )
-      .then((_) =>
+      .then(() =>
         this.page.evaluate(
           ({ chatId, method }) => {
             //@ts-ignore
@@ -358,7 +358,7 @@ export class ListenerLayer extends ProfileLayer {
       .exposeFunction(method, (participantChangedEvent: ParticipantEvent) =>
         fn(participantChangedEvent)
       )
-      .then((_) =>
+      .then(() =>
         this.page.evaluate(
           ({ groupId, method }) => {
             //@ts-ignore
