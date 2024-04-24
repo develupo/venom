@@ -1,25 +1,37 @@
 const { storeObjects } = require('./store-objects')
-// const { injectObjects } = require('./inject-objects')
 
-export async function getStore() {
-  storeObjects.forEach((el) => {
-    if (el.wppModule) {
-      const moduleFound = el.conditions(self.importNamespace(el.wppModule))
-      if (moduleFound) {
-        el.moduleFound = moduleFound
+export async function getStore(modules) {
+  let foundCount = 0
+  const neededObjects = storeObjects
+  for (const idx in modules) {
+    if (typeof modules[idx] === 'object' && modules[idx] !== null) {
+      neededObjects.forEach((needObj) => {
+        if (!needObj.conditions || needObj.foundedModule) return
+        // console.log(needObj.id);
+        const neededModule = needObj.conditions(modules[idx])
+        if (neededModule !== null) {
+          foundCount++
+          needObj.foundedModule = neededModule
+          console.log(neededModule)
+        }
+      })
+      if (foundCount === neededObjects.length) {
+        break
       }
     }
-  })
+  }
 
-  storeObjects.forEach((needObj) => {
-    if (needObj.moduleFound) {
+  neededObjects.forEach((needObj) => {
+    if (needObj.foundedModule) {
       if (needObj.id !== 'module') {
-        window.Store[needObj.id] = needObj.moduleFound
+        window.Store[needObj.id] = needObj.foundedModule
+        console.log(needObj.id)
+        console.log(needObj.foundedModule)
       }
     }
   })
 
-  const module = storeObjects.filter((e) => e.id === 'module')[0].moduleFound
+  const module = neededObjects.filter((e) => e.id === 'module')[0].foundedModule
   Object.keys(module).forEach((key) => {
     if (!['Chat'].includes(key)) {
       if (window.Store[key]) {
@@ -36,20 +48,44 @@ export async function getStore() {
       window.Store.MediaCollection.prototype.processAttachments
   }
 
-  const modules = window.getModuleList()
-
   window.mR = async (find) => {
     return new Promise((resolve) => {
-      for (const idx in window.getModuleList()) {
-        if (typeof modules[idx] === 'object' && modules[idx] !== null) {
-          const module = modules[idx]
+      if (window.__debug) {
+        for (const idx in window.getModuleList()) {
+          if (typeof modules[idx] === 'object' && modules[idx] !== null) {
+            const module = modules[idx]
 
-          var evet = module[find] ? module : null
-          if (evet) {
-            window[find] = evet
-            return resolve(window[find])
+            var evet = module[find] ? module : null
+            if (evet) {
+              window[find] = evet
+              return resolve(window[find])
+            }
           }
         }
+      } else {
+        const parasite = `parasite${Date.now()}`
+        window['webpackChunkwhatsapp_web_client'].push([
+          [parasite],
+          {},
+          function (o) {
+            const modules = []
+            for (const idx in o.m) {
+              modules.push(o(idx))
+            }
+
+            for (const idx in modules) {
+              if (typeof modules[idx] === 'object' && modules[idx] !== null) {
+                const module = modules[idx]
+
+                var evet = module[find] ? module : null
+                if (evet) {
+                  window[find] = evet
+                  return resolve(window[find])
+                }
+              }
+            }
+          },
+        ])
       }
     })
   }
@@ -260,20 +296,4 @@ export async function getStore() {
 
     return node
   })
-
-  // FIXME - Improvement, but didn't worked it, need to be investigated (to improve injectFunction above)
-  // Probably is missing window[find] = evet of window.MR above
-  /* window.injectToFunction = (selector, wppModule, callback) => {
-    ;(async () => {
-      const Nr = self.importNamespace(wppModule)
-      const oldFunct = Nr[selector]
-      Nr[selector] = (...args) => callback(oldFunct, args)
-    })()
-  }
-
-  injectObjects.forEach((el) => {
-    window.injectToFunction(el.selector, el.wppModule, el.callback)
-  }) */
-
-  window.Store.injectParasiteLoaded = true
 }

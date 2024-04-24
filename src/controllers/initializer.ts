@@ -431,9 +431,18 @@ export async function create(
 
       logger.debug(`[whatzapp-${session}] Successfully connected!`)
 
-      // FIXME - Duplicated
-      // await client.initService()
-      // await client.addChatWapi()
+      // Possible solution to leak
+      /* client.page.on('load', async () => {
+        try {
+          await this.initService()
+          await page
+            .waitForSelector('#app .two', { visible: true })
+            .catch(() => {})
+          await this.addChatWapi()
+        } catch (error) {
+          console.error('failed loading page', error)
+        }
+      }) */
 
       statusManagement.setStatusCompleted(session)
 
