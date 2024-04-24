@@ -16,6 +16,7 @@ export async function openChat(chatId, force = false) {
   const chat = await WAPI.sendExist(chatId)
   if (chat && chat.status != 404 && chat.id) {
     const chat = Store.Chat.get(chatId)
+    // FIXME - Cmd.default not exists
     const result = Store.Cmd.default.openChatBottom(chat)
     return WAPI.scope(undefined, false, result)
   }
@@ -40,6 +41,7 @@ export async function openChatAt(chatId, messageId) {
     msg: atMessage,
     isUnreadDivider: false,
   }
+  // FIXME - Cmd.default not exists
   const result = await Store.Cmd.default._openChat(chat, args)
   return result
 }

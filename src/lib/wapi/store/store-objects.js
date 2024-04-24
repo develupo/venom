@@ -1,10 +1,12 @@
 export const storeObjects = [
   {
+    // Note - Imported again with name 'Chat' in filtered Objects (addChatApi)
     id: 'module',
     conditions: (module) =>
       module.default && module.default.Chat && module.default.Msg
         ? module.default
         : null,
+    wppModule: 'WAWebCollections',
   },
   {
     id: 'replyButton',
@@ -30,11 +32,13 @@ export const storeObjects = [
     id: 'TemplateButtonCollection',
     conditions: (module) =>
       module.TemplateButtonCollection ? module.TemplateButtonCollection : null,
+    wppModule: 'WAWebTemplateButtonCollection',
   },
   {
     id: 'ButtonCollection',
     conditions: (module) =>
       module.ButtonCollection ? module.ButtonCollection : null,
+    wppModule: 'WAWebButtonCollection',
   },
   {
     id: 'MediaCollection',
@@ -45,20 +49,29 @@ export const storeObjects = [
         module.default.prototype.processAttachments !== undefined)
         ? module.default
         : null,
+    wppModule: 'WAWebAttachMediaCollection',
   },
-  { id: 'MediaProcess', conditions: (module) => (module.BLOB ? module : null) },
+  {
+    id: 'MediaProcess',
+    conditions: (module) => (module.BLOB ? module : null),
+    wppModule: 'WAWebImageUtils',
+  },
   {
     id: 'ChatUtil',
     conditions: (module) => (module.sendClear ? module : null),
+    wppModule: 'WAWebChatClearBridge',
   },
   {
     id: 'GroupInvite',
     conditions: (module) =>
       module.queryGroupInviteCode && module.revokeGroupInvite ? module : null,
+    wppModule: 'WAWebGroupInviteAction',
   },
   {
+    // FIXME - Duplicated id with WAWap.
     id: 'Wap',
     conditions: (module) => (module.createGroup ? module : null),
+    wppModule: 'WAWebGroupCreateJob',
   },
   {
     id: 'ServiceWorker',
@@ -111,28 +124,34 @@ export const storeObjects = [
       module.default.prototype.isUser
         ? module.default
         : null,
+    wppModule: 'WAWebWid',
   },
   {
     id: 'SendTextMsgToChat',
     conditions: (module) =>
       module.sendTextMsgToChat ? module.sendTextMsgToChat : null,
+    wppModule: 'WAWebSendTextMsgChatAction',
   },
   {
     id: 'Archive',
     conditions: (module) => (module.setArchive ? module : null),
+    wppModule: 'WAWebChatDbUpdatesApi',
   },
   {
     id: 'pinChat',
     conditions: (module) => (module.setPin ? module : null),
+    wppModule: 'WAWebSetPinChatAction',
   },
   {
     id: 'sendDelete',
     conditions: (module) => (module.sendDelete ? module.sendDelete : null),
+    wppModule: 'WAWebDeleteChatAction',
   },
   {
     id: 'addAndSendMsgToChat',
     conditions: (module) =>
       module.addAndSendMsgToChat ? module.addAndSendMsgToChat : null,
+    wppModule: 'WAWebSendMsgChatAction',
   },
   {
     id: 'sendMsgToChat',
@@ -161,11 +180,13 @@ export const storeObjects = [
       module.default.toString().includes('MsgKey error: obj is null/undefined')
         ? module.default
         : null,
+    wppModule: 'WAWebMsgKey',
   },
   {
     id: 'Parser',
     conditions: (module) =>
-      module.convertToTextWithoutSpecialEmojis ? module.default : null,
+      module.convertToTextWithoutSpecialEmojis ? module : null,
+    wppModule: 'WAWebConvertToTextWithoutSpecialEmojis',
   },
   {
     id: 'Builders',
@@ -176,6 +197,7 @@ export const storeObjects = [
     id: 'Me',
     conditions: (module) =>
       module.Conn && module.ConnImpl ? module.Conn : null,
+    wppModule: 'WAWebConnModel',
   },
   {
     id: 'CallUtils',
@@ -191,6 +213,7 @@ export const storeObjects = [
     id: 'MyStatus',
     conditions: (module) =>
       module.getStatus && module.setMyStatus ? module : null,
+    wppModule: 'WAWebContactStatusBridge',
   },
   {
     id: 'ChatStates',
@@ -200,11 +223,13 @@ export const storeObjects = [
       module.sendChatStateComposing
         ? module
         : null,
+    wppModule: 'WAWebChatStateBridge',
   },
   {
     id: 'GroupActions',
     conditions: (module) =>
       module.sendExitGroup && module.localExitGroup ? module : null,
+    wppModule: 'WAWebExitGroupAction',
   },
   {
     id: 'Features',
@@ -229,6 +254,7 @@ export const storeObjects = [
       module.isWidlike && module.createWid && module.createWidFromWidLike
         ? module
         : null,
+    wppModule: 'WAWebWidFactory',
   },
   {
     id: 'Base',
@@ -248,13 +274,15 @@ export const storeObjects = [
         : null,
   },
   {
+    // Note - Imported again with same name in filtered Objects (addChatApi)
     id: 'MaybeMeUser',
     conditions: (module) => (module.getMaybeMeUser ? module : null),
+    wppModule: 'WAWebUserPrefsMeUser',
   },
   {
     id: 'Sticker',
-    conditions: (module) =>
-      module.StickerCollection && module.default ? module : null,
+    conditions: (module) => (module.StickerCollection ? module : null),
+    wppModule: 'WAWebStickerCollection',
   },
   {
     id: 'MediaObject',
@@ -262,6 +290,7 @@ export const storeObjects = [
       module.getOrCreateMediaObject && module.disassociateMediaFromStickerPack
         ? module
         : null,
+    wppModule: 'WAWebMediaStorage',
   },
   {
     id: 'MediaUpload',
@@ -272,50 +301,57 @@ export const storeObjects = [
     id: 'UploadUtils',
     conditions: (module) =>
       module.default && module.default.encryptAndUpload ? module.default : null,
+    wppModule: 'WAWebUploadManager',
   },
   {
     id: 'Cmd',
     conditions: (module) => (module.CmdImpl && module.Cmd ? module.Cmd : null),
+    wppModule: 'WAWebCmd',
   },
   {
     id: 'ReadSeen',
     conditions: (module) => (module.sendSeen ? module : null),
+    wppModule: 'WAWebUpdateUnreadChatAction',
   },
   {
     id: 'Block',
     conditions: (module) =>
       module.blockContact && module.unblockContact ? module : null,
+    wppModule: 'WAWebBlockContactAction',
   },
   {
     id: 'BlockList',
     conditions: (module) => (module.BlocklistCollection ? module : null),
+    wppModule: 'WAWebBlocklistCollection',
   },
   {
     id: 'Theme',
     conditions: (module) =>
       module.getTheme && module.setTheme ? module : null,
+    wppModule: 'WAWebUserPrefsGeneral',
   },
   {
     id: 'Vcard',
     conditions: (module) => (module.vcardFromContactModel ? module : null),
+    wppModule: 'WAWebFrontendVcardUtils',
   },
   {
     id: 'Profile',
     conditions: (module) =>
       module.sendSetPicture && module.requestDeletePicture ? module : null,
+    wppModule: 'WAWebContactProfilePicThumbBridge',
   },
   {
     id: 'SendMute',
     conditions: (module) => (module.sendConversationMute ? module : null),
+    wppModule: 'WAWebChatMuteBridge',
   },
   {
     id: 'Validators',
     conditions: (module) => (module.findLinks ? module : null),
+    wppModule: 'WALinkify',
   },
-  {
-    id: 'Wap2',
-    conditions: (module) => (module.Wap ? module : null),
-  },
+  { id: 'Wap2', conditions: (module) => (module.Wap ? module : null) },
   {
     id: 'genId',
     conditions: (module) =>
@@ -324,6 +360,7 @@ export const storeObjects = [
       module.default.toString().match(/crypto/)
         ? module
         : null,
+    wppModule: 'WAWebPonyfillsCryptoRandomUUID',
   },
   {
     id: 'GroupMetadata',
@@ -348,10 +385,12 @@ export const storeObjects = [
     id: 'Stream',
     conditions: (module) =>
       module.Stream && module.StreamInfo ? module.Stream : null,
+    wppModule: 'WAWebStreamModel',
   },
   {
     id: 'State',
     conditions: (module) => (module.Socket ? module : null),
+    wppModule: 'WAWebSocketModel',
   },
   {
     id: 'ws2',
@@ -361,6 +400,7 @@ export const storeObjects = [
   {
     id: 'Login',
     conditions: (module) => (module.startLogout ? module : null),
+    wppModule: 'WAWebCompanionRegUtils',
   },
   {
     id: 'BlobCache',
@@ -373,11 +413,12 @@ export const storeObjects = [
       module.setPresenceAvailable && module.setPresenceUnavailable
         ? module
         : null,
+    wppModule: 'WAWebContactPresenceBridge',
   },
   {
     id: 'PresenceCollection',
-    conditions: (module) =>
-      module.default && module.PresenceCollection ? module.default : null,
+    conditions: (module) => (module.PresenceCollection ? module : null),
+    wppModule: 'WAWebPresenceCollection',
   },
   {
     id: 'chatOptions',
@@ -388,6 +429,7 @@ export const storeObjects = [
     id: 'blob',
     conditions: (module) =>
       module.default && module.default.createFromData ? module : null,
+    wppModule: 'WAWebMediaOpaqueData',
   },
   {
     id: 'GroupDesc',
@@ -396,6 +438,7 @@ export const storeObjects = [
   {
     id: 'infoGroup',
     conditions: (module) => (module.queryGroupInviteInfo ? module : null),
+    wppModule: 'WAWebQueryGroupAction',
   },
   {
     id: 'GroupTitle',
@@ -411,52 +454,60 @@ export const storeObjects = [
       module.createGroup && module.sendForNeededAddRequest
         ? module.createGroup
         : null,
+    wppModule: 'WAWebCreateGroupAction',
   },
   {
     id: 'SetStatusChat',
     conditions: (module) =>
       module.markComposing && module.markRecording ? module : null,
+    wppModule: 'WAWebPresenceChatAction',
   },
   {
     id: 'Reactions',
     conditions: (module) => (module.sendReactionToMsg ? module : null),
+    wppModule: 'WAWebSendReactionMsgAction',
   },
   {
     id: 'CheckWid',
     conditions: (module) => (module.validateWid ? module : null),
+    wppModule: 'WAWebWidValidator',
   },
   {
     id: 'ProfileBusiness',
     conditions: (module) => (module.BUSINESS_URL_DOMAIN ? module : null),
+    wppModule: 'WAWebBusinessProfileModel',
   },
   {
     id: 'Contacts',
     conditions: (module) => (module.ContactCollection ? module : null),
+    wppModule: 'WAWebContactCollection',
   },
   {
     id: 'onlySendAdmin',
     conditions: (module) =>
       module.setGroupProperty && module.setGroupDescription ? module : null,
+    wppModule: 'WAWebGroupModifyInfoJob',
   },
   {
     id: 'SendCommunity',
     conditions: (module) => (module.sendCreateCommunity ? module : null),
+    wppModule: 'WAWebGroupCommunityJob',
   },
   {
     id: 'Websocket',
     conditions: (module) => (module.smax ? module : null),
+    wppModule: 'WASmaxJsx',
   },
   {
     id: 'Survey',
     conditions: (module) => (module.sendPollCreation ? module : null),
+    wppModule: 'WAWebPollsSendPollCreationMsgAction',
   },
   {
-    id: 'Cmd',
-    conditions: (module) => (module.APP_STATE_SYNC_COMPLETED ? module : null),
-  },
-  {
+    // FIXME - Duplicated id with WAWebGroupCreateJob.
     id: 'Wap',
     conditions: (module) => (module.BIG_ENDIAN_CONTENT ? module : null),
+    wppModule: 'WAWap',
   },
   {
     id: 'WapParser',
@@ -465,27 +516,35 @@ export const storeObjects = [
   {
     id: 'SendSocket',
     conditions: (module) => (module.deprecatedSendIq ? module : null),
+    wppModule: 'WADeprecatedSendIq',
   },
   {
     id: 'Jid',
     conditions: (module) => (module.WAP_JID_SUBTYPE ? module : null),
+    wppModule: 'WAWapJid',
   },
   {
+    // TODO - Duplicated wppModule with sendRevokeMsgs. That's could be not a problem, just a duplicated reference, but could be too
     id: 'sendDeleteMsgs',
     conditions: (module) =>
       module.sendDeleteMsgs ? module.sendDeleteMsgs : null,
+    wppModule: 'WAWebChatSendMessages',
   },
   {
+    // TODO - Duplicated with sendDeleteMsgs. That's could be not a problem, just a duplicated reference, but could be too
     id: 'sendRevokeMsgs',
     conditions: (module) =>
       module.sendRevokeMsgs ? module.sendRevokeMsgs : null,
+    wppModule: 'WAWebChatSendMessages',
   },
   {
     id: 'createNewsletterQuery',
     conditions: (module) => (module.createNewsletterQuery ? module : null),
+    wppModule: 'WAWebNewsletterCreateQueryJob',
   },
   {
     id: 'userJidToUserWid',
     conditions: (module) => (module.newsletterJidToWid ? module : null),
+    wppModule: 'WAWebJidToWid',
   },
 ]

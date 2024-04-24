@@ -129,6 +129,7 @@ import {
   getFileHash,
   arrayBufferToBase64,
   sleep,
+  injectConfig,
 } from './helper'
 import {
   addNewMessagesListener,
@@ -156,82 +157,7 @@ import {
 } from './serializers'
 import { getStore } from './store/get-store'
 
-// NOTE - Not necessary, only here to force import of all libs in some tests
-/* const invalidModules = [
-  '__requireModule__WAWebLocalesEmojiSuggestionEn__61',
-  '__requireModule__WAWebLocalesEmojiSuggestionPt__62',
-  '__call__WAWebCometRoot.init__48',
-  '__requireModule__WAWebAppInitializer.react__49',
-  '__requireWeak__WAWebAppInitializer.react__0',
-  'WAWebUserPrefsDebugKeys',
-  'WAWebUserPrefsMultiDeviceDebug',
-  'WAWebDebugRoutingToken',
-  'WAWebOutgoingMessageTone',
-  '__requireModule__WAWebMoment-pt-br__61',
-  '__requireModule__WAWebLocalesEmojiSuggestionEn__62',
-  '__requireModule__WAWebLocalesEmojiSuggestionPt__63',
-  'WAWebDebugPins',
-  'WAWebDebugRichTextInput',
-  '__requireModule__WAWebMediaViewerFlow.react__64',
-  '__requireModule__WAWebInfoFlow.react__65',
-  '__requireModule__WAWebPhotoPicker.react__70',
-  '__requireModule__WAWebStarredDrawerV2.react__71',
-  '__requireModule__WAWebAttachMediaFlow.react__72',
-  '__requireModule__WAWebCaptureMediaDrawer.react__73',
-  '__requireModule__WAWebEditCaptureFlow.react__74',
-  '__requireModule__WAWebGroupMsgInfoFlow.react__75',
-  '__requireModule__WAWebNewChatFlow.react__76',
-  '__requireModule__WAWebBizSendProductModal.react__77',
-  '__requireModule__WAWebBizAttachProductModal.react__78',
-  '__requireModule__WAWebSendGroupInviteFlow.react__79',
-  '__requireModule__WAWebSendMsgMultiModal.react__80',
-  '__requireModule__WAWebForwardMessageModal__81',
-  '__requireModule__WAWebAttachVcardsFlow.react__82',
-  '__requireModule__WAWebBizProductDetailsFlow.react__83',
-  '__requireModule__WAWebBizCartFlow__84',
-  '__requireModule__WAWebBizManageLabelFlow.react__85',
-  '__requireModule__WAWebAddContactToGroupFlow.react__86',
-  '__requireModule__WAWebStatusV3Flow.react__87',
-  '__requireModule__WAWebContactMsgInfoFlow.react__88',
-  '__requireModule__WAWebGroupsV4InviteFlow.react__89',
-  '__requireModule__WAWebArchivedFlow.react__90',
-  '__requireModule__WAWebLottieAnimation.react__91',
-  '__requireModule__WAWebManageCommunityGroupsFlow.react__92',
-  '__requireModule__WAWebCommunityAdminPromotionNotificationFlow.react__93',
-]
-
-self.ErrorGuard.skipGuardGlobal(true)
-Object.keys(window.__debug.modulesMap)
-  .filter((e) => e.includes('WA'))
-  .filter((e) => !invalidModules.includes(e))
-  .forEach((mod) => {
-    try {
-      self.importNamespace(mod)
-    } catch {
-      console.error(mod)
-    }
-  }) */
-
-// window['__debug'] = require('__debug')
-
-window.Store = { injectParasiteLoaded: false }
-
-async function waitForObjects() {
-  return new Promise((resolve) => {
-    const checkObjects = () => {
-      if (
-        window.__debug.modulesMap?.WAWebUserPrefsMeUser?.factoryFinished &&
-        window.__debug.modulesMap?.WAWebGroupInviteAction
-      ) {
-        resolve()
-      } else {
-        setTimeout(checkObjects, 100)
-      }
-    }
-
-    checkObjects()
-  })
-}
+window.Store = {}
 
 window.getModuleList = function () {
   const modules = {}
@@ -256,12 +182,74 @@ window.getModuleList = function () {
     })
   return modules
 }
-;(async () => {
-  if (window.Store.injectParasiteLoaded) {
-    return
+
+function injectParasite() {
+  if (window.__debug) {
+    getStore(window.getModuleList()).finally()
+  } else {
+    if (
+      window.webpackChunkwhatsapp_web_client &&
+      Array.isArray(window.webpackChunkwhatsapp_web_client)
+    ) {
+      const parasite = injectConfig.parasite
+      window[injectConfig.webpack].push([
+        [parasite],
+        {},
+        async function (o) {
+          const modules = []
+          for (const idx in o.m) {
+            modules.push(o(idx))
+          }
+          await getStore(modules)
+        },
+      ])
+    }
   }
-  await waitForObjects()
-  getStore().catch()
+}
+
+async function waitForObjects() {
+  return new Promise((resolve) => {
+    const checkObjects = () => {
+      if (window.__debug) {
+        if (window.__debug.modulesMap?.WAWebUserPrefsMeUser) {
+          resolve()
+        } else {
+          setTimeout(checkObjects, 200)
+        }
+      } else {
+        if (
+          window[injectConfig.webpack] &&
+          Array.isArray(window[injectConfig.webpack]) &&
+          window[injectConfig.webpack].every(
+            (item) => Array.isArray(item) && item.length > 0
+          )
+        ) {
+          resolve()
+        } else {
+          setTimeout(checkObjects, 200)
+        }
+      }
+    }
+
+    checkObjects()
+  })
+}
+
+;(async () => {
+  if (window.__debug) {
+    await waitForObjects()
+    injectParasite()
+  } else {
+    await waitForObjects()
+
+    const last = window[injectConfig.webpack].length - 1
+    if (
+      !window[injectConfig.webpack][last][0].includes(injectConfig.parasite) &&
+      document.querySelectorAll('#app .two').length
+    ) {
+      injectParasite()
+    }
+  }
 })()
 
 if (typeof window.WAPI === 'undefined') {
