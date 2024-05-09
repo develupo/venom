@@ -1,3 +1,10 @@
+## [1.10.1](https://github.com/develupo/venom/compare/v1.10.0...v1.10.1) (2024-05-09)
+
+
+### Bug Fixes
+
+* state and stream events ([15d6863](https://github.com/develupo/venom/commit/15d68637cafe4beaf1d4f83e2c5e326b0a790542))
+
 # [1.10.0](https://github.com/develupo/venom/compare/v1.9.0...v1.10.0) (2024-05-07)
 
 
