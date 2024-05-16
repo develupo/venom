@@ -1,3 +1,13 @@
+## [1.10.2](https://github.com/develupo/venom/compare/v1.10.1...v1.10.2) (2024-05-16)
+
+
+### Bug Fixes
+
+* code review ([89e046a](https://github.com/develupo/venom/commit/89e046a1893009f62a53c9738227dd09b4666da2))
+* code review ([9e33215](https://github.com/develupo/venom/commit/9e33215e3918e71bd426abc457832a20b3dd2adb))
+* forward messages ([45c1179](https://github.com/develupo/venom/commit/45c1179f7732a8cac3905b6c1b124d5ebde37a6a))
+* forward messages ([69ef645](https://github.com/develupo/venom/commit/69ef645986bc7d67a261d8f60aad172e928b6e83))
+
 ## [1.10.1](https://github.com/develupo/venom/compare/v1.10.0...v1.10.1) (2024-05-09)
 
 
