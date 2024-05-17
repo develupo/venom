@@ -1,3 +1,10 @@
+## [1.10.3](https://github.com/develupo/venom/compare/v1.10.2...v1.10.3) (2024-05-17)
+
+
+### Bug Fixes
+
+* Added Store.Chat validation to fix error at getHost ([98422f5](https://github.com/develupo/venom/commit/98422f5cca2e8f547532fc5e5e644147b3e2d1e5))
+
 ## [1.10.2](https://github.com/develupo/venom/compare/v1.10.1...v1.10.2) (2024-05-16)
 
 
