@@ -1,3 +1,10 @@
+## [1.10.4](https://github.com/develupo/venom/compare/v1.10.3...v1.10.4) (2024-05-20)
+
+
+### Bug Fixes
+
+* imports revoke messages ([ae3d6d8](https://github.com/develupo/venom/commit/ae3d6d8398f1cedf3034a8c12997342d52ed46bb))
+
 ## [1.10.3](https://github.com/develupo/venom/compare/v1.10.2...v1.10.3) (2024-05-17)
 
 
