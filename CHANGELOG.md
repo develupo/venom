@@ -1,3 +1,10 @@
+## [1.10.5](https://github.com/develupo/venom/compare/v1.10.4...v1.10.5) (2024-05-20)
+
+
+### Bug Fixes
+
+* prop name ([c2d849c](https://github.com/develupo/venom/commit/c2d849c2e120715c59867fce257c15ad2d06a82a))
+
 ## [1.10.4](https://github.com/develupo/venom/compare/v1.10.3...v1.10.4) (2024-05-20)
 
 
