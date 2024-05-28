@@ -1,3 +1,19 @@
+# [1.11.0](https://github.com/develupo/venom/compare/v1.10.5...v1.11.0) (2024-05-28)
+
+
+### Bug Fixes
+
+* Fixed read qrCode throw ([886dec7](https://github.com/develupo/venom/commit/886dec79a65aa3a2e5e5cc9e47828549dcd1eeab))
+* logout ([a1543b5](https://github.com/develupo/venom/commit/a1543b5278bac473e6ea1cefb46f9d5639fa636b))
+
+
+### Features
+
+* add html cached version ([d4e3638](https://github.com/develupo/venom/commit/d4e3638816d19114dc8629c13212c444ebb4b2b8))
+* Added error message when number does not exist ([ca64cec](https://github.com/develupo/venom/commit/ca64cecee49248f410ff6a468c44f1a14137381f))
+* Added error messageconstant ([eb4b67f](https://github.com/develupo/venom/commit/eb4b67fd33313c5ddae2037d77db0ec792947589))
+* code review ([0386d92](https://github.com/develupo/venom/commit/0386d9241ca00de3d12ef319611f095bb6823ac4))
+
 ## [1.10.5](https://github.com/develupo/venom/compare/v1.10.4...v1.10.5) (2024-05-20)
 
 
