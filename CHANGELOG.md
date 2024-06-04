@@ -1,3 +1,10 @@
+## [1.11.1](https://github.com/develupo/venom/compare/v1.11.0...v1.11.1) (2024-06-04)
+
+
+### Bug Fixes
+
+* message with 9 digits ([152948b](https://github.com/develupo/venom/commit/152948b86701a5ab0028d905651f5bb3ab0beb1e))
+
 # [1.11.0](https://github.com/develupo/venom/compare/v1.10.5...v1.11.0) (2024-05-28)
 
 
