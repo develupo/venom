@@ -1,3 +1,10 @@
+## [1.11.2](https://github.com/develupo/venom/compare/v1.11.1...v1.11.2) (2024-06-05)
+
+
+### Bug Fixes
+
+* new group id ([c4dd507](https://github.com/develupo/venom/commit/c4dd5070438ad51fdb9de6a14779f5dcb3b8e4b7))
+
 ## [1.11.1](https://github.com/develupo/venom/compare/v1.11.0...v1.11.1) (2024-06-04)
 
 
