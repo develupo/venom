@@ -1,3 +1,10 @@
+## [1.11.3](https://github.com/develupo/venom/compare/v1.11.2...v1.11.3) (2024-06-10)
+
+
+### Bug Fixes
+
+* quoted message ([6687142](https://github.com/develupo/venom/commit/6687142ea54966d9a7923e3d3a9d7b6bb6ceed39))
+
 ## [1.11.2](https://github.com/develupo/venom/compare/v1.11.1...v1.11.2) (2024-06-05)
 
 
