@@ -1,3 +1,10 @@
+## [1.11.4](https://github.com/develupo/venom/compare/v1.11.3...v1.11.4) (2024-06-12)
+
+
+### Bug Fixes
+
+* missing correct url reference ([de0c491](https://github.com/develupo/venom/commit/de0c491a415e9637125d46d513c87cbd8b55bf62))
+
 ## [1.11.3](https://github.com/develupo/venom/compare/v1.11.2...v1.11.3) (2024-06-10)
 
 
