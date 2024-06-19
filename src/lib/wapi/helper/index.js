@@ -7,3 +7,5 @@ export { sleep } from './sleep'
 export { injectConfig } from './inject-config'
 export { filterObjects } from './filter-object'
 export { filterModule } from './filter-module'
+
+export { checkIfExistsAndLoadModule } from './check-if-exists-and-load-module'
