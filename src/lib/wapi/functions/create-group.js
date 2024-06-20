@@ -1,3 +1,6 @@
+import { WAPI_MODULES_NAMES } from '../constants/wapi-modules-names'
+import { checkIfExistsAndLoadModule } from '../helper'
+
 const {
   getAddParticipantStatusError,
   verifyContacts,
@@ -5,6 +8,8 @@ const {
 } = require('../validation/group')
 
 export async function createGroup(name, contactsId, temporarySeconds) {
+  checkIfExistsAndLoadModule(WAPI_MODULES_NAMES.GROUP_CREATE_JOB)
+
   if (!Array.isArray(contactsId)) {
     contactsId = [contactsId]
   }
