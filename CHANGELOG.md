@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/develupo/venom/compare/v1.11.5...v1.12.0) (2024-06-20)
+
+
+### Features
+
+* reload modules if it not load when whatsapp init ([2b13476](https://github.com/develupo/venom/commit/2b134766c4a57e0b9de7e99bda5acdd2493fde58))
+
 ## [1.11.5](https://github.com/develupo/venom/compare/v1.11.4...v1.11.5) (2024-06-17)
 
 ## [1.11.4](https://github.com/develupo/venom/compare/v1.11.3...v1.11.4) (2024-06-12)
