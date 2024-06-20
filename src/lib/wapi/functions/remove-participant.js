@@ -1,3 +1,6 @@
+import { WAPI_MODULES_NAMES } from '../constants/wapi-modules-names'
+import { checkIfExistsAndLoadModule } from '../helper'
+
 const { GROUP_ERRORS } = require('../constants/group-errors')
 const {
   verifyContacts,
@@ -6,6 +9,8 @@ const {
 } = require('../validation/group')
 
 export async function removeParticipant(groupId, contactsId) {
+  checkIfExistsAndLoadModule(WAPI_MODULES_NAMES.GROUP_MODIFY_PARTICIPANTS_JOB)
+
   if (!Array.isArray(contactsId)) {
     contactsId = [contactsId]
   }
