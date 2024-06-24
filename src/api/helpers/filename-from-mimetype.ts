@@ -8,9 +8,13 @@ export function filenameFromMimeType(
   const filenameExtension = path.extname(filename)
   const mimeExtension = mime.extension(mimeType)
 
-  if (!mimeExtension || filenameExtension === mimeExtension) {
+  if (filenameExtension || !mimeExtension) {
     return filename
   }
+
+  /* if (!mimeExtension || filenameExtension === mimeExtension) {
+    return filename
+  } */
 
   return path.basename(filename, filenameExtension) + '.' + mimeExtension
 }
