@@ -1,3 +1,6 @@
+import { WAPI_MODULES_NAMES } from '../constants/wapi-modules-names'
+import { checkIfExistsAndLoadModule } from '../helper'
+
 const {
   getAddParticipantStatusError,
   verifyContacts,
@@ -5,6 +8,8 @@ const {
 } = require('../validation/group')
 
 export async function createGroup(name, contactsId, temporarySeconds) {
+  checkIfExistsAndLoadModule(WAPI_MODULES_NAMES.GROUP_CREATE_JOB)
+
   if (!Array.isArray(contactsId)) {
     contactsId = [contactsId]
   }
@@ -22,6 +27,8 @@ export async function createGroup(name, contactsId, temporarySeconds) {
     return contacts
   }
 
+  // TODO - In some cases, this is not being loaded. We need to enhance the injection from libs,
+  // maybe verify if is loaded before trying to use something from Store
   const requestResult = await Store.GroupCreateJob.createGroup(
     name,
     contacts.filter((contact) => contact.id).map((contact) => contact.id),

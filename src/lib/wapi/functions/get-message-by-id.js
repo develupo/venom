@@ -1,20 +1,19 @@
+import { NUMBER_SUFIX } from '../constants/number-suffix'
+import { normalizePhoneNumber } from '../helper/normalize-phone-number'
+
 export async function getMessageById(
   key,
   done,
   serialize = true,
-  limitIterationFindMessage = 1
+  limitIterationFindMessage = 1,
+  retrying = false
 ) {
   // Check message is loaded in store
   let msg = window.Store.Msg.get(key)
 
   if (!msg) {
-    if (!key.contains('@c.us') && !key.contains('@g.us')) {
-      return { erro: 'invalid key: without chatId' }
-    }
-
-    // Capture chatId from id of message
-    const splitKey = key.replace('true_', '').replace('false_', '').split('@')
-    const chatId = splitKey[0] + '@' + splitKey[1].split('_')[0]
+    const splittedKey = key.split('_')
+    const chatId = splittedKey[1]
 
     let chat
     try {
@@ -24,22 +23,44 @@ export async function getMessageById(
     }
 
     if (!chat) {
+      if (!retrying) {
+        return await getMessageById(
+          normalize(key),
+          done,
+          serialize,
+          limitIterationFindMessage,
+          true
+        )
+      }
       return { erro: 'chat not found' }
     }
 
-    let i = 0
-    while (
-      limitIterationFindMessage === 0 ||
-      ++i <= limitIterationFindMessage
-    ) {
-      msg = window.Store.Msg.get(key)
-      if (msg) {
-        break
+    msg = window.Store.Msg.get(key)
+    if (!msg) {
+      let i = 0
+      while (
+        limitIterationFindMessage === 0 ||
+        ++i <= limitIterationFindMessage
+      ) {
+        const msgs = await window.Store.ChatLoadMessages.loadEarlierMsgs(chat)
+        if (!msgs || msgs.length === 0) {
+          break
+        }
+        msg = window.Store.Msg.get(key)
+        if (msg) {
+          break
+        }
       }
-      const msgs = await window.Store.ChatLoadMessages.loadEarlierMsgs(chat)
-      if (!msgs || msgs.length === 0) {
-        return { erro: 'message not found' }
-      }
+    }
+
+    if (!msg && !retrying) {
+      return await getMessageById(
+        normalize(key),
+        done,
+        serialize,
+        limitIterationFindMessage,
+        true
+      )
     }
   }
 
@@ -61,5 +82,20 @@ export async function getMessageById(
     done(result)
   } else {
     return result
+  }
+}
+
+const normalize = (key) => {
+  const splittedKey = key.split('_')
+
+  const chatId = splittedKey[1]
+  const prefix = splittedKey[0]
+  const msgId = splittedKey[2]
+
+  if (chatId.includes(NUMBER_SUFIX.CONTACT)) {
+    return `${prefix}_${normalizePhoneNumber(chatId)}_${msgId}`
+  } else if (chatId.includes(NUMBER_SUFIX.GROUP)) {
+    const numberPhone = splittedKey[3]
+    return `${prefix}_${chatId}_${msgId}_${normalizePhoneNumber(numberPhone)}`
   }
 }

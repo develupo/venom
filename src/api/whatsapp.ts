@@ -43,7 +43,8 @@ export class Whatsapp extends ControlsLayer {
       let useWebpack = false
       if (
         this.options.forceWebpack === false &&
-        this.options.webVersion === false
+        this.options.webVersion &&
+        this.options.webVersion.length
       ) {
         // NOTE return whatsapp version
         const actualWebVersion = await this.page.evaluate(() => {
@@ -199,6 +200,11 @@ export class Whatsapp extends ControlsLayer {
       throw new Error(
         'message is missing critical data needed to download the file.'
       )
+    }
+
+    // Not all messages come with correct url, need to address this issue
+    if (message.clientUrl === 'https://web.whatsapp.net') {
+      message.clientUrl = `https://mmg.whatsapp.net${message.directPath}`
     }
 
     let haventGottenImageYet: boolean = true,

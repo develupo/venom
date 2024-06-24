@@ -95,7 +95,7 @@ export async function sendFile(
     const result = await Store.Chat.find(chat.id)
       .then(async (_chat) => {
         const mediaBlob = base64ToFile(file, filename || 'file')
-        return await processFiles(_chat, mediaBlob)
+        return await processFiles(_chat, mediaBlob, 'document')
           .then(async (mc) => {
             if (typeof mc === 'object' && mc._models && mc._models[0]) {
               const media = mc._models[0]

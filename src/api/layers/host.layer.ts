@@ -207,7 +207,11 @@ export class HostLayer {
         if (error.message === 'Creation Stopped') {
           throw error
         }
-        logger.error(error)
+        logger.error(
+          `[waitForLogin:${
+            this.session
+          }] error waiting QrCode: ${JSON.stringify(error)}`
+        )
       })
 
       logger.info(`[waitForLogin:${this.session}] Checking QRCode status...`)
@@ -231,7 +235,7 @@ export class HostLayer {
         this.cancelAutoClose()
         this.tryAutoClose()
 
-        throw 'Failed to read the QRCode'
+        throw new Error('Failed to read the QRCode')
       }
     } else if (authenticated === true) {
       logger.info(`[waitForLogin:${this.session}] Authenticated!`)
