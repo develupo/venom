@@ -1,3 +1,10 @@
+## [1.12.1](https://github.com/develupo/venom/compare/v1.12.0...v1.12.1) (2024-06-24)
+
+
+### Bug Fixes
+
+* caption on audio and changing extension file ([9ec5f15](https://github.com/develupo/venom/commit/9ec5f15223a330b468a9ae74ea6673da3f8535a2))
+
 # [1.12.0](https://github.com/develupo/venom/compare/v1.11.5...v1.12.0) (2024-06-20)
 
 
