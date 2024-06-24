@@ -2,7 +2,12 @@ export async function deleteMessages(chatId, messageArray) {
   if (typeof chatId != 'string') {
     return WAPI.scope(null, true, 404, 'enter the chatid variable as an string')
   }
+
+  if (messageArray.some((msg) => msg.includes('true'))) {
+    return WAPI.scope(null, true, 404, 'Some messages are not valid')
+  }
   const chat = await WAPI.sendExist(chatId)
+
   if (chat && chat.status != 404) {
     if (!Array.isArray(messageArray)) {
       return WAPI.scope(
@@ -16,57 +21,40 @@ export async function deleteMessages(chatId, messageArray) {
     for (const i in messageArray) {
       if (typeof messageArray[i] === 'string') {
         const checkID = await WAPI.checkIdMessage(chatId, messageArray[i])
-        if (checkID.erro == true) {
+        if (checkID?.erro && checkID?.erro == true) {
           return checkID
         }
       }
     }
 
-    const messagesToDelete = (
-      await Promise.all(
-        messageArray.map(
-          async (msgId) => await WAPI.getMessageById(msgId, null, false)
-        )
-      )
-    ).filter((x) => x)
+    const messagesToDelete = await Promise.all(
+      messageArray.map((msgId) => WAPI.getMessageById(msgId, null, false))
+    )
 
     const To = chat.id
     const m = { type: 'deleteMessages' }
-
-    const jobs = [
-      Store.sendRevokeMsgs(
-        chat,
-        messagesToDelete.filter((msg) => msg.id._serialized.includes('true')),
-        true
-      ),
-      Store.sendDeleteMsgs(
-        chat,
-        messagesToDelete.filter((msg) => msg.id._serialized.includes('true')),
-        true
-      ),
-    ]
-
     try {
-      var result = (await Promise.all(jobs))[1]
+      var result = await Store.sendRevokeMsgs(
+        chat,
+        {
+          list: messagesToDelete,
+        },
+        true
+      )
 
-      if (result >= 0) {
-        const obj = WAPI.scope(To, false, result, '')
-        Object.assign(obj, m)
-        return obj
-      }
+      const obj = WAPI.scope(To, !!result, result, '')
+      Object.assign(obj, m)
+      return obj
     } catch (e) {
       const obj = WAPI.scope(
         null,
         true,
         result,
-        'The message has not been deleted'
+        'The messages has not been deleted'
       )
       Object.assign(obj, m)
       return obj
     }
-    const obj = WAPI.scope(To, true, result, '')
-    Object.assign(obj, m)
-    return obj
   } else {
     if (!chat.erro) {
       chat.erro = true
