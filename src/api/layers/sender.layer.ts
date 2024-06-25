@@ -2,17 +2,17 @@ import * as path from 'path'
 import { Page, Browser } from 'puppeteer'
 import { CreateConfig } from '../../config/create-config'
 import {
-  base64MimeType,
-  downloadFileToBase64,
-  fileToBase64,
   stickerSelect,
   dowloadMetaFileBase64,
+  base64Management,
+  BASE64_ERROR,
 } from '../helpers'
 import { filenameFromMimeType } from '../helpers/filename-from-mimetype'
 import { Message, SendFileResult, SendStickerResult } from '../model'
 import { ChatState } from '../model/enum'
 import { AutomateLayer } from './automate.layer'
 import { Scope, checkValuesSender } from '../helpers/layers-interface'
+import { logger } from '../../utils/logger'
 
 let obj: Scope
 
@@ -142,7 +142,7 @@ export class SenderLayer extends AutomateLayer {
     description?: string
   ): Promise<SendFileResult> {
     return new Promise(async (resolve, reject) => {
-      let base64 = await downloadFileToBase64(filePath, [
+      const base64 = await base64Management.getBase64(filePath, [
         'image/gif',
         'image/png',
         'image/jpg',
@@ -150,32 +150,13 @@ export class SenderLayer extends AutomateLayer {
         'image/webp',
       ])
 
-      if (!base64) {
-        base64 = await fileToBase64(filePath)
-      }
-
-      if (!base64) {
-        const obj = {
-          erro: true,
-          to: 'status',
-          text: 'No such file or directory, open "' + filePath + '"',
-        }
-        return reject(obj)
+      if (base64.error) {
+        return reject(base64.error)
       }
 
       let filename = path.basename(filePath)
-      const mimeType = base64MimeType(base64)
 
-      if (!mimeType) {
-        obj = {
-          erro: true,
-          to: 'status',
-          text: 'Invalid base64!',
-        }
-        return reject(obj)
-      }
-
-      if (!mimeType.includes('image')) {
+      if (!base64.mimeType.includes('image')) {
         const obj = {
           erro: true,
           to: 'status',
@@ -184,19 +165,20 @@ export class SenderLayer extends AutomateLayer {
         return reject(obj)
       }
       const to = 'status@broadcast'
-      filename = filenameFromMimeType(filename, mimeType)
+      filename = filenameFromMimeType(filename, base64.mimeType)
 
+      const base64Data = base64.data
       const result = await this.page.evaluate(
-        ({ to, base64, filename, description }) => {
+        ({ to, base64Data, filename, description }) => {
           return WAPI.sendImage(
-            base64,
+            base64Data,
             to,
             filename,
             description,
             'sendImageStatus'
           )
         },
-        { to, base64, filename, description }
+        { to, base64Data, filename, description }
       )
 
       if (result['erro'] == true) {
@@ -214,27 +196,16 @@ export class SenderLayer extends AutomateLayer {
    */
   public async sendVideoStatus(filePath: string, description?: string) {
     return new Promise(async (resolve, reject) => {
-      let base64 = await downloadFileToBase64(filePath, ['video/mp4']),
-        obj: { erro: boolean; to: string; text: string }
+      const base64 = await base64Management.getBase64(filePath, ['video/mp4'])
+      let obj: { erro: boolean; to: string; text: string }
 
-      if (!base64) {
-        base64 = await fileToBase64(filePath)
-      }
-
-      if (!base64) {
-        obj = {
-          erro: true,
-          to: 'status',
-          text: 'No such file or directory, open "' + filePath + '"',
-        }
-        return reject(obj)
+      if (base64.error) {
+        return reject(base64.error)
       }
 
       let filename = path.basename(filePath)
 
-      const mimeType = base64MimeType(base64)
-
-      if (!mimeType) {
+      if (!base64.mimeType) {
         obj = {
           erro: true,
           to: 'status',
@@ -243,7 +214,7 @@ export class SenderLayer extends AutomateLayer {
         return reject(obj)
       }
 
-      if (!mimeType.includes('video')) {
+      if (!base64.mimeType.includes('video')) {
         const obj = {
           erro: true,
           to: 'status',
@@ -252,12 +223,13 @@ export class SenderLayer extends AutomateLayer {
         return reject(obj)
       }
 
-      filename = filenameFromMimeType(filename, mimeType)
+      filename = filenameFromMimeType(filename, base64.mimeType)
       const to = 'status@broadcast'
+      const base64Data = base64.data
       const result = await this.page.evaluate(
-        ({ to, base64, filename, description }) => {
+        ({ to, base64Data, filename, description }) => {
           return WAPI.sendFile(
-            base64,
+            base64Data,
             to,
             filename,
             description,
@@ -265,7 +237,7 @@ export class SenderLayer extends AutomateLayer {
             true
           )
         },
-        { to, base64, filename, description }
+        { to, base64Data, filename, description }
       )
       if (result['erro'] == true) {
         reject(result)
@@ -534,7 +506,7 @@ export class SenderLayer extends AutomateLayer {
         return reject(validating)
       }
 
-      const mimeType = base64MimeType(base64)
+      const mimeType = base64Management.getBase64MimeType(base64)
 
       if (!mimeType) {
         obj = {
@@ -633,7 +605,7 @@ export class SenderLayer extends AutomateLayer {
     passId?: any
   ): Promise<SendFileResult> {
     return new Promise(async (resolve, reject) => {
-      let base64 = await downloadFileToBase64(filePath, [
+      const base64 = await base64Management.getBase64(filePath, [
         'image/gif',
         'image/png',
         'image/jpg',
@@ -641,26 +613,15 @@ export class SenderLayer extends AutomateLayer {
         'image/webp',
       ])
 
-      if (!base64) {
-        base64 = await fileToBase64(filePath)
-      }
-
-      if (!base64) {
-        const obj = {
-          erro: true,
-          to: to,
-          text: 'No such file or directory, open "' + filePath + '"',
-        }
-        return reject(obj)
+      if (base64.error) {
+        return reject(base64.error)
       }
 
       if (!filename) {
         filename = path.basename(filePath)
       }
 
-      const mimeType = base64MimeType(base64)
-
-      if (!mimeType) {
+      if (!base64.mimeType) {
         obj = {
           erro: true,
           to: to,
@@ -669,7 +630,7 @@ export class SenderLayer extends AutomateLayer {
         return reject(obj)
       }
 
-      if (!mimeType.includes('image')) {
+      if (!base64.mimeType.includes('image')) {
         const obj = {
           erro: true,
           to: to,
@@ -678,12 +639,13 @@ export class SenderLayer extends AutomateLayer {
         return reject(obj)
       }
 
-      filename = filenameFromMimeType(filename, mimeType)
+      filename = filenameFromMimeType(filename, base64.mimeType)
 
+      const base64Data = base64.data
       const result = await this.page.evaluate(
-        ({ to, base64, filename, caption, passId }) => {
+        ({ to, base64Data, filename, caption, passId }) => {
           return WAPI.sendImage(
-            base64,
+            base64Data,
             to,
             filename,
             caption,
@@ -692,7 +654,7 @@ export class SenderLayer extends AutomateLayer {
             passId
           )
         },
-        { to, base64, filename, caption, passId }
+        { to, base64Data, filename, caption, passId }
       )
 
       if (result['erro'] == true) {
@@ -820,7 +782,7 @@ export class SenderLayer extends AutomateLayer {
    */
   public async sendVoiceBase64(to: string, base64: string, passId?: any) {
     return new Promise(async (resolve, reject) => {
-      const mimeType: any = base64MimeType(base64)
+      const mimeType = base64Management.getBase64MimeType(base64)
 
       if (!mimeType) {
         obj = {
@@ -876,37 +838,38 @@ export class SenderLayer extends AutomateLayer {
   ) {
     return new Promise(async (resolve, reject) => {
       try {
-        let base64: string | false = await downloadFileToBase64(filePath, [
+        const base64 = await base64Management.getBase64(filePath, [
           'audio/mpeg',
           'audio/mp3',
           'audio/aac',
+          'audio/mp4',
+          'audio/x-m4a',
         ])
 
-        if (!base64) {
-          base64 = await fileToBase64(filePath)
+        if (base64.error) {
+          return reject(base64.error)
         }
-
-        if (!base64) {
-          obj = {
-            erro: true,
-            to: to,
-            text: 'No such file or directory, open "' + filePath + '"',
-          }
-          return reject(obj)
-        }
-
-        const mimeInfo = base64MimeType(base64)
 
         if (
-          !mimeInfo ||
-          mimeInfo.includes('audio/mpeg') ||
-          mimeInfo.includes('audio/mp3') ||
-          mimeInfo.includes('audio/aac')
+          !base64.mimeType ||
+          base64.mimeType.includes('audio/mpeg') ||
+          base64.mimeType.includes('audio/mp3') ||
+          base64.mimeType.includes('audio/aac') ||
+          base64.mimeType.includes('audio/mp4') ||
+          base64.mimeType.includes('audio/x-m4a')
         ) {
+          const base64Data = base64.data
           const result: any = await this.page.evaluate(
-            ({ to, base64, passId, checkNumber, forcingReturn, delSend }) => {
+            ({
+              to,
+              base64Data,
+              passId,
+              checkNumber,
+              forcingReturn,
+              delSend,
+            }) => {
               return WAPI.sendPtt(
-                base64,
+                base64Data,
                 to,
                 passId,
                 checkNumber,
@@ -914,7 +877,7 @@ export class SenderLayer extends AutomateLayer {
                 delSend
               )
             },
-            { to, base64, passId, checkNumber, forcingReturn, delSend }
+            { to, base64Data, passId, checkNumber, forcingReturn, delSend }
           )
           if (result['erro'] == true) {
             reject(result)
@@ -922,15 +885,12 @@ export class SenderLayer extends AutomateLayer {
             resolve(result)
           }
         } else {
-          obj = {
-            erro: true,
-            to: to,
-            text: 'Use the MP3 format to be able to send an audio!',
-          }
-          return reject(obj)
+          return reject({
+            error: { erro: true, text: BASE64_ERROR.CONTENT_TYPE_NOT_ALLOWED },
+          })
         }
       } catch (error) {
-        console.log(error)
+        logger.error(error)
         return reject(error)
       }
     })
@@ -952,7 +912,7 @@ export class SenderLayer extends AutomateLayer {
     passId?: any
   ): Promise<SendFileResult> {
     return new Promise(async (resolve, reject) => {
-      const mimeType = base64MimeType(base64)
+      const mimeType = base64Management.getBase64MimeType(base64)
 
       if (!mimeType) {
         obj = {
@@ -1006,29 +966,18 @@ export class SenderLayer extends AutomateLayer {
     delSend?: boolean
   ) {
     return new Promise(async (resolve, reject) => {
-      let base64 = await downloadFileToBase64(filePath),
-        obj: { erro: boolean; to: string; text: string }
+      const base64 = await base64Management.getBase64(filePath)
+      let obj: { erro: boolean; to: string; text: string }
 
-      if (!base64) {
-        base64 = await fileToBase64(filePath)
-      }
-
-      if (!base64) {
-        obj = {
-          erro: true,
-          to: to,
-          text: 'No such file or directory, open "' + filePath + '"',
-        }
-        return reject(obj)
+      if (base64.error) {
+        return reject(base64.error)
       }
 
       if (!filename && typeof filename !== 'string') {
         filename = path.basename(filePath)
       }
 
-      const mimeType = base64MimeType(base64)
-
-      if (!mimeType) {
+      if (!base64.mimeType) {
         obj = {
           erro: true,
           to: to,
@@ -1037,14 +986,15 @@ export class SenderLayer extends AutomateLayer {
         return reject(obj)
       }
 
-      filename = filenameFromMimeType(filename, mimeType)
+      filename = filenameFromMimeType(filename, base64.mimeType)
 
       let result = {}
+      const base64Data = base64.data
       try {
         result = await this.page.evaluate(
           ({
             to,
-            base64,
+            base64Data,
             filename,
             caption,
             passId,
@@ -1053,7 +1003,7 @@ export class SenderLayer extends AutomateLayer {
             delSend,
           }) => {
             return WAPI.sendFile(
-              base64,
+              base64Data,
               to,
               filename,
               caption,
@@ -1067,7 +1017,7 @@ export class SenderLayer extends AutomateLayer {
           },
           {
             to,
-            base64,
+            base64Data,
             filename,
             caption,
             passId,
@@ -1097,11 +1047,11 @@ export class SenderLayer extends AutomateLayer {
   }
 
   /**
-   * Sends a video to given chat as a gif, with caption or not, using base64
-   * @param to chat id xxxxx@us.c
-   * @param base64 base64 data:video/xxx;base64,xxx
-   * @param filename string xxxxx
-   * @param caption string xxxxx
+   * Sends file from path
+   * @param to Chat id
+   * @param path File path
+   * @param filename
+   * @param caption
    */
   public async sendVideoAsGif(
     to: string,
@@ -1109,30 +1059,16 @@ export class SenderLayer extends AutomateLayer {
     filename: string,
     caption: string
   ) {
-    const base64 = await fileToBase64(path)
-    if (base64) {
-      return this.sendVideoAsGifFromBase64(to, base64, filename, caption)
+    const base64 = await base64Management.getBase64(path)
+    if (base64.error) {
+      throw new Error(base64.error.text)
     }
-  }
-
-  /**
-   * Sends a video to given chat as a gif, with caption or not, using base64
-   * @param to chat id xxxxx@us.c
-   * @param base64 base64 data:video/xxx;base64,xxx
-   * @param filename string xxxxx
-   * @param caption string xxxxx
-   */
-  public async sendVideoAsGifFromBase64(
-    to: string,
-    base64: string,
-    filename: string,
-    caption: string
-  ) {
+    const base64Data = base64.data
     return await this.page.evaluate(
-      ({ to, base64, filename, caption }) => {
-        WAPI.sendVideoAsGif(base64, to, filename, caption)
+      ({ to, base64Data, filename, caption }) => {
+        WAPI.sendVideoAsGif(base64Data, to, filename, caption)
       },
-      { to, base64, filename, caption }
+      { to, base64Data, filename, caption }
     )
   }
 
@@ -1223,45 +1159,40 @@ export class SenderLayer extends AutomateLayer {
   public async sendImageAsStickerGif(
     to: string,
     path: string
-  ): Promise<SendStickerResult | false> {
-    let b64 = await downloadFileToBase64(path, ['image/gif', 'image/webp'])
-    if (!b64) {
-      b64 = await fileToBase64(path)
-    }
-    if (b64) {
-      const buff = Buffer.from(
-        b64.replace(/^data:image\/(gif|webp);base64,/, ''),
-        'base64'
-      )
-      const mimeInfo = base64MimeType(b64)
-      if (!mimeInfo || mimeInfo.includes('image')) {
-        const obj = await stickerSelect(buff, 1)
-        if (typeof obj == 'object') {
-          const _webb64 = obj['webpBase64']
-          const _met = obj['metadata']
+  ): Promise<SendStickerResult> {
+    const base64 = await base64Management.getBase64(path, [
+      'image/gif',
+      'image/webp',
+    ])
 
-          return new Promise(async (resolve, reject) => {
-            const result = await this.page.evaluate(
-              ({ _webb64, to, _met }) => {
-                return WAPI.sendImageAsSticker(_webb64, to, _met, 'StickerGif')
-              },
-              { _webb64, to, _met }
-            )
-            if (result['erro'] == true) {
-              reject(result)
-            } else {
-              resolve(result)
-            }
-          })
-        } else {
-          throw {
-            error: true,
-            message: 'Error with sharp library, check the console log',
+    const buff = Buffer.from(
+      base64.data.replace(/^data:image\/(gif|webp);base64,/, ''),
+      'base64'
+    )
+    if (!base64.mimeType || base64.mimeType.includes('image')) {
+      const obj = await stickerSelect(buff, 1)
+      if (typeof obj == 'object') {
+        const _webb64 = obj['webpBase64']
+        const _met = obj['metadata']
+
+        return new Promise(async (resolve, reject) => {
+          const result = await this.page.evaluate(
+            ({ _webb64, to, _met }) => {
+              return WAPI.sendImageAsSticker(_webb64, to, _met, 'StickerGif')
+            },
+            { _webb64, to, _met }
+          )
+          if (result['erro'] == true) {
+            reject(result)
+          } else {
+            resolve(result)
           }
-        }
+        })
       } else {
-        console.log('Not an image, allowed format gif')
-        return false
+        throw {
+          error: true,
+          message: 'Error with sharp library, check the console log',
+        }
       }
     }
   }
@@ -1274,55 +1205,49 @@ export class SenderLayer extends AutomateLayer {
   public async sendImageAsSticker(
     to: string,
     path: string
-  ): Promise<SendStickerResult | false> {
-    let b64 = await downloadFileToBase64(path, [
+  ): Promise<SendStickerResult> {
+    const base64 = await base64Management.getBase64(path, [
       'image/gif',
       'image/png',
       'image/jpg',
       'image/jpeg',
       'image/webp',
     ])
-
-    if (!b64) {
-      b64 = await fileToBase64(path)
+    if (base64.error) {
+      throw new Error(base64.error.text)
     }
+    const buff = Buffer.from(
+      base64.data.replace(/^data:image\/(png|jpe?g|webp|gif);base64,/, ''),
+      'base64'
+    )
 
-    if (b64) {
-      const buff = Buffer.from(
-        b64.replace(/^data:image\/(png|jpe?g|webp|gif);base64,/, ''),
-        'base64'
-      )
-
-      const mimeInfo = base64MimeType(b64)
-
-      if (!mimeInfo || mimeInfo.includes('image')) {
-        const obj = await stickerSelect(buff, 0)
-        if (typeof obj == 'object') {
-          const _webb64 = obj['webpBase64']
-          const _met = obj['metadata']
-          return new Promise(async (resolve, reject) => {
-            const result = await this.page.evaluate(
-              ({ _webb64, to, _met }) => {
-                return WAPI.sendImageAsSticker(_webb64, to, _met, 'Sticker')
-              },
-              { _webb64, to, _met }
-            )
-            if (result['erro'] == true) {
-              reject(result)
-            } else {
-              resolve(result)
-            }
-          })
-        } else {
-          throw {
-            error: true,
-            message: 'Error with sharp library, check the console log',
+    if (!base64.mimeType || base64.mimeType.includes('image')) {
+      const obj = await stickerSelect(buff, 0)
+      if (typeof obj == 'object') {
+        const _webb64 = obj['webpBase64']
+        const _met = obj['metadata']
+        return new Promise(async (resolve, reject) => {
+          const result = await this.page.evaluate(
+            ({ _webb64, to, _met }) => {
+              return WAPI.sendImageAsSticker(_webb64, to, _met, 'Sticker')
+            },
+            { _webb64, to, _met }
+          )
+          if (result['erro'] == true) {
+            reject(result)
+          } else {
+            resolve(result)
           }
-        }
+        })
       } else {
-        console.log('Not an image, allowed formats png, jpeg and webp')
-        return false
+        throw {
+          error: true,
+          message: 'Error with sharp library, check the console log',
+        }
       }
+    } else {
+      logger.error('Not an image, allowed formats png, jpeg and webp')
+      throw new Error(BASE64_ERROR.CONTENT_TYPE_NOT_ALLOWED)
     }
   }
 
