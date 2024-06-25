@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/develupo/venom/compare/v1.12.1...v1.13.0) (2024-06-25)
+
+
+### Features
+
+* change error messages and allow audio m4a ([4176867](https://github.com/develupo/venom/commit/4176867f1d0f6f40c3dbfd7832371ca8f1cb475b))
+
 ## [1.12.1](https://github.com/develupo/venom/compare/v1.12.0...v1.12.1) (2024-06-24)
 
 
