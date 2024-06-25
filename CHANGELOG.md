@@ -1,3 +1,12 @@
+## [1.13.1](https://github.com/develupo/venom/compare/v1.13.0...v1.13.1) (2024-06-25)
+
+
+### Bug Fixes
+
+* deleteMessages function ([d983a9e](https://github.com/develupo/venom/commit/d983a9ed4a70923436121eaecf822508e462426f))
+* dev review ([094e599](https://github.com/develupo/venom/commit/094e599dde9c7c121a6584fca98cf8b26fc6f866))
+* scope error ([6cdd720](https://github.com/develupo/venom/commit/6cdd720147a1968ce279d4593ee521ffe8e6c374))
+
 # [1.13.0](https://github.com/develupo/venom/compare/v1.12.1...v1.13.0) (2024-06-25)
 
 
