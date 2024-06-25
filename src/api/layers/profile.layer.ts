@@ -4,12 +4,7 @@ import * as path from 'path'
 const { exec } = require('child_process')
 
 const fs = require('fs')
-import {
-  base64MimeType,
-  fileToBase64,
-  downloadFileToBase64,
-  resizeImg,
-} from '../helpers'
+import { BASE64_ERROR, base64Management, resizeImg } from '../helpers'
 import { CreateConfig } from '../../config/create-config'
 
 export class ProfileLayer extends HostLayer {
@@ -77,39 +72,36 @@ export class ProfileLayer extends HostLayer {
    * @param name
    */
   public async setProfilePic(path: string, to?: string) {
-    let b64 = await downloadFileToBase64(path, [
+    const base64 = await base64Management.getBase64(path, [
       'image/gif',
       'image/png',
       'image/jpg',
       'image/jpeg',
       'image/webp',
     ])
-    if (!b64) {
-      b64 = await fileToBase64(path)
+    if (base64.error) {
+      throw new Error(base64.error.text)
     }
-    if (b64) {
-      const buff = Buffer.from(
-        b64.replace(/^data:image\/(png|jpe?g|webp);base64,/, ''),
-        'base64'
+    const buff = Buffer.from(
+      base64.data.replace(/^data:image\/(png|jpe?g|webp);base64,/, ''),
+      'base64'
+    )
+
+    if (!base64.mimeType || base64.mimeType.includes('image')) {
+      const _webb64_96 = await resizeImg(buff, { width: 96, height: 96 }),
+        _webb64_640 = await resizeImg(buff, { width: 640, height: 640 })
+      const obj = { a: _webb64_640, b: _webb64_96 }
+
+      return await this.page.evaluate(
+        ({ obj, to }) => WAPI.setProfilePic(obj, to),
+        {
+          obj,
+          to,
+        }
       )
-      const mimeInfo = base64MimeType(b64)
-
-      if (!mimeInfo || mimeInfo.includes('image')) {
-        const _webb64_96 = await resizeImg(buff, { width: 96, height: 96 }),
-          _webb64_640 = await resizeImg(buff, { width: 640, height: 640 })
-        const obj = { a: _webb64_640, b: _webb64_96 }
-
-        return await this.page.evaluate(
-          ({ obj, to }) => WAPI.setProfilePic(obj, to),
-          {
-            obj,
-            to,
-          }
-        )
-      } else {
-        console.log('Not an image, allowed formats png, jpeg and webp')
-        return false
-      }
+    } else {
+      console.log('Not an image, allowed formats png, jpeg and webp')
+      throw new Error(BASE64_ERROR.CONTENT_TYPE_NOT_ALLOWED)
     }
   }
 
