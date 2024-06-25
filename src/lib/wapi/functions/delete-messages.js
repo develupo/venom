@@ -1,32 +1,31 @@
+import { sendScopeError } from '../helper/sendScopeError'
+
 export async function deleteMessages(chatId, messageArray) {
   if (typeof chatId != 'string') {
-    return WAPI.scope(null, true, 404, 'enter the chatid variable as an string')
+    return sendScopeError(412, 'chat.must.be.string')
   }
 
   if (messageArray.some((msg) => !msg.includes('true'))) {
-    return WAPI.scope(null, true, 404, 'Some messages are not valid')
+    return sendScopeError(412, 'some.messages.are.not.valid')
   }
 
   const chat = await WAPI.sendExist(chatId)
 
   if (!chat || chat.status == 404) {
-    return WAPI.scope(chat, true, 404, 'Chat not found')
+    return sendScopeError(404, 'chat.not.found')
   }
 
   if (!Array.isArray(messageArray)) {
-    return WAPI.scope(
-      chat,
-      true,
-      404,
-      'enter the message identification variable as an array'
-    )
+    return sendScopeError(412, 'messages.must.be.an.array')
   }
 
   const messagesToDelete = await Promise.all(
-    messageArray.map(async (msgId) => {
-      WAPI.getMessageById(msgId, null, false)
-    })
+    messageArray.map((msgId) => WAPI.getMessageById(msgId, null, false))
   )
+
+  if (messagesToDelete.some((msg) => !msg)) {
+    return sendScopeError(412, 'some.messages.are.not.valid')
+  }
 
   let error, result
 
@@ -39,10 +38,11 @@ export async function deleteMessages(chatId, messageArray) {
       true
     )
   } catch (e) {
-    error = e?.message || 'The messages has not been deleted'
+    error = e?.message || 'messages.has.not.been.deleted'
+    return sendScopeError(500, error)
   }
 
-  const scope = await WAPI.scope(error ? null : chat.id, !!error, result, error)
+  const scope = await WAPI.scope(chat.id, false, result, error)
 
   return { type: 'deleteMessages', ...scope }
 }
