@@ -923,8 +923,6 @@ export class SenderLayer extends AutomateLayer {
         return reject(obj)
       }
 
-      filename = filenameFromMimeType(filename, mimeType)
-
       const type = 'FileFromBase64'
       const result = await this.page.evaluate(
         ({ to, base64, filename, caption, type, passId }) => {
@@ -985,8 +983,6 @@ export class SenderLayer extends AutomateLayer {
         }
         return reject(obj)
       }
-
-      filename = filenameFromMimeType(filename, base64.mimeType)
 
       let result = {}
       const base64Data = base64.data
