@@ -1,3 +1,10 @@
+## [1.13.3](https://github.com/develupo/venom/compare/v1.13.2...v1.13.3) (2024-06-28)
+
+
+### Bug Fixes
+
+* allow audio types ([94b6bad](https://github.com/develupo/venom/commit/94b6bada5e03699fda0d2bfcf53fe8adee996b51))
+
 ## [1.13.2](https://github.com/develupo/venom/compare/v1.13.1...v1.13.2) (2024-06-28)
 
 
