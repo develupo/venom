@@ -842,8 +842,10 @@ export class SenderLayer extends AutomateLayer {
           'audio/mpeg',
           'audio/mp3',
           'audio/aac',
-          'audio/mp4',
-          'audio/x-m4a',
+          'audio/flac',
+          'audio/vnd.dlna.adts',
+          'audio/ogg',
+          'audio/wav',
         ])
 
         if (base64.error) {
@@ -855,8 +857,10 @@ export class SenderLayer extends AutomateLayer {
           base64.mimeType.includes('audio/mpeg') ||
           base64.mimeType.includes('audio/mp3') ||
           base64.mimeType.includes('audio/aac') ||
-          base64.mimeType.includes('audio/mp4') ||
-          base64.mimeType.includes('audio/x-m4a')
+          base64.mimeType.includes('audio/flac') ||
+          base64.mimeType.includes('audio/vnd.dlna.adts') ||
+          base64.mimeType.includes('audio/ogg') ||
+          base64.mimeType.includes('audio/wav')
         ) {
           const base64Data = base64.data
           const result: any = await this.page.evaluate(
