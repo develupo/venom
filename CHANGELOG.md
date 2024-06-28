@@ -1,3 +1,10 @@
+## [1.13.2](https://github.com/develupo/venom/compare/v1.13.1...v1.13.2) (2024-06-28)
+
+
+### Bug Fixes
+
+* files without format ([098c1e0](https://github.com/develupo/venom/commit/098c1e0b70e3b902523af63f38024088928a4551))
+
 ## [1.13.1](https://github.com/develupo/venom/compare/v1.13.0...v1.13.1) (2024-06-25)
 
 
