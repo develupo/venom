@@ -1,3 +1,4 @@
+import { GROUP_ERRORS } from '../constants/group-errors'
 import { MESSAGE_ERRORS } from '../constants/message-errors'
 
 export async function scope(id, erro, status, text = null) {
@@ -41,11 +42,11 @@ export function sendCheckType(chatId = undefined) {
   if (typeof chatId === 'string') {
     const contact = '@c.us'
     const broadcast = '@broadcast'
-    const grup = '@g.us'
+    const group = '@g.us'
     if (
       contact !== chatId.substr(-contact.length, contact.length) &&
       broadcast !== chatId.substr(-broadcast.length, broadcast.length) &&
-      grup !== chatId.substr(-grup.length, grup.length)
+      group !== chatId.substr(-group.length, group.length)
     ) {
       return WAPI.scope(
         chatId,
@@ -82,7 +83,7 @@ export function sendCheckType(chatId = undefined) {
     }
 
     if (
-      grup === chatId.substr(-grup.length, grup.length) &&
+      group === chatId.substr(-group.length, group.length) &&
       ((chatId.match(/(@g.us)/g) && chatId.match(/(@g.us)/g).length > 1) ||
         !chatId.match(/^(\d+(-)+(\d)|\d+(\d))*@g.us$/g))
     ) {
@@ -224,12 +225,7 @@ export async function sendExist(chatId, returnChat = true, Send = true) {
   }
 
   if (!ck.numberExists && !chat.t && chat.isGroup) {
-    return WAPI.scope(
-      chatId,
-      true,
-      ck.status,
-      'The group number does not exist on your chat list, or it does not exist at all!'
-    )
+    return WAPI.scope(chatId, true, ck.status, GROUP_ERRORS.INVALID_GROUP_ID)
   }
 
   if (
