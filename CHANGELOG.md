@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/develupo/venom/compare/v1.13.3...v1.14.0) (2024-07-01)
+
+
+### Features
+
+* added invalid group id ([f6955d0](https://github.com/develupo/venom/commit/f6955d01084deb73deafdff609a77ef1ff0efae2))
+
 ## [1.13.3](https://github.com/develupo/venom/compare/v1.13.2...v1.13.3) (2024-06-28)
 
 
