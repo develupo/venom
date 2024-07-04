@@ -706,7 +706,8 @@ export class SenderLayer extends AutomateLayer {
     quotedMsg: string,
     passId?: any,
     checkNumber?: boolean,
-    limitIterationFindMessage?: number
+    limitIterationFindMessage?: number,
+    sendEvenIfNotExists?: boolean
   ): Promise<Message | object> {
     return new Promise(async (resolve, reject) => {
       const typeFunction = 'reply'
@@ -746,6 +747,7 @@ export class SenderLayer extends AutomateLayer {
           passId,
           checkNumber,
           limitIterationFindMessage,
+          sendEvenIfNotExists,
         }) => {
           return WAPI.reply(
             to,
@@ -753,7 +755,8 @@ export class SenderLayer extends AutomateLayer {
             quotedMsg,
             passId,
             checkNumber,
-            limitIterationFindMessage
+            limitIterationFindMessage,
+            sendEvenIfNotExists
           )
         },
         {
@@ -763,6 +766,7 @@ export class SenderLayer extends AutomateLayer {
           passId,
           checkNumber,
           limitIterationFindMessage,
+          sendEvenIfNotExists,
         }
       )
 

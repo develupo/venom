@@ -122,7 +122,8 @@ interface WAPI {
     quotedMsg: string,
     passID: any | undefined,
     checkNumber: boolean | undefined,
-    limitIterationFindMessage: number | undefined
+    limitIterationFindMessage: number | undefined,
+    sendEvenIfNotExists: boolean | undefined
   ) => Promise<object>
   restartService: () => boolean
   sendChatstate: (chatState: string | any, chatId: string) => void
