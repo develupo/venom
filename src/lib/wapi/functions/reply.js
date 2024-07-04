@@ -4,7 +4,8 @@ export async function reply(
   quotedMessageId,
   passId,
   checkNumber = true,
-  limitIterationFindMessage
+  limitIterationFindMessage,
+  sendEvenIfNotExists = false
 ) {
   try {
     if (typeof chatId != 'string') {
@@ -42,7 +43,7 @@ export async function reply(
         false,
         limitIterationFindMessage
       )
-      if (quotedMessage.erro) {
+      if (quotedMessage.erro && !sendEvenIfNotExists) {
         const obj = WAPI.scope(
           To,
           true,
@@ -65,7 +66,8 @@ export async function reply(
 
       const k = {
         linkPreview: undefined,
-        quotedMsg: quotedMessage,
+        quotedMsg:
+          quotedMessage.erro && sendEvenIfNotExists ? undefined : quotedMessage,
         mentionedJidList: [],
         groupMentions: [],
         quotedMsgAdminGroupJid: undefined,
