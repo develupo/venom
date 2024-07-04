@@ -1,3 +1,10 @@
+## [1.14.1](https://github.com/develupo/venom/compare/v1.14.0...v1.14.1) (2024-07-04)
+
+
+### Bug Fixes
+
+* send message even if message does not exists ([428e1d5](https://github.com/develupo/venom/commit/428e1d508e267998ab9cf53708e995d582ec798e))
+
 # [1.14.0](https://github.com/develupo/venom/compare/v1.13.3...v1.14.0) (2024-07-01)
 
 
