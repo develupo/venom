@@ -50,9 +50,17 @@ export const getInterfaceStatus = async (waPage: puppeteer.Page) => {
         .evaluate((a: any) => {
           return a
         })
-        .catch(() => undefined)
+        .catch((error) => {
+          logger.error(
+            `[Auth - getInterfaceStatus] message=${error.message} error=${error.stack}`
+          )
+        })
     })
-    .catch(() => undefined)
+    .catch((error) => {
+      logger.error(
+        `[Auth - getInterfaceStatus] message=${error.message} error=${error.stack}`
+      )
+    })
 }
 
 // };
@@ -134,7 +142,11 @@ export async function retrieveQR(
         return false
       }
     })
-    .catch(() => undefined)
+    .catch((error) => {
+      logger.error(
+        `[Auth - retrieveQR hasCanvas] message=${error.message} error=${error.stack}`
+      )
+    })
 
   if (hasCanvas === false) {
     return undefined
@@ -168,7 +180,12 @@ export async function retrieveQR(
       }
       return undefined
     })
-    .catch(() => undefined)
+    .catch((error) => {
+      logger.error(
+        `[Auth - retrieveQR] message=${error.message} error=${error.stack}`
+      )
+      return undefined
+    })
 }
 
 export async function checkDisconnect(page: puppeteer.Page, wpp: Whatsapp) {
@@ -182,7 +199,11 @@ export async function checkDisconnect(page: puppeteer.Page, wpp: Whatsapp) {
         }
         return false
       })
-      .catch(() => {})
+      .catch((error) => {
+        logger.error(
+          `[Auth - checkDisconnect] message=${error.message} error=${error.stack}`
+        )
+      })
 
     if (erroBrowser) {
       await wpp.delProfile()
@@ -220,7 +241,11 @@ export async function checkStore(page: puppeteer.Page, client: Whatsapp) {
         }
         return true
       })
-      .catch(() => {})
+      .catch((error) => {
+        logger.error(
+          `[Auth - checkStore] message=${error.message} error=${error.stack}`
+        )
+      })
 
     if (result === false) {
       await client.initService()

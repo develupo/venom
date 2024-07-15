@@ -3,6 +3,7 @@ import { Mutex } from 'async-mutex'
 import { Browser, Page } from 'puppeteer'
 import { CreateConfig } from '../../config/create-config'
 import { sleep } from '../../utils/sleep'
+import { logger } from '../../utils/logger'
 
 export class AutomateLayer extends ListenerLayer {
   private typingMutex: Mutex
@@ -19,9 +20,16 @@ export class AutomateLayer extends ListenerLayer {
 
   private async selectChatViaTyping(chatId: string): Promise<boolean> {
     const xpath = '//*[@id="side"]/div[1]/div/div[2]/div[2]/div/div[1]/p'
-    const ids = await this.page.evaluate(() => {
-      return WAPI.getAllChatIds()
-    })
+    let ids = []
+    try {
+      ids = await this.page.evaluate(() => {
+        return WAPI.getAllChatIds()
+      })
+    } catch (error) {
+      logger.error(
+        `[automate - selectChatViaTyping] message=${error.message} error=${error.stack}`
+      )
+    }
     if (!ids.includes(chatId)) {
       return false
     }

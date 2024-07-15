@@ -1,5 +1,6 @@
 import { Page } from 'puppeteer'
 import { sleep } from '../../utils/sleep'
+import { logger } from '../../utils/logger'
 
 export async function loadForceConnect(
   page: Page,
@@ -9,11 +10,15 @@ export async function loadForceConnect(
 ) {
   try {
     page.on('load', async () => {
-      await page
-        .evaluate(() => {
+      try {
+        await page.evaluate(() => {
           window['connectionAttempts'] = 0
         })
-        .catch(() => undefined)
+      } catch (error) {
+        logger.error(
+          `[loadForceConnect - page.on('load')] message=${error.message} error=${error.stack}`
+        )
+      }
     })
 
     while (true) {
@@ -26,8 +31,9 @@ export async function loadForceConnect(
         sleeps = 5000
       }
 
-      const checkStatus: string | true = (await page
-        .evaluate((attempts) => {
+      let checkStatus: string | true
+      try {
+        checkStatus = await page.evaluate((attempts) => {
           if (
             window.Store &&
             window.Store.State &&
@@ -59,7 +65,11 @@ export async function loadForceConnect(
             }
           }
         }, attempts)
-        .catch(() => undefined)) as string | true
+      } catch (error) {
+        logger.error(
+          `[loadForceConnect - checkStatus] message=${error.message} error=${error.stack}`
+        )
+      }
 
       if (checkStatus) {
         callback(checkStatus)

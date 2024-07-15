@@ -1,7 +1,9 @@
 import { Page } from 'puppeteer'
+import { logger } from '../../utils/logger'
 export async function scrapeLogin(page: Page): Promise<boolean> {
-  const result = await page
-    .evaluate(() => {
+  let result
+  try {
+    result = await page.evaluate(() => {
       const count = document.querySelector('._9a59P')
       let data: boolean
       data = false
@@ -14,6 +16,8 @@ export async function scrapeLogin(page: Page): Promise<boolean> {
         return data
       }
     })
-    .catch(() => undefined)
+  } catch (error) {
+    logger.error(`[scrapeLogin] message=${error.message} error=${error.stack}`)
+  }
   return result
 }

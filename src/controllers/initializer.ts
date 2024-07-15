@@ -395,7 +395,11 @@ export async function create(
             }
           }
         })
-        .catch()
+        .catch((error) => {
+          logger.error(
+            `[Initializer - onStateChange] message=${error.message} error=${error.stack}`
+          )
+        })
 
       page.on('dialog', async (dialog) => {
         await dialog.accept()
@@ -452,8 +456,12 @@ export async function create(
       logger.debug(`[whatzapp-${session}] waiting for app load...`)
 
       await page
-        .waitForSelector('#app .two', { visible: true }) // , timeout: 60000
-        .catch(() => {})
+        .waitForSelector('#app .two', { visible: true }) // , timeout: 25000
+        .catch((error) => {
+          logger.error(
+            `[Initializer - page.waitForSelector('#app .two')] message=${error.message} error=${error.stack}`
+          )
+        })
 
       logger.debug(`[whatzapp-${session}] Successfully connected!`)
 

@@ -2,6 +2,7 @@ import { Page, Browser } from 'puppeteer'
 import { CreateConfig } from '../../config/create-config'
 import { UILayer } from './ui.layer'
 import { checkValuesSender } from '../helpers/layers-interface'
+import { logger } from '../../utils/logger'
 
 export class ControlsLayer extends UILayer {
   constructor(
@@ -19,10 +20,18 @@ export class ControlsLayer extends UILayer {
    * @returns boolean
    */
   public async unblockContact(contactId: string) {
-    return this.page.evaluate(
-      (contactId: string) => WAPI.unblockContact(contactId),
-      contactId
-    )
+    let result
+    try {
+      result = this.page.evaluate(
+        (contactId: string) => WAPI.unblockContact(contactId),
+        contactId
+      )
+    } catch (error) {
+      logger.error(
+        `[ControlsLayer - unblockContact] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -31,10 +40,18 @@ export class ControlsLayer extends UILayer {
    * @returns boolean
    */
   public async blockContact(contactId: string) {
-    return this.page.evaluate(
-      (contactId: string) => WAPI.blockContact(contactId),
-      contactId
-    )
+    let result
+    try {
+      result = this.page.evaluate(
+        (contactId: string) => WAPI.blockContact(contactId),
+        contactId
+      )
+    } catch (error) {
+      logger.error(
+        `[ControlsLayer - blockContact] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -43,34 +60,39 @@ export class ControlsLayer extends UILayer {
    * @returns bollean
    */
   public async markUnseenMessage(contactId: string) {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'markUnseenMessage'
-      const type = 'string'
-      const check = [
-        {
-          param: 'contactId',
-          type: type,
-          value: contactId,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
+    const typeFunction = 'markUnseenMessage'
+    const type = 'string'
+    const check = [
+      {
+        param: 'contactId',
+        type: type,
+        value: contactId,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
 
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
-      const result = await this.page.evaluate(
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
+    let result
+    try {
+      result = await this.page.evaluate(
         (contactId: string) => WAPI.markUnseenMessage(contactId),
         contactId
       )
+    } catch (error) {
+      logger.error(
+        `[ControlsLayer - markUnseenMessage] message=${error.message} error=${error.stack}`
+      )
+    }
 
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -79,34 +101,40 @@ export class ControlsLayer extends UILayer {
    * @returns boolean
    */
   public async markMarkSeenMessage(contactId: string) {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'markMarkSeenMessage'
-      const type = 'string'
-      const check = [
-        {
-          param: 'contactId',
-          type: type,
-          value: contactId,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
+    const typeFunction = 'markMarkSeenMessage'
+    const type = 'string'
+    const check = [
+      {
+        param: 'contactId',
+        type: type,
+        value: contactId,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
 
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
-      const result = await this.page.evaluate(
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
+    let result
+    try {
+      result = await this.page.evaluate(
         (contactId: string) => WAPI.markMarkSeenMessage(contactId),
         contactId
       )
+    } catch (error) {
+      logger.error(
+        `[ControlsLayer - markMarkSeenMessage] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
 
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -115,10 +143,18 @@ export class ControlsLayer extends UILayer {
    * @returns boolean
    */
   public async deleteChat(chatId: string) {
-    return await this.page.evaluate(
-      (chatId) => WAPI.deleteConversation(chatId),
-      chatId
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        (chatId) => WAPI.deleteConversation(chatId),
+        chatId
+      )
+    } catch (error) {
+      logger.error(
+        `[ControlsLayer - deleteChat] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -128,10 +164,18 @@ export class ControlsLayer extends UILayer {
    * @returns boolean
    */
   public async archiveChat(chatId: string, option: boolean) {
-    return this.page.evaluate(
-      ({ chatId, option }) => WAPI.archiveChat(chatId, option),
-      { chatId, option }
-    )
+    let result
+    try {
+      result = this.page.evaluate(
+        ({ chatId, option }) => WAPI.archiveChat(chatId, option),
+        { chatId, option }
+      )
+    } catch (error) {
+      logger.error(
+        `[ControlsLayer - archiveChat] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -142,19 +186,25 @@ export class ControlsLayer extends UILayer {
    * @returns object
    */
   public async pinChat(chatId: string, option: boolean, nonExistent?: boolean) {
-    return new Promise(async (resolve, reject) => {
-      const result = await this.page.evaluate(
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ chatId, option, nonExistent }) => {
           return WAPI.pinChat(chatId, option, nonExistent)
         },
         { chatId, option, nonExistent }
       )
-      if (result['erro'] == true) {
-        reject(result)
-      } else {
-        resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[ControlsLayer - pinChat] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -163,10 +213,18 @@ export class ControlsLayer extends UILayer {
    * @returns boolean
    */
   public async clearChatMessages(chatId: string) {
-    return this.page.evaluate(
-      (chatId) => WAPI.clearChatMessages(chatId),
-      chatId
-    )
+    let result
+    try {
+      result = this.page.evaluate(
+        (chatId) => WAPI.clearChatMessages(chatId),
+        chatId
+      )
+    } catch (error) {
+      logger.error(
+        `[ControlsLayer - clearChatMessages] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -179,41 +237,47 @@ export class ControlsLayer extends UILayer {
     chatId: string,
     messageId: string[]
   ): Promise<Object> {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'deleteMessage'
-      const type = 'string'
-      const check = [
-        {
-          param: 'chatId',
-          type: type,
-          value: chatId,
-          function: typeFunction,
-          isUser: true,
-        },
-        {
-          param: 'messageId',
-          type: 'object',
-          value: messageId,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
+    const typeFunction = 'deleteMessage'
+    const type = 'string'
+    const check = [
+      {
+        param: 'chatId',
+        type: type,
+        value: chatId,
+        function: typeFunction,
+        isUser: true,
+      },
+      {
+        param: 'messageId',
+        type: 'object',
+        value: messageId,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
 
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
-      const result = await this.page.evaluate(
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ chatId, messageId }) => WAPI.deleteMessages(chatId, messageId),
         { chatId, messageId }
       )
+    } catch (error) {
+      logger.error(
+        `[ControlsLayer - deleteMessage] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
 
-      if (result['erro'] === true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    if (result['erro'] === true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -224,15 +288,29 @@ export class ControlsLayer extends UILayer {
    * @returns boolean
    */
   public async setMessagesAdminsOnly(chatId: string, option: boolean) {
-    return this.page.evaluate(
-      ({ chatId, option }) => WAPI.setMessagesAdminsOnly(chatId, option),
-      { chatId, option }
-    )
+    let result
+    try {
+      result = this.page.evaluate(
+        ({ chatId, option }) => WAPI.setMessagesAdminsOnly(chatId, option),
+        { chatId, option }
+      )
+    } catch (error) {
+      logger.error(
+        `[ControlsLayer - setMessagesAdminOnly] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   public async reload() {
-    await this.page.evaluate(() => {
-      window.location.reload()
-    })
+    try {
+      await this.page.evaluate(() => {
+        window.location.reload()
+      })
+    } catch (error) {
+      logger.error(
+        `[ControlsLayer - reload] message=${error.message} error=${error.stack}`
+      )
+    }
   }
 }

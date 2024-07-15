@@ -1,14 +1,22 @@
 import { Page } from 'puppeteer'
 import { ScrapQrcode } from '../model/qrcode'
+import { logger } from '../../utils/logger'
 
 export async function scrapeImg(page: Page): Promise<ScrapQrcode | undefined> {
-  const click = await page.evaluate(async () => {
-    const buttonReload = document.querySelector('button.Jht5u')
-    if (buttonReload != null) {
-      return true
-    }
-    return false
-  })
+  let click
+  try {
+    click = await page.evaluate(async () => {
+      const buttonReload = document.querySelector('button.Jht5u')
+      if (buttonReload != null) {
+        return true
+      }
+      return false
+    })
+  } catch (error) {
+    logger.error(
+      `[scrapeImg - click] message=${error.message} error=${error.stack}`
+    )
+  }
 
   if (click) {
     const buttonReloadElementHandle = await page.$('button.Jht5u')
@@ -17,8 +25,9 @@ export async function scrapeImg(page: Page): Promise<ScrapQrcode | undefined> {
     }
   }
 
-  const result = await page
-    .evaluate(() => {
+  let result
+  try {
+    result = await page.evaluate(() => {
       const selectorImg = document.querySelector('canvas')
       const selectorUrl = selectorImg.closest('[data-ref]')
       const buttonReload = document.querySelector('button.Jht5u')
@@ -33,7 +42,11 @@ export async function scrapeImg(page: Page): Promise<ScrapQrcode | undefined> {
         return undefined
       }
     })
-    .catch(() => undefined)
+  } catch (error) {
+    logger.error(
+      `[scrapeImg - result] message=${error.message} error=${error.stack}`
+    )
+  }
 
   return result
 }

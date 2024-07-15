@@ -27,10 +27,16 @@ export class Whatsapp extends ControlsLayer {
         await this.initService()
         await page
           .waitForSelector('#app .two', { visible: true })
-          .catch(() => {})
+          .catch((error) => {
+            logger.error(
+              `[Whatsapp - page.waitForSelector('#app .two')] message=${error.message} error=${error.stack}`
+            )
+          })
         await this.addChatWapi()
       } catch (error) {
-        console.error('failed loading page', error)
+        logger.error(
+          `[Whatsapp - page.on('load')] message=${error.message} error=${error.stack}`
+        )
       }
     })
   }
@@ -64,7 +70,11 @@ export class Whatsapp extends ControlsLayer {
       } else {
         await this.page
           .waitForFunction('webpackChunkwhatsapp_web_client.length')
-          .catch()
+          .catch((error) => {
+            logger.error(
+              `[Whatsapp - forceWebpack] message=${error.message} error=${error.stack}`
+            )
+          })
       }
 
       const js = await fs.readFile(
@@ -83,7 +93,9 @@ export class Whatsapp extends ControlsLayer {
       )
       await this.page.evaluate(middleware_script)
     } catch (error) {
-      logger.error(error)
+      logger.error(
+        `[Whatsapp - initService] message=${error.message} error=${error.stack}`
+      )
     }
   }
 
@@ -97,7 +109,15 @@ export class Whatsapp extends ControlsLayer {
    * @returns Decrypted file buffer (null otherwise)
    */
   public async downloadFile(data: string) {
-    return await this.page.evaluate((data) => WAPI.downloadFile(data), data)
+    let result
+    try {
+      result = await this.page.evaluate((data) => WAPI.downloadFile(data), data)
+    } catch (error) {
+      logger.error(
+        `[Whatsapp - downloadFile] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -110,15 +130,21 @@ export class Whatsapp extends ControlsLayer {
       messageId = messageId.id
     }
 
-    const result = await this.page
-      .evaluate(
+    let result
+    try {
+      result = await this.page.evaluate(
         (messageId) =>
           WAPI.downloadMedia(messageId).catch((e) => ({
             __error: e,
           })),
         messageId
       )
-      .catch(() => undefined)
+    } catch (error) {
+      logger.error(
+        `[Whatsapp - downloadMedia] message=${error.message} error=${error.stack}`
+      )
+      logger.error(error)
+    }
 
     if (typeof result === 'object' && result.__error) {
       throw result.__error
@@ -141,7 +167,15 @@ export class Whatsapp extends ControlsLayer {
    * Dont rely on this method
    */
   public async useHere() {
-    return await this.page.evaluate(() => WAPI.takeOver())
+    let result
+    try {
+      result = await this.page.evaluate(() => WAPI.takeOver())
+    } catch (error) {
+      logger.error(
+        `[Whatsapp - useHere] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -149,7 +183,15 @@ export class Whatsapp extends ControlsLayer {
    * @returns boolean
    */
   public async logout() {
-    return await this.page.evaluate(() => WAPI.logout())
+    let result
+    try {
+      result = await this.page.evaluate(() => WAPI.logout())
+    } catch (error) {
+      logger.error(
+        `[Whatsapp - logout] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -167,7 +209,10 @@ export class Whatsapp extends ControlsLayer {
       statusManagement.removeSession(this.session)
       interfaceStatusManagement.removeSession()
       return true
-    } catch (e) {
+    } catch (error) {
+      logger.error(
+        `[Whatsapp - close] message=${error.message} error=${error.stack}`
+      )
       return false
     }
   }
@@ -178,10 +223,18 @@ export class Whatsapp extends ControlsLayer {
    * @returns Message object
    */
   public async getMessageById(messageId: string) {
-    return (await this.page.evaluate(
-      (messageId: any) => WAPI.getMessageById(messageId),
-      messageId
-    )) as Message
+    let result
+    try {
+      result = (await this.page.evaluate(
+        (messageId: any) => WAPI.getMessageById(messageId),
+        messageId
+      )) as Message
+    } catch (error) {
+      logger.error(
+        `[Whatsapp - getMessageById] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -219,7 +272,7 @@ export class Whatsapp extends ControlsLayer {
         }
       }
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       throw 'Error trying to download the file.'
     }
     const buff = Buffer.from(res.data, 'binary')

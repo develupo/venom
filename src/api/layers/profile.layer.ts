@@ -6,6 +6,7 @@ const { exec } = require('child_process')
 const fs = require('fs')
 import { BASE64_ERROR, base64Management, resizeImg } from '../helpers'
 import { CreateConfig } from '../../config/create-config'
+import { logger } from '../../utils/logger'
 
 export class ProfileLayer extends HostLayer {
   constructor(
@@ -30,20 +31,30 @@ export class ProfileLayer extends HostLayer {
    * @param type kind of silence "hours" "minutes" "year"
    * To remove the silence, just enter the contact parameter
    */
-  public sendMute(id: string, time: number, type: string): Promise<object> {
-    return new Promise(async (resolve, reject) => {
-      const result = await this.page.evaluate(
+  public async sendMute(
+    id: string,
+    time: number,
+    type: string
+  ): Promise<object> {
+    let result
+    try {
+      result = await this.page.evaluate(
         (id, time, type) => WAPI.sendMute(id, time, type),
         id,
         time,
         type
       )
-      if (result['erro'] == true) {
-        reject(result)
-      } else {
-        resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[ProfileLayer - sendMute] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -51,7 +62,15 @@ export class ProfileLayer extends HostLayer {
    * @param string types "dark" or "light"
    */
   public setTheme(type: string) {
-    return this.page.evaluate((type) => WAPI.setTheme(type), type)
+    let result
+    try {
+      result = this.page.evaluate((type) => WAPI.setTheme(type), type)
+    } catch (error) {
+      logger.error(
+        `[ProfileLayer - setTheme] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -59,12 +78,20 @@ export class ProfileLayer extends HostLayer {
    * @param status
    */
   public async setProfileStatus(status: string) {
-    return await this.page.evaluate(
-      ({ status }) => {
-        WAPI.setMyStatus(status)
-      },
-      { status }
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        ({ status }) => {
+          WAPI.setMyStatus(status)
+        },
+        { status }
+      )
+    } catch (error) {
+      logger.error(
+        `[ProfileLayer - setProfileStatus] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -92,15 +119,25 @@ export class ProfileLayer extends HostLayer {
         _webb64_640 = await resizeImg(buff, { width: 640, height: 640 })
       const obj = { a: _webb64_640, b: _webb64_96 }
 
-      return await this.page.evaluate(
-        ({ obj, to }) => WAPI.setProfilePic(obj, to),
-        {
-          obj,
-          to,
-        }
-      )
+      let result
+      try {
+        result = await this.page.evaluate(
+          ({ obj, to }) => WAPI.setProfilePic(obj, to),
+          {
+            obj,
+            to,
+          }
+        )
+      } catch (error) {
+        logger.error(
+          `[ProfileLayer - setProfilePic result] message=${error.message} error=${error.stack}`
+        )
+      }
+      return result
     } else {
-      console.log('Not an image, allowed formats png, jpeg and webp')
+      logger.error(
+        `[ProfileLayer - setProfilePic] Not an image, allowed formats png, jpeg and webp`
+      )
       throw new Error(BASE64_ERROR.CONTENT_TYPE_NOT_ALLOWED)
     }
   }
@@ -110,19 +147,41 @@ export class ProfileLayer extends HostLayer {
    * @param name
    */
   public async setProfileName(name: string) {
-    return this.page.evaluate(
-      ({ name }) => {
-        WAPI.setMyName(name)
-      },
-      { name }
-    )
+    let result
+    try {
+      result = this.page.evaluate(
+        ({ name }) => {
+          WAPI.setMyName(name)
+        },
+        { name }
+      )
+    } catch (error) {
+      logger.error(
+        `[ProfileLayer - setProfileName] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   public async delProfile() {
     if (!this.page.isClosed()) {
-      await this.page.evaluate(() => WAPI.logout()).catch(() => {})
-      await this.page.close().catch(() => {})
-      await this.browser.close().catch(() => {})
+      await this.page
+        .evaluate(() => WAPI.logout())
+        .catch((error) => {
+          logger.error(
+            `[ProfileLayer - deProfile WAPI.logout] message=${error.message} error=${error.stack}`
+          )
+        })
+      await this.page.close().catch((error) => {
+        logger.error(
+          `[ProfileLayer - deProfile page.close] message=${error.message} error=${error.stack}`
+        )
+      })
+      await this.browser.close().catch((error) => {
+        logger.error(
+          `[ProfileLayer - deProfile WAPI.logout] message=${error.message} error=${error.stack}`
+        )
+      })
       const folderSession = path.join(
         path.resolve(
           process.cwd(),

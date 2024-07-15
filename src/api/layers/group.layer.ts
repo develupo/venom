@@ -4,6 +4,7 @@ import { RetrieverLayer } from './retriever.layer'
 import { checkValuesSender } from '../helpers/layers-interface'
 import { BASE64_ERROR, base64Management, resizeImg } from '../helpers'
 import { GroupSettings } from '../model/enum'
+import { logger } from '../../utils/logger'
 
 export class GroupLayer extends RetrieverLayer {
   constructor(
@@ -26,51 +27,57 @@ export class GroupLayer extends RetrieverLayer {
     settings: GroupSettings,
     value: boolean
   ): Promise<Object> {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'setGroupSettings'
-      const type = 'string'
-      const check = [
-        {
-          param: 'groupId',
-          type: type,
-          value: groupId,
-          function: typeFunction,
-          isUser: true,
-        },
-        {
-          param: 'settings',
-          type: type,
-          value: settings,
-          function: typeFunction,
-          isUser: true,
-        },
-        {
-          param: 'value',
-          type: type,
-          value: value,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
+    const typeFunction = 'setGroupSettings'
+    const type = 'string'
+    const check = [
+      {
+        param: 'groupId',
+        type: type,
+        value: groupId,
+        function: typeFunction,
+        isUser: true,
+      },
+      {
+        param: 'settings',
+        type: type,
+        value: settings,
+        function: typeFunction,
+        isUser: true,
+      },
+      {
+        param: 'value',
+        type: type,
+        value: value,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
 
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
 
-      const result = await this.page.evaluate(
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ groupId, settings, value }) => {
           return WAPI.setGroupSettings(groupId, settings, value)
         },
         { groupId, settings, value }
       )
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - setGroupSettings] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
 
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -100,15 +107,25 @@ export class GroupLayer extends RetrieverLayer {
         _webb64_640 = await resizeImg(buff, { width: 640, height: 640 })
       const obj = { a: _webb64_640, b: _webb64_96 }
 
-      return await this.page.evaluate(
-        ({ obj, groupId }) => WAPI.setProfilePic(obj, groupId),
-        {
-          obj,
-          groupId,
-        }
-      )
+      let result
+      try {
+        result = await this.page.evaluate(
+          ({ obj, groupId }) => WAPI.setProfilePic(obj, groupId),
+          {
+            obj,
+            groupId,
+          }
+        )
+      } catch (error) {
+        logger.error(
+          `[GroupLayer - setGroupImage result] message=${error.message} error=${error.stack}`
+        )
+      }
+      return result
     } else {
-      console.log('Not an image, allowed formats png, jpeg and webp')
+      logger.error(
+        `[GroupLayer - setGroupImage] Not an image, allowed formats png, jpeg and webp`
+      )
       throw new Error(BASE64_ERROR.CONTENT_TYPE_NOT_ALLOWED)
     }
   }
@@ -119,44 +136,50 @@ export class GroupLayer extends RetrieverLayer {
    * @param {string} title group title
    */
   public async setGroupTitle(groupId: string, title: string): Promise<Object> {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'setGroupTitle'
-      const type = 'string'
-      const check = [
-        {
-          param: 'groupId',
-          type: type,
-          value: groupId,
-          function: typeFunction,
-          isUser: true,
-        },
-        {
-          param: 'title',
-          type: type,
-          value: title,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
+    const typeFunction = 'setGroupTitle'
+    const type = 'string'
+    const check = [
+      {
+        param: 'groupId',
+        type: type,
+        value: groupId,
+        function: typeFunction,
+        isUser: true,
+      },
+      {
+        param: 'title',
+        type: type,
+        value: title,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
 
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
 
-      const result = await this.page.evaluate(
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ groupId, title }) => {
           return WAPI.setGroupTitle(groupId, title)
         },
         { groupId, title }
       )
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - setGroupTitle] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
 
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -168,44 +191,50 @@ export class GroupLayer extends RetrieverLayer {
     groupId: string,
     description: string
   ): Promise<Object> {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'setGroupDescription'
-      const type = 'string'
-      const check = [
-        {
-          param: 'groupId',
-          type: type,
-          value: groupId,
-          function: typeFunction,
-          isUser: true,
-        },
-        {
-          param: 'description',
-          type: type,
-          value: description,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
+    const typeFunction = 'setGroupDescription'
+    const type = 'string'
+    const check = [
+      {
+        param: 'groupId',
+        type: type,
+        value: groupId,
+        function: typeFunction,
+        isUser: true,
+      },
+      {
+        param: 'description',
+        type: type,
+        value: description,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
 
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
 
-      const result = await this.page.evaluate(
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ groupId, description }) => {
           return WAPI.setGroupDescription(groupId, description)
         },
         { groupId, description }
       )
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - setGroupDescription] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
 
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -213,10 +242,18 @@ export class GroupLayer extends RetrieverLayer {
    * @returns array of groups
    */
   public async getAllChatsGroups() {
-    return await this.page.evaluate(async () => {
-      const chats = WAPI.getAllChats()
-      return (await chats).filter((chat) => chat.kind === 'group')
-    })
+    let result
+    try {
+      result = await this.page.evaluate(async () => {
+        const chats = WAPI.getAllChats()
+        return (await chats).filter((chat) => chat.kind === 'group')
+      })
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - getAllChatsGroups] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -224,10 +261,18 @@ export class GroupLayer extends RetrieverLayer {
    * @returns array of groups
    */
   public async getChatGroupNewMsg() {
-    return await this.page.evaluate(() => {
-      const chats = WAPI.getAllChatsWithNewMsg()
-      return chats.filter((chat) => chat.kind === 'group')
-    })
+    let result
+    try {
+      await this.page.evaluate(() => {
+        const chats = WAPI.getAllChatsWithNewMsg()
+        return chats.filter((chat) => chat.kind === 'group')
+      })
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - getChatGroupNewMsg] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -235,7 +280,18 @@ export class GroupLayer extends RetrieverLayer {
    * @param groupId group id
    */
   public async leaveGroup(groupId: string) {
-    return this.page.evaluate((groupId) => WAPI.leaveGroup(groupId), groupId)
+    let result
+    try {
+      result = this.page.evaluate(
+        (groupId) => WAPI.leaveGroup(groupId),
+        groupId
+      )
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - leaveGroup] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -243,34 +299,40 @@ export class GroupLayer extends RetrieverLayer {
    * @param groupId group id
    */
   public async getGroupMembers(groupId: string, time: string): Promise<Object> {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'getGroupMembers'
-      const type = 'string'
-      const check = [
-        {
-          param: 'groupId',
-          type: type,
-          value: groupId,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
-      const result = this.page.evaluate(
+    const typeFunction = 'getGroupMembers'
+    const type = 'string'
+    const check = [
+      {
+        param: 'groupId',
+        type: type,
+        value: groupId,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
+    let result
+    try {
+      result = this.page.evaluate(
         (groupId: string, time: string) =>
           WAPI.getGroupParticipant(groupId, time),
         groupId,
         time
       )
-      if (result['erro'] == true) {
-        reject(result)
-      } else {
-        resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - getGroupMembers] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   // TODO - Remover
@@ -292,10 +354,18 @@ export class GroupLayer extends RetrieverLayer {
    * @returns boolean
    */
   public async revokeGroupInviteLink(chatId: string) {
-    return await this.page.evaluate(
-      (chatId) => WAPI.revokeGroupInviteLink(chatId),
-      chatId
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        (chatId) => WAPI.revokeGroupInviteLink(chatId),
+        chatId
+      )
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - revokeGroupInviteLink] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -304,10 +374,18 @@ export class GroupLayer extends RetrieverLayer {
    * @returns Invitation link
    */
   public async getGroupInviteLink(chatId: string) {
-    return await this.page.evaluate(
-      (chatId) => WAPI.getGroupInviteLink(chatId),
-      chatId
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        (chatId) => WAPI.getGroupInviteLink(chatId),
+        chatId
+      )
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - getGroupInviteLink] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
   /**
    * Generates group-invite link
@@ -319,10 +397,18 @@ export class GroupLayer extends RetrieverLayer {
     inviteCode = inviteCode.replace('invite/', '')
     inviteCode = inviteCode.replace('https://', '')
     inviteCode = inviteCode.replace('http://', '')
-    return await this.page.evaluate(
-      (inviteCode) => WAPI.getGroupInfoFromInviteLink(inviteCode),
-      inviteCode
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        (inviteCode) => WAPI.getGroupInfoFromInviteLink(inviteCode),
+        inviteCode
+      )
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - getGroupInfoFromInviteLink] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -336,11 +422,19 @@ export class GroupLayer extends RetrieverLayer {
     contacts: string | string[],
     temporarySeconds: number = 0
   ) {
-    return await this.page.evaluate(
-      ({ groupName, contacts, temporarySeconds }) =>
-        WAPI.createGroup(groupName, contacts, temporarySeconds),
-      { groupName, contacts, temporarySeconds }
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        ({ groupName, contacts, temporarySeconds }) =>
+          WAPI.createGroup(groupName, contacts, temporarySeconds),
+        { groupName, contacts, temporarySeconds }
+      )
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - createGroup] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -352,11 +446,19 @@ export class GroupLayer extends RetrieverLayer {
     groupId: string,
     participantId: string | string[]
   ) {
-    return await this.page.evaluate(
-      ({ groupId, participantId }) =>
-        WAPI.removeParticipant(groupId, participantId),
-      { groupId, participantId }
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        ({ groupId, participantId }) =>
+          WAPI.removeParticipant(groupId, participantId),
+        { groupId, participantId }
+      )
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - removeParticipant] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -368,11 +470,19 @@ export class GroupLayer extends RetrieverLayer {
     groupId: string,
     participantId: string | string[]
   ) {
-    return await this.page.evaluate(
-      ({ groupId, participantId }) =>
-        WAPI.addParticipant(groupId, participantId),
-      { groupId, participantId }
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        ({ groupId, participantId }) =>
+          WAPI.addParticipant(groupId, participantId),
+        { groupId, participantId }
+      )
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - addParticipant] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -384,11 +494,19 @@ export class GroupLayer extends RetrieverLayer {
     groupId: string,
     participantId: string | string[]
   ) {
-    return await this.page.evaluate(
-      ({ groupId, participantId }) =>
-        WAPI.promoteParticipant(groupId, participantId),
-      { groupId, participantId }
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        ({ groupId, participantId }) =>
+          WAPI.promoteParticipant(groupId, participantId),
+        { groupId, participantId }
+      )
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - promoteParticipant] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -400,11 +518,19 @@ export class GroupLayer extends RetrieverLayer {
     groupId: string,
     participantId: string | string[]
   ) {
-    return await this.page.evaluate(
-      ({ groupId, participantId }) =>
-        WAPI.demoteParticipant(groupId, participantId),
-      { groupId, participantId }
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        ({ groupId, participantId }) =>
+          WAPI.demoteParticipant(groupId, participantId),
+        { groupId, participantId }
+      )
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - demoteParticipant] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -412,32 +538,38 @@ export class GroupLayer extends RetrieverLayer {
    * @param groupId Group/Chat id ('0000000000-00000000@g.us')
    */
   public async getGroupAdmins(groupId: string): Promise<Object> {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'getGroupAdmins'
-      const type = 'string'
-      const check = [
-        {
-          param: 'groupId',
-          type: type,
-          value: groupId,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
-      const result = this.page.evaluate(
+    const typeFunction = 'getGroupAdmins'
+    const type = 'string'
+    const check = [
+      {
+        param: 'groupId',
+        type: type,
+        value: groupId,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
+    let result
+    try {
+      result = this.page.evaluate(
         (groupId: string) => WAPI.getGroupAdmins(groupId),
         groupId
       )
-      if (result['erro'] == true) {
-        reject(result)
-      } else {
-        resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - getGroupAdmins] message=${error.message} error=${error.stack}`
+      )
+      throw new Error(JSON.stringify(result))
+    }
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
   /**
    * Join a group with invite code
@@ -448,9 +580,17 @@ export class GroupLayer extends RetrieverLayer {
     inviteCode = inviteCode.replace('invite/', '')
     inviteCode = inviteCode.replace('https://', '')
     inviteCode = inviteCode.replace('http://', '')
-    return await this.page.evaluate(
-      (inviteCode) => WAPI.joinGroup(inviteCode),
-      inviteCode
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        (inviteCode) => WAPI.joinGroup(inviteCode),
+        inviteCode
+      )
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - joinGroup] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 }

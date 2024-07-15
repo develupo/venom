@@ -3,6 +3,7 @@ import { CreateConfig } from '../../config/create-config'
 import { WhatsappProfile } from '../model'
 import { SenderLayer } from './sender.layer'
 import { checkValuesSender } from '../helpers/layers-interface'
+import { logger } from '../../utils/logger'
 
 export class RetrieverLayer extends SenderLayer {
   constructor(
@@ -33,42 +34,56 @@ export class RetrieverLayer extends SenderLayer {
     time: string,
     limit: number
   ) {
-    return await this.page.evaluate(
-      ({ chatId, type, idateStart, time, limit }) =>
-        WAPI.getAllMessagesDate(chatId, type, idateStart, time, limit),
-      { chatId, type, idateStart, time, limit }
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        ({ chatId, type, idateStart, time, limit }) =>
+          WAPI.getAllMessagesDate(chatId, type, idateStart, time, limit),
+        { chatId, type, idateStart, time, limit }
+      )
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getAllMessagesDate] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   public async getNewMessageId(chatId: string) {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'getNewMessageId'
-      const type = 'string'
-      const check = [
-        {
-          param: 'text',
-          type: type,
-          value: chatId,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
+    const typeFunction = 'getNewMessageId'
+    const type = 'string'
+    const check = [
+      {
+        param: 'text',
+        type: type,
+        value: chatId,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
 
-      const result = await this.page.evaluate(
+    let result
+    try {
+      result = await this.page.evaluate(
         (chatId: string) => WAPI.getNewMessageId(chatId),
         chatId
       )
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getNewMessageId] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
 
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
   /**
    * Returns a list of mute and non-mute users
@@ -76,10 +91,18 @@ export class RetrieverLayer extends SenderLayer {
    * @returns obj
    */
   public async getListMutes(type?: string) {
-    return await this.page.evaluate(
-      (type: string) => WAPI.getListMute(type),
-      type
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        (type: string) => WAPI.getListMute(type),
+        type
+      )
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getListMutes] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -87,7 +110,15 @@ export class RetrieverLayer extends SenderLayer {
    * @returns obj
    */
   public async getStateConnection() {
-    return await this.page.evaluate(() => WAPI.getStateConnection())
+    let result
+    try {
+      result = await this.page.evaluate(() => WAPI.getStateConnection())
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getStateConnection] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -95,7 +126,15 @@ export class RetrieverLayer extends SenderLayer {
    * @returns string light or dark
    */
   public async getTheme() {
-    return await this.page.evaluate(() => WAPI.getTheme())
+    let result
+    try {
+      result = await this.page.evaluate(() => WAPI.getTheme())
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getTheme] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -103,7 +142,15 @@ export class RetrieverLayer extends SenderLayer {
    * @returns array of [0,1,2,3....]
    */
   public async getBlockList() {
-    return await this.page.evaluate(() => WAPI.getBlockList())
+    let result
+    try {
+      result = await this.page.evaluate(() => WAPI.getBlockList())
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getBlockList] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -111,10 +158,18 @@ export class RetrieverLayer extends SenderLayer {
    * @returns array of [Chat]
    */
   public async getAllChats() {
-    return await this.page.evaluate(() => {
-      const chats = WAPI.getAllChats()
-      return chats
-    })
+    let result
+    try {
+      result = await this.page.evaluate(() => {
+        const chats = WAPI.getAllChats()
+        return chats
+      })
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getAllChats] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -122,10 +177,18 @@ export class RetrieverLayer extends SenderLayer {
    * @returns array of [Chat]
    */
   public async getAllChatsNewMsg() {
-    return await this.page.evaluate(() => {
-      const chats = WAPI.getAllChatsWithNewMsg()
-      return chats
-    })
+    let result
+    try {
+      await this.page.evaluate(() => {
+        const chats = WAPI.getAllChatsWithNewMsg()
+        return chats
+      })
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getAllChatsNewMsg] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -133,11 +196,19 @@ export class RetrieverLayer extends SenderLayer {
    * @returns array of [Chat]
    */
   public async getAllChatsContacts() {
-    return await this.page.evaluate(async () => {
-      const chats = WAPI.getAllChats(),
-        filter = (await chats).filter((chat) => chat.kind === 'chat')
-      return filter
-    })
+    let result
+    try {
+      result = await this.page.evaluate(async () => {
+        const chats = WAPI.getAllChats(),
+          filter = (await chats).filter((chat) => chat.kind === 'chat')
+        return filter
+      })
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getAllChatsContacts] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -147,17 +218,23 @@ export class RetrieverLayer extends SenderLayer {
    * @returns contact detial as promise
    */
   public async checkNumberStatus(contactId: string): Promise<WhatsappProfile> {
-    return new Promise(async (resolve, reject) => {
-      const result: WhatsappProfile = await this.page.evaluate(
+    let result: WhatsappProfile
+    try {
+      result = await this.page.evaluate(
         (contactId) => WAPI.checkNumberStatus(contactId),
         contactId
       )
-      if (result['status'] !== 200) {
-        reject(result)
-      } else {
-        resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - checkNumberStatus] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    if (result['status'] !== 200) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -165,11 +242,17 @@ export class RetrieverLayer extends SenderLayer {
    * @returns array of [Chat]
    */
   public async getAllChatsWithMessages(withNewMessageOnly = false) {
-    return this.page.evaluate(
-      (withNewMessageOnly: boolean) =>
-        WAPI.getAllChatsWithMessages(withNewMessageOnly),
-      withNewMessageOnly
-    )
+    let result
+    try {
+      result = this.page.evaluate(
+        (withNewMessageOnly: boolean) =>
+          WAPI.getAllChatsWithMessages(withNewMessageOnly),
+        withNewMessageOnly
+      )
+    } catch (error) {
+      logger.error(error)
+    }
+    return result
   }
 
   /**
@@ -177,7 +260,14 @@ export class RetrieverLayer extends SenderLayer {
    * @returns array of groups
    */
   public async getChatContactNewMsg() {
-    const chats = await this.page.evaluate(() => WAPI.getAllChatsWithNewMsg())
+    let chats = []
+    try {
+      chats = await this.page.evaluate(() => WAPI.getAllChatsWithNewMsg())
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getChatContactNewMsg] message=${error.message} error=${error.stack}`
+      )
+    }
     return chats.filter((chat) => chat.kind === 'chat')
   }
 
@@ -187,10 +277,18 @@ export class RetrieverLayer extends SenderLayer {
    * @returns contact detial as promise
    */
   public async getContact(contactId: string) {
-    return this.page.evaluate(
-      (contactId) => WAPI.getContact(contactId),
-      contactId
-    )
+    let result
+    try {
+      result = this.page.evaluate(
+        (contactId) => WAPI.getContact(contactId),
+        contactId
+      )
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getContact] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -198,7 +296,15 @@ export class RetrieverLayer extends SenderLayer {
    * @returns array of [Contact]
    */
   public async getAllContacts() {
-    return await this.page.evaluate(() => WAPI.getAllContacts())
+    let result
+    try {
+      result = await this.page.evaluate(() => WAPI.getAllContacts())
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getAllContacts] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -206,10 +312,18 @@ export class RetrieverLayer extends SenderLayer {
    * @returns array of [Chat]
    */
   public async getAllChatsTransmission() {
-    return await this.page.evaluate(async () => {
-      const chats = WAPI.getAllChats()
-      return (await chats).filter((chat) => chat.kind === 'broadcast')
-    })
+    let result
+    try {
+      result = await this.page.evaluate(async () => {
+        const chats = WAPI.getAllChats()
+        return (await chats).filter((chat) => chat.kind === 'broadcast')
+      })
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getAllChatsTransmission] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -218,10 +332,18 @@ export class RetrieverLayer extends SenderLayer {
    * @returns contact detial as promise
    */
   public async getChatById(contactId: string) {
-    return await this.page.evaluate(
-      (contactId) => WAPI.getChatById(contactId),
-      contactId
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        (contactId) => WAPI.getChatById(contactId),
+        contactId
+      )
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getChatById] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -232,7 +354,15 @@ export class RetrieverLayer extends SenderLayer {
    */
   // TODO - Remover
   public async getChat(contactId: string) {
-    return await this.getChatById(contactId)
+    let result
+    try {
+      result = await this.getChatById(contactId)
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getChat] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -241,10 +371,18 @@ export class RetrieverLayer extends SenderLayer {
    * @returns url of the chat picture or undefined if there is no picture for the chat.
    */
   public async getProfilePicFromServer(chatId: string) {
-    return this.page.evaluate(
-      (chatId) => WAPI.getProfilePicFromServer(chatId),
-      chatId
-    )
+    let result
+    try {
+      result = this.page.evaluate(
+        (chatId) => WAPI.getProfilePicFromServer(chatId),
+        chatId
+      )
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getProfilePicFromServer] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -254,10 +392,18 @@ export class RetrieverLayer extends SenderLayer {
    * @deprecated
    */
   public async loadEarlierMessages(contactId: string) {
-    return this.page.evaluate(
-      (contactId: string) => WAPI.loadEarlierMessages(contactId),
-      contactId
-    )
+    let result
+    try {
+      result = this.page.evaluate(
+        (contactId: string) => WAPI.loadEarlierMessages(contactId),
+        contactId
+      )
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - loadEarlierMessages] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -265,10 +411,18 @@ export class RetrieverLayer extends SenderLayer {
    * @param contactId
    */
   public async getStatus(contactId: string) {
-    return this.page.evaluate(
-      (contactId: string) => WAPI.getStatus(contactId),
-      contactId
-    )
+    let result
+    try {
+      this.page.evaluate(
+        (contactId: string) => WAPI.getStatus(contactId),
+        contactId
+      )
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getStatus] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -277,32 +431,38 @@ export class RetrieverLayer extends SenderLayer {
    * @returns contact detial as promise
    */
   public async getNumberProfile(contactId: string) {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'getNumberProfile'
-      const type = 'string'
-      const check = [
-        {
-          param: 'contactId',
-          type: type,
-          value: contactId,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
-      const result = this.page.evaluate(
+    const typeFunction = 'getNumberProfile'
+    const type = 'string'
+    const check = [
+      {
+        param: 'contactId',
+        type: type,
+        value: contactId,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
+    let result
+    try {
+      result = this.page.evaluate(
         (contactId: string) => WAPI.getNumberProfile(contactId),
         contactId
       )
-      if (result['erro'] == true) {
-        reject(result)
-      } else {
-        resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getNumberProfile] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -310,17 +470,33 @@ export class RetrieverLayer extends SenderLayer {
    * @returns boolean
    */
   public async isBeta() {
-    return await this.page.evaluate(() => WAPI.isBeta())
+    let result
+    try {
+      result = await this.page.evaluate(() => WAPI.isBeta())
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - isBeta] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
    * Retrieves all undread Messages
    */
   public async getUnreadMessages(unread?: boolean) {
-    return await this.page.evaluate(
-      (unread) => WAPI.getUnreadMessages(unread),
-      unread
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        (unread) => WAPI.getUnreadMessages(unread),
+        unread
+      )
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getUnreadMessages] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -336,11 +512,19 @@ export class RetrieverLayer extends SenderLayer {
     includeMe: boolean,
     includeNotifications: boolean
   ) {
-    return await this.page.evaluate(
-      ({ chatId, includeMe, includeNotifications }) =>
-        WAPI.getAllMessagesInChat(chatId, includeMe, includeNotifications),
-      { chatId, includeMe, includeNotifications }
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        ({ chatId, includeMe, includeNotifications }) =>
+          WAPI.getAllMessagesInChat(chatId, includeMe, includeNotifications),
+        { chatId, includeMe, includeNotifications }
+      )
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getAllMessagesInChat] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -355,15 +539,23 @@ export class RetrieverLayer extends SenderLayer {
     includeMe = false,
     includeNotifications = false
   ) {
-    return await this.page.evaluate(
-      ({ chatId, includeMe, includeNotifications }) =>
-        WAPI.loadAndGetAllMessagesInChat(
-          chatId,
-          includeMe,
-          includeNotifications
-        ),
-      { chatId, includeMe, includeNotifications }
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        ({ chatId, includeMe, includeNotifications }) =>
+          WAPI.loadAndGetAllMessagesInChat(
+            chatId,
+            includeMe,
+            includeNotifications
+          ),
+        { chatId, includeMe, includeNotifications }
+      )
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - loadAndGetAllMessagesInChat] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -371,10 +563,18 @@ export class RetrieverLayer extends SenderLayer {
    * @param chatId chat id: xxxxx@c.us
    */
   public async getChatIsOnline(chatId: string): Promise<boolean> {
-    return await this.page.evaluate(
-      (chatId: string) => WAPI.getChatIsOnline(chatId),
-      chatId
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        (chatId: string) => WAPI.getChatIsOnline(chatId),
+        chatId
+      )
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getChatIsOnline] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -382,9 +582,17 @@ export class RetrieverLayer extends SenderLayer {
    * @param chatId chat id: xxxxx@c.us
    */
   public async getLastSeen(chatId: string): Promise<number | boolean> {
-    return await this.page.evaluate(
-      (chatId: string) => WAPI.getLastSeen(chatId),
-      chatId
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        (chatId: string) => WAPI.getLastSeen(chatId),
+        chatId
+      )
+    } catch (error) {
+      logger.error(
+        `[RetrieverLayer - getLastSeen] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 }

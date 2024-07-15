@@ -1,5 +1,6 @@
 import { Browser, Page } from 'puppeteer'
 import { ControlsLayer } from './controls.layer'
+import { logger } from '../../utils/logger'
 
 export class BusinessLayer extends ControlsLayer {
   constructor(public page: Page, public browser: Browser) {
@@ -11,12 +12,20 @@ export class BusinessLayer extends ControlsLayer {
    * @param id Buisness profile id ('00000@c.us')
    */
   public async getBusinessProfilesProducts(id: string) {
-    return this.page.evaluate(
-      ({ id }) => {
-        WAPI.getBusinessProfilesProducts(id)
-      },
-      { id }
-    )
+    let result
+    try {
+      result = this.page.evaluate(
+        ({ id }) => {
+          WAPI.getBusinessProfilesProducts(id)
+        },
+        { id }
+      )
+    } catch (error) {
+      logger.error(
+        `[BusinessLayer - getBusinessProfilesProducts] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -34,11 +43,19 @@ export class BusinessLayer extends ControlsLayer {
     businessId: string,
     productId: string
   ) {
-    return this.page.evaluate(
-      ({ to, base64, businessId, caption, productId }) => {
-        WAPI.sendImageWithProduct(base64, to, caption, businessId, productId)
-      },
-      { to, base64, businessId, caption, productId }
-    )
+    let result
+    try {
+      result = this.page.evaluate(
+        ({ to, base64, businessId, caption, productId }) => {
+          WAPI.sendImageWithProduct(base64, to, caption, businessId, productId)
+        },
+        { to, base64, businessId, caption, productId }
+      )
+    } catch (error) {
+      logger.error(
+        `[BusinessLayer - sendImageWithProduct] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 }

@@ -52,7 +52,7 @@ export async function initWhatsapp(
     whatsappCacheManagement.setup(waPage, options)
     await waPage.setUserAgent(useragentOverride)
     await waPage.setBypassCSP(true)
-    waPage.setDefaultTimeout(60000)
+    waPage.setDefaultTimeout(25000)
 
     await whatsappCacheManagement.initListener()
 

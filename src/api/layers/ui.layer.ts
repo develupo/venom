@@ -2,6 +2,7 @@ import { Page, Browser } from 'puppeteer'
 import { CreateConfig } from '../../config/create-config'
 import { GroupLayer } from './group.layer'
 import { checkValuesSender } from '../helpers/layers-interface'
+import { logger } from '../../utils/logger'
 
 export class UILayer extends GroupLayer {
   constructor(
@@ -29,12 +30,20 @@ export class UILayer extends GroupLayer {
    * @param messages
    */
   public async returnReply(messages: any) {
-    return await this.page.evaluate(
-      ({ messages }) => WAPI.returnReply(messages),
-      {
-        messages,
-      }
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        ({ messages }) => WAPI.returnReply(messages),
+        {
+          messages,
+        }
+      )
+    } catch (error) {
+      logger.error(
+        `[UILayer - returnReply] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
@@ -43,33 +52,39 @@ export class UILayer extends GroupLayer {
    * @param chatId
    */
   public async openChat(chatId: string, force?: boolean) {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'openChat'
-      const type = 'string'
-      const check = [
-        {
-          param: 'text',
-          type: type,
-          value: chatId,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
-      const result = await this.page.evaluate(
+    const typeFunction = 'openChat'
+    const type = 'string'
+    const check = [
+      {
+        param: 'text',
+        type: type,
+        value: chatId,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ chatId, force }) => WAPI.openChat(chatId, force),
         { chatId, force }
       )
+    } catch (error) {
+      logger.error(
+        `[UILayer - openChat] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
 
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -78,9 +93,17 @@ export class UILayer extends GroupLayer {
    * @param messageId Message id (For example: '06D3AB3D0EEB9D077A3F9A3EFF4DD030')
    */
   public async openChatAt(chatId: string, messageId: string) {
-    return this.page.evaluate(
-      (chatId: string) => WAPI.openChatAt(chatId, messageId),
-      chatId
-    )
+    let result
+    try {
+      result = this.page.evaluate(
+        (chatId: string) => WAPI.openChatAt(chatId, messageId),
+        chatId
+      )
+    } catch (error) {
+      logger.error(
+        `[UILayer - openChatAt] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 }

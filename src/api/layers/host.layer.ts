@@ -293,7 +293,15 @@ export class HostLayer {
    * Set offline
    */
   public async setPresenceOffline() {
-    return await this.page.evaluate(() => WAPI.setPresenceOffline())
+    let result
+    try {
+      result = await this.page.evaluate(() => WAPI.setPresenceOffline())
+    } catch (error) {
+      logger.error(
+        `[HostLayer - setPresenceOffline] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   //Pro
@@ -301,64 +309,136 @@ export class HostLayer {
    * Set online
    */
   public async setPresenceOnline() {
-    return await this.page.evaluate(() => WAPI.setPresenceOnline())
+    let result
+    try {
+      result = await this.page.evaluate(() => WAPI.setPresenceOnline())
+    } catch (error) {
+      logger.error(
+        `[HostLayer - setPresenceOnline] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
    * Delete the Service Workers
    */
   public async killServiceWorker() {
-    return await this.page.evaluate(() => WAPI.killServiceWorker())
+    let result
+    try {
+      result = await this.page.evaluate(() => WAPI.killServiceWorker())
+    } catch (error) {
+      logger.error(
+        `[HostLayer - killServiceWorker] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
    * Load the service again
    */
   public async restartService() {
-    return await this.page.evaluate(() => WAPI.restartService())
+    let result
+    try {
+      result = await this.page.evaluate(() => WAPI.restartService())
+    } catch (error) {
+      logger.error(
+        `[HostLayer - restartService] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
    * @returns Current host device details
    */
   public async getHostDevice(): Promise<Object> {
-    return await this.page.evaluate(() => WAPI.getHost())
+    let result
+    try {
+      result = await this.page.evaluate(() => WAPI.getHost())
+    } catch (error) {
+      logger.error(
+        `[HostLayer - getHostDevice] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
    * Retrieves WA version
    */
   public async getWAVersion() {
-    return await this.page.evaluate(() => WAPI.getWAVersion())
+    let result
+    try {
+      result = await this.page.evaluate(() => WAPI.getWAVersion())
+    } catch (error) {
+      logger.error(
+        `[HostLayer - getWaVersion] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
    * Retrieves the connecction state
    */
   public async getConnectionState(): Promise<SocketState> {
-    return await this.page.evaluate(() => {
-      return window.Store.State.Socket.state
-    })
+    let result
+    try {
+      result = await this.page.evaluate(() => {
+        return window.Store.State.Socket.state
+      })
+    } catch (error) {
+      logger.error(
+        `[HostLayer - getConnectionState] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
    * Retrieves if the phone is online. Please note that this may not be real time.
    */
   public async isConnected() {
-    return await this.page.evaluate(() => WAPI.isConnected())
+    let result
+    try {
+      result = await this.page.evaluate(() => WAPI.isConnected())
+    } catch (error) {
+      logger.error(
+        `[HostLayer - isConnected] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
    * Retrieves if the phone is online. Please note that this may not be real time.
    */
   public async isLoggedIn() {
-    return await this.page.evaluate(() => WAPI.isLoggedIn())
+    let result
+    try {
+      result = await this.page.evaluate(() => WAPI.isLoggedIn())
+    } catch (error) {
+      logger.error(
+        `[HostLayer - isLoggedIn] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 
   /**
    * Retrieves Battery Level
    */
   public async getBatteryLevel() {
-    return await this.page.evaluate(() => WAPI.getBatteryLevel())
+    let result
+    try {
+      result = await this.page.evaluate(() => WAPI.getBatteryLevel())
+    } catch (error) {
+      logger.error(
+        `[HostLayer - getBatteryLevel] message=${error.message} error=${error.stack}`
+      )
+    }
+    return result
   }
 }

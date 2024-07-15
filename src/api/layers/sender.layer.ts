@@ -27,12 +27,19 @@ export class SenderLayer extends AutomateLayer {
   }
 
   public async createCommunity(name: string, description: string) {
-    return await this.page.evaluate(
-      ({ name, description }) => {
-        return WAPI.createCommunity(name, description)
-      },
-      { name, description }
-    )
+    try {
+      const result = await this.page.evaluate(
+        ({ name, description }) => {
+          return WAPI.createCommunity(name, description)
+        },
+        { name, description }
+      )
+      return result
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - createCommunity] message=${error.message} error=${error.stack}`
+      )
+    }
   }
 
   /**
@@ -52,8 +59,9 @@ export class SenderLayer extends AutomateLayer {
     buttonText: string,
     menu: Array<any>
   ): Promise<Object> {
-    return new Promise(async (resolve, reject) => {
-      const result = await this.page.evaluate(
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ to, title, subTitle, description, buttonText, menu }) => {
           return WAPI.sendListMenu(
             to,
@@ -66,12 +74,17 @@ export class SenderLayer extends AutomateLayer {
         },
         { to, title, subTitle, description, buttonText, menu }
       )
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendListMenu] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   //*PRO_
@@ -80,36 +93,42 @@ export class SenderLayer extends AutomateLayer {
    * @param text The text for the status
    */
   public async sendStatusText(text: string) {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'sendText'
-      const type = 'string'
-      const check = [
-        {
-          param: 'text',
-          type: type,
-          value: text,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
-      const to = 'status@broadcast'
-      const result = await this.page.evaluate(
+    const typeFunction = 'sendText'
+    const type = 'string'
+    const check = [
+      {
+        param: 'text',
+        type: type,
+        value: text,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
+    const to = 'status@broadcast'
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ to, text }) => {
           return WAPI.sendMessage(to, text, true)
         },
         { to, text }
       )
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendStatusText] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
 
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -117,19 +136,25 @@ export class SenderLayer extends AutomateLayer {
    * @param idUser chat id: xxxxx@us.c
    */
   public async sendPollCreation(idUser: string, poll: any) {
-    return new Promise(async (resolve, reject) => {
-      const result = await this.page.evaluate(
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ idUser, poll }) => {
           return WAPI.sendPollCreation(idUser, poll)
         },
         { idUser, poll }
       )
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendPollCreation] message=${error.message} error=${error.stack}`
+      )
+      throw new Error(JSON.stringify(result))
+    }
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   //*PRO_
@@ -141,34 +166,35 @@ export class SenderLayer extends AutomateLayer {
     filePath: string,
     description?: string
   ): Promise<SendFileResult> {
-    return new Promise(async (resolve, reject) => {
-      const base64 = await base64Management.getBase64(filePath, [
-        'image/gif',
-        'image/png',
-        'image/jpg',
-        'image/jpeg',
-        'image/webp',
-      ])
+    const base64 = await base64Management.getBase64(filePath, [
+      'image/gif',
+      'image/png',
+      'image/jpg',
+      'image/jpeg',
+      'image/webp',
+    ])
 
-      if (base64.error) {
-        return reject(base64.error)
+    if (base64.error) {
+      throw new Error(JSON.stringify(base64.error))
+    }
+
+    let filename = path.basename(filePath)
+
+    if (!base64.mimeType.includes('image')) {
+      const obj = {
+        erro: true,
+        to: 'status',
+        text: 'Not an image, allowed formats gif, png, jpg, jpeg and webp',
       }
+      throw new Error(JSON.stringify(obj))
+    }
+    const to = 'status@broadcast'
+    filename = filenameFromMimeType(filename, base64.mimeType)
 
-      let filename = path.basename(filePath)
-
-      if (!base64.mimeType.includes('image')) {
-        const obj = {
-          erro: true,
-          to: 'status',
-          text: 'Not an image, allowed formats gif, png, jpg, jpeg and webp',
-        }
-        return reject(obj)
-      }
-      const to = 'status@broadcast'
-      filename = filenameFromMimeType(filename, base64.mimeType)
-
-      const base64Data = base64.data
-      const result = await this.page.evaluate(
+    const base64Data = base64.data
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ to, base64Data, filename, description }) => {
           return WAPI.sendImage(
             base64Data,
@@ -180,13 +206,18 @@ export class SenderLayer extends AutomateLayer {
         },
         { to, base64Data, filename, description }
       )
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendImageStatus] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
 
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -195,38 +226,39 @@ export class SenderLayer extends AutomateLayer {
    * @param caption
    */
   public async sendVideoStatus(filePath: string, description?: string) {
-    return new Promise(async (resolve, reject) => {
-      const base64 = await base64Management.getBase64(filePath, ['video/mp4'])
-      let obj: { erro: boolean; to: string; text: string }
+    const base64 = await base64Management.getBase64(filePath, ['video/mp4'])
+    let obj: { erro: boolean; to: string; text: string }
 
-      if (base64.error) {
-        return reject(base64.error)
+    if (base64.error) {
+      throw new Error(JSON.stringify(base64.error))
+    }
+
+    let filename = path.basename(filePath)
+
+    if (!base64.mimeType) {
+      obj = {
+        erro: true,
+        to: 'status',
+        text: 'Invalid base64!',
       }
+      throw new Error(JSON.stringify(obj))
+    }
 
-      let filename = path.basename(filePath)
-
-      if (!base64.mimeType) {
-        obj = {
-          erro: true,
-          to: 'status',
-          text: 'Invalid base64!',
-        }
-        return reject(obj)
+    if (!base64.mimeType.includes('video')) {
+      const obj = {
+        erro: true,
+        to: 'status',
+        text: 'Not an video, allowed format mp4',
       }
+      throw new Error(JSON.stringify(obj))
+    }
 
-      if (!base64.mimeType.includes('video')) {
-        const obj = {
-          erro: true,
-          to: 'status',
-          text: 'Not an video, allowed format mp4',
-        }
-        return reject(obj)
-      }
-
-      filename = filenameFromMimeType(filename, base64.mimeType)
-      const to = 'status@broadcast'
-      const base64Data = base64.data
-      const result = await this.page.evaluate(
+    filename = filenameFromMimeType(filename, base64.mimeType)
+    const to = 'status@broadcast'
+    const base64Data = base64.data
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ to, base64Data, filename, description }) => {
           return WAPI.sendFile(
             base64Data,
@@ -239,12 +271,17 @@ export class SenderLayer extends AutomateLayer {
         },
         { to, base64Data, filename, description }
       )
-      if (result['erro'] == true) {
-        reject(result)
-      } else {
-        resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendVideoStatus] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -260,57 +297,63 @@ export class SenderLayer extends AutomateLayer {
     subtitle: string,
     buttons: any
   ): Promise<Object> {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'sendButtons'
-      const type = 'string'
-      const obj = 'object'
-      const check = [
-        {
-          param: 'to',
-          type: type,
-          value: to,
-          function: typeFunction,
-          isUser: true,
-        },
-        {
-          param: 'title',
-          type: type,
-          value: title,
-          function: typeFunction,
-          isUser: true,
-        },
-        {
-          param: 'subtitle',
-          type: type,
-          value: subtitle,
-          function: typeFunction,
-          isUser: true,
-        },
-        {
-          param: 'buttons',
-          type: obj,
-          value: buttons,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
+    const typeFunction = 'sendButtons'
+    const type = 'string'
+    const obj = 'object'
+    const check = [
+      {
+        param: 'to',
+        type: type,
+        value: to,
+        function: typeFunction,
+        isUser: true,
+      },
+      {
+        param: 'title',
+        type: type,
+        value: title,
+        function: typeFunction,
+        isUser: true,
+      },
+      {
+        param: 'subtitle',
+        type: type,
+        value: subtitle,
+        function: typeFunction,
+        isUser: true,
+      },
+      {
+        param: 'buttons',
+        type: obj,
+        value: buttons,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
 
-      const result = await this.page.evaluate(
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ to, title, subtitle, buttons }) => {
           return WAPI.sendButtons(to, title, buttons, subtitle)
         },
         { to, title, subtitle, buttons }
       )
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendButtons] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   public async sendTypeButtons(
@@ -320,19 +363,25 @@ export class SenderLayer extends AutomateLayer {
     footer: string,
     buttons: any
   ): Promise<Object> {
-    return new Promise(async (resolve, reject) => {
-      const result = await this.page.evaluate(
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ to, title, subtitle, footer, buttons }) => {
           return WAPI.sendTypeButtons(to, title, subtitle, footer, buttons)
         },
         { to, title, subtitle, footer, buttons }
       )
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendTypeButtons] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -351,30 +400,31 @@ export class SenderLayer extends AutomateLayer {
     forcingReturn?: boolean,
     delSend?: boolean
   ): Promise<Object> {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'sendText'
-      const type = 'string'
-      const check = [
-        {
-          param: 'to',
-          type: type,
-          value: to,
-          function: typeFunction,
-          isUser: true,
-        },
-        {
-          param: 'content',
-          type: type,
-          value: content,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
-      const result = await this.page.evaluate(
+    const typeFunction = 'sendText'
+    const type = 'string'
+    const check = [
+      {
+        param: 'to',
+        type: type,
+        value: to,
+        function: typeFunction,
+        isUser: true,
+      },
+      {
+        param: 'content',
+        type: type,
+        value: content,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ to, content, passId, checkNumber, forcingReturn, delSend }) => {
           return WAPI.sendMessage(
             to,
@@ -388,12 +438,17 @@ export class SenderLayer extends AutomateLayer {
         },
         { to, content, passId, checkNumber, forcingReturn, delSend }
       )
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendText] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -408,56 +463,62 @@ export class SenderLayer extends AutomateLayer {
     title: string,
     message: string
   ): Promise<object> {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'sendLinkPreview'
-      const type = 'string'
-      const check = [
-        {
-          param: 'chatId',
-          type: type,
-          value: chatId,
-          function: typeFunction,
-          isUser: true,
-        },
-        {
-          param: 'url',
-          type: type,
-          value: url,
-          function: typeFunction,
-          isUser: true,
-        },
-        {
-          param: 'title',
-          type: type,
-          value: title,
-          function: typeFunction,
-          isUser: false,
-        },
-        {
-          param: 'message',
-          type: type,
-          value: message,
-          function: typeFunction,
-          isUser: false,
-        },
-      ]
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
-      const thumbnail = await dowloadMetaFileBase64(url)
-      const result = await this.page.evaluate(
+    const typeFunction = 'sendLinkPreview'
+    const type = 'string'
+    const check = [
+      {
+        param: 'chatId',
+        type: type,
+        value: chatId,
+        function: typeFunction,
+        isUser: true,
+      },
+      {
+        param: 'url',
+        type: type,
+        value: url,
+        function: typeFunction,
+        isUser: true,
+      },
+      {
+        param: 'title',
+        type: type,
+        value: title,
+        function: typeFunction,
+        isUser: false,
+      },
+      {
+        param: 'message',
+        type: type,
+        value: message,
+        function: typeFunction,
+        isUser: false,
+      },
+    ]
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
+    const thumbnail = await dowloadMetaFileBase64(url)
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ chatId, url, title, message, thumbnail }) => {
           return WAPI.sendLinkPreview(chatId, url, title, message, thumbnail)
         },
         { chatId, url, title, message, thumbnail }
       )
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendLinkPreview] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -474,73 +535,79 @@ export class SenderLayer extends AutomateLayer {
     caption?: string,
     status?: boolean
   ): Promise<SendFileResult> {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'sendImageFromBase64'
-      const type = 'string'
-      const check = [
-        {
-          param: 'to',
-          type: type,
-          value: to,
-          function: typeFunction,
-          isUser: true,
-        },
-        {
-          param: 'base64',
-          type: type,
-          value: base64,
-          function: typeFunction,
-          isUser: true,
-        },
-        {
-          param: 'filename',
-          type: type,
-          value: filename,
-          function: typeFunction,
-          isUser: false,
-        },
-      ]
+    const typeFunction = 'sendImageFromBase64'
+    const type = 'string'
+    const check = [
+      {
+        param: 'to',
+        type: type,
+        value: to,
+        function: typeFunction,
+        isUser: true,
+      },
+      {
+        param: 'base64',
+        type: type,
+        value: base64,
+        function: typeFunction,
+        isUser: true,
+      },
+      {
+        param: 'filename',
+        type: type,
+        value: filename,
+        function: typeFunction,
+        isUser: false,
+      },
+    ]
 
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
+
+    const mimeType = base64Management.getBase64MimeType(base64)
+
+    if (!mimeType) {
+      obj = {
+        erro: true,
+        to: to,
+        text: 'Invalid base64!',
       }
+      throw new Error(JSON.stringify(obj))
+    }
 
-      const mimeType = base64Management.getBase64MimeType(base64)
-
-      if (!mimeType) {
-        obj = {
-          erro: true,
-          to: to,
-          text: 'Invalid base64!',
-        }
-        return reject(obj)
+    if (!mimeType.includes('image')) {
+      const obj = {
+        erro: true,
+        to: to,
+        text: 'Not an image, allowed formats gif, png, jpg, jpeg and webp',
       }
+      throw new Error(JSON.stringify(obj))
+    }
 
-      if (!mimeType.includes('image')) {
-        const obj = {
-          erro: true,
-          to: to,
-          text: 'Not an image, allowed formats gif, png, jpg, jpeg and webp',
-        }
-        return reject(obj)
-      }
+    filename = filenameFromMimeType(filename, mimeType)
 
-      filename = filenameFromMimeType(filename, mimeType)
-
-      const result = await this.page.evaluate(
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ to, base64, filename, caption, status }) => {
           return WAPI.sendImage(base64, to, filename, caption, status)
         },
         { to, base64, filename, caption, status }
       )
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendImageFromBase64] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
 
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -549,8 +616,9 @@ export class SenderLayer extends AutomateLayer {
    * @param {boolean} type 'true' only admin can send messages or 'false' everyone can send
    */
   public async onlySendAdmin(chatId: string, type: boolean) {
-    return new Promise(async (resolve, reject) => {
-      const result: any = await this.page
+    let result
+    try {
+      result = await this.page
         .evaluate(
           ({ chatId, type }) => {
             return WAPI.onlySendAdmin(chatId, type)
@@ -558,12 +626,17 @@ export class SenderLayer extends AutomateLayer {
           { chatId, type }
         )
         .catch(() => {})
-      if (result?.erro == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - onlySendAdmin] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    if (result?.erro == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   public async sendMessageOptions(
@@ -571,23 +644,24 @@ export class SenderLayer extends AutomateLayer {
     content: any,
     options?: any
   ): Promise<Message> {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const messageId = await this.page.evaluate(
-          ({ chat, content, options }) => {
-            return WAPI.sendMessageOptions(chat, content, options)
-          },
-          { chat, content, options }
-        )
-        const result = (await this.page.evaluate(
-          (messageId: any) => WAPI.getMessageById(messageId),
-          messageId
-        )) as Message
-        resolve(result)
-      } catch (error) {
-        reject(error)
-      }
-    })
+    try {
+      const messageId = await this.page.evaluate(
+        ({ chat, content, options }) => {
+          return WAPI.sendMessageOptions(chat, content, options)
+        },
+        { chat, content, options }
+      )
+      const result = (await this.page.evaluate(
+        (messageId: any) => WAPI.getMessageById(messageId),
+        messageId
+      )) as Message
+      return result
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendMessageOptions] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
   }
 
   /**
@@ -604,45 +678,46 @@ export class SenderLayer extends AutomateLayer {
     caption?: string,
     passId?: any
   ): Promise<SendFileResult> {
-    return new Promise(async (resolve, reject) => {
-      const base64 = await base64Management.getBase64(filePath, [
-        'image/gif',
-        'image/png',
-        'image/jpg',
-        'image/jpeg',
-        'image/webp',
-      ])
+    const base64 = await base64Management.getBase64(filePath, [
+      'image/gif',
+      'image/png',
+      'image/jpg',
+      'image/jpeg',
+      'image/webp',
+    ])
 
-      if (base64.error) {
-        return reject(base64.error)
+    if (base64.error) {
+      throw new Error(JSON.stringify(base64.error))
+    }
+
+    if (!filename) {
+      filename = path.basename(filePath)
+    }
+
+    if (!base64.mimeType) {
+      obj = {
+        erro: true,
+        to: to,
+        text: 'Invalid base64!',
       }
+      throw new Error(JSON.stringify(obj))
+    }
 
-      if (!filename) {
-        filename = path.basename(filePath)
+    if (!base64.mimeType.includes('image')) {
+      const obj = {
+        erro: true,
+        to: to,
+        text: 'Not an image, allowed formats gif, png, jpg, jpeg and webp',
       }
+      throw new Error(JSON.stringify(obj))
+    }
 
-      if (!base64.mimeType) {
-        obj = {
-          erro: true,
-          to: to,
-          text: 'Invalid base64!',
-        }
-        return reject(obj)
-      }
+    filename = filenameFromMimeType(filename, base64.mimeType)
 
-      if (!base64.mimeType.includes('image')) {
-        const obj = {
-          erro: true,
-          to: to,
-          text: 'Not an image, allowed formats gif, png, jpg, jpeg and webp',
-        }
-        return reject(obj)
-      }
-
-      filename = filenameFromMimeType(filename, base64.mimeType)
-
-      const base64Data = base64.data
-      const result = await this.page.evaluate(
+    const base64Data = base64.data
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ to, base64Data, filename, caption, passId }) => {
           return WAPI.sendImage(
             base64Data,
@@ -656,13 +731,18 @@ export class SenderLayer extends AutomateLayer {
         },
         { to, base64Data, filename, caption, passId }
       )
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendImage] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
 
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -680,18 +760,27 @@ export class SenderLayer extends AutomateLayer {
     description: string,
     chatId: string
   ) {
-    return await this.page.evaluate(
-      ({ thumb, url, title, description, chatId }) => {
-        WAPI.sendMessageWithThumb(thumb, url, title, description, chatId)
-      },
-      {
-        thumb,
-        url,
-        title,
-        description,
-        chatId,
-      }
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        ({ thumb, url, title, description, chatId }) => {
+          WAPI.sendMessageWithThumb(thumb, url, title, description, chatId)
+        },
+        {
+          thumb,
+          url,
+          title,
+          description,
+          chatId,
+        }
+      )
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendMessageWithThumb] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    return result
   }
 
   /**
@@ -709,37 +798,38 @@ export class SenderLayer extends AutomateLayer {
     limitIterationFindMessage?: number,
     sendEvenIfNotExists?: boolean
   ): Promise<Message | object> {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'reply'
-      const type = 'string'
-      const check = [
-        {
-          param: 'to',
-          type: type,
-          value: to,
-          function: typeFunction,
-          isUser: true,
-        },
-        {
-          param: 'content',
-          type: type,
-          value: content,
-          function: typeFunction,
-          isUser: true,
-        },
-        {
-          param: 'quotedMsg',
-          type: type,
-          value: quotedMsg,
-          function: typeFunction,
-          isUser: false,
-        },
-      ]
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
-      const result: object = await this.page.evaluate(
+    const typeFunction = 'reply'
+    const type = 'string'
+    const check = [
+      {
+        param: 'to',
+        type: type,
+        value: to,
+        function: typeFunction,
+        isUser: true,
+      },
+      {
+        param: 'content',
+        type: type,
+        value: content,
+        function: typeFunction,
+        isUser: true,
+      },
+      {
+        param: 'quotedMsg',
+        type: type,
+        value: quotedMsg,
+        function: typeFunction,
+        isUser: false,
+      },
+    ]
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
+    let result
+    try {
+      result = await this.page.evaluate(
         ({
           to,
           content,
@@ -769,13 +859,18 @@ export class SenderLayer extends AutomateLayer {
           sendEvenIfNotExists,
         }
       )
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - reply] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
 
-      if (result['erro'] == true) {
-        reject(result)
-      } else {
-        resolve(result)
-      }
-    })
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -785,43 +880,49 @@ export class SenderLayer extends AutomateLayer {
    * @param passId new id
    */
   public async sendVoiceBase64(to: string, base64: string, passId?: any) {
-    return new Promise(async (resolve, reject) => {
-      const mimeType = base64Management.getBase64MimeType(base64)
+    const mimeType = base64Management.getBase64MimeType(base64)
 
-      if (!mimeType) {
-        obj = {
-          erro: true,
-          to: to,
-          text: 'Invalid base64!',
-        }
-        return reject(obj)
+    if (!mimeType) {
+      obj = {
+        erro: true,
+        to: to,
+        text: 'Invalid base64!',
       }
+      throw new Error(JSON.stringify(obj))
+    }
 
-      if (
-        !mimeType ||
-        mimeType.includes('audio/mpeg') ||
-        mimeType.includes('audio/mp3')
-      ) {
-        const result = await this.page.evaluate(
+    if (
+      !mimeType ||
+      mimeType.includes('audio/mpeg') ||
+      mimeType.includes('audio/mp3')
+    ) {
+      let result
+      try {
+        result = await this.page.evaluate(
           ({ to, base64, passId }) => {
             return WAPI.sendPtt(base64, to, passId)
           },
           { to, base64, passId }
         )
-        if (result['erro'] == true) {
-          reject(result)
-        } else {
-          resolve(result)
-        }
-      } else {
-        obj = {
-          erro: true,
-          to: to,
-          text: 'Use the MP3 format to be able to send an audio!',
-        }
-        return reject(obj)
+      } catch (error) {
+        logger.error(
+          `[SenderLayer - sendMessageOptions] message=${error.message} error=${error.stack}`
+        )
+        throw error
       }
-    })
+      if (result['erro'] == true) {
+        throw new Error(JSON.stringify(result))
+      } else {
+        return result
+      }
+    } else {
+      obj = {
+        erro: true,
+        to: to,
+        text: 'Use the MP3 format to be able to send an audio!',
+      }
+      throw new Error(JSON.stringify(obj))
+    }
   }
 
   /**
@@ -840,68 +941,67 @@ export class SenderLayer extends AutomateLayer {
     forcingReturn?: boolean,
     delSend?: boolean
   ) {
-    return new Promise(async (resolve, reject) => {
+    const base64 = await base64Management.getBase64(filePath, [
+      'audio/mpeg',
+      'audio/mp3',
+      'audio/aac',
+      'audio/flac',
+      'audio/vnd.dlna.adts',
+      'audio/ogg',
+      'audio/wav',
+    ])
+
+    if (base64.error) {
+      throw new Error(JSON.stringify(base64.error))
+    }
+
+    if (
+      !base64.mimeType ||
+      base64.mimeType.includes('audio/mpeg') ||
+      base64.mimeType.includes('audio/mp3') ||
+      base64.mimeType.includes('audio/aac') ||
+      base64.mimeType.includes('audio/flac') ||
+      base64.mimeType.includes('audio/vnd.dlna.adts') ||
+      base64.mimeType.includes('audio/ogg') ||
+      base64.mimeType.includes('audio/wav')
+    ) {
+      const base64Data = base64.data
+      let result
       try {
-        const base64 = await base64Management.getBase64(filePath, [
-          'audio/mpeg',
-          'audio/mp3',
-          'audio/aac',
-          'audio/flac',
-          'audio/vnd.dlna.adts',
-          'audio/ogg',
-          'audio/wav',
-        ])
-
-        if (base64.error) {
-          return reject(base64.error)
-        }
-
-        if (
-          !base64.mimeType ||
-          base64.mimeType.includes('audio/mpeg') ||
-          base64.mimeType.includes('audio/mp3') ||
-          base64.mimeType.includes('audio/aac') ||
-          base64.mimeType.includes('audio/flac') ||
-          base64.mimeType.includes('audio/vnd.dlna.adts') ||
-          base64.mimeType.includes('audio/ogg') ||
-          base64.mimeType.includes('audio/wav')
-        ) {
-          const base64Data = base64.data
-          const result: any = await this.page.evaluate(
-            ({
-              to,
+        result = await this.page.evaluate(
+          ({ to, base64Data, passId, checkNumber, forcingReturn, delSend }) => {
+            return WAPI.sendPtt(
               base64Data,
+              to,
               passId,
               checkNumber,
               forcingReturn,
-              delSend,
-            }) => {
-              return WAPI.sendPtt(
-                base64Data,
-                to,
-                passId,
-                checkNumber,
-                forcingReturn,
-                delSend
-              )
-            },
-            { to, base64Data, passId, checkNumber, forcingReturn, delSend }
-          )
-          if (result['erro'] == true) {
-            reject(result)
-          } else {
-            resolve(result)
-          }
-        } else {
-          return reject({
-            error: { erro: true, text: BASE64_ERROR.CONTENT_TYPE_NOT_ALLOWED },
-          })
-        }
+              delSend
+            )
+          },
+          { to, base64Data, passId, checkNumber, forcingReturn, delSend }
+        )
       } catch (error) {
-        logger.error(error)
-        return reject(error)
+        logger.error(
+          `[SenderLayer - sendVoice] message=${error.message} error=${error.stack}`
+        )
+        throw error
       }
-    })
+      if (result['erro'] == true) {
+        throw new Error(JSON.stringify(result))
+      } else {
+        return result
+      }
+    } else {
+      throw new Error(
+        JSON.stringify({
+          error: {
+            erro: true,
+            text: BASE64_ERROR.CONTENT_TYPE_NOT_ALLOWED,
+          },
+        })
+      )
+    }
   }
 
   /**
@@ -919,20 +1019,21 @@ export class SenderLayer extends AutomateLayer {
     caption?: string,
     passId?: any
   ): Promise<SendFileResult> {
-    return new Promise(async (resolve, reject) => {
-      const mimeType = base64Management.getBase64MimeType(base64)
+    const mimeType = base64Management.getBase64MimeType(base64)
 
-      if (!mimeType) {
-        obj = {
-          erro: true,
-          to: to,
-          text: 'Invalid base64!',
-        }
-        return reject(obj)
+    if (!mimeType) {
+      obj = {
+        erro: true,
+        to: to,
+        text: 'Invalid base64!',
       }
+      throw new Error(JSON.stringify(obj))
+    }
 
-      const type = 'FileFromBase64'
-      const result = await this.page.evaluate(
+    const type = 'FileFromBase64'
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ to, base64, filename, caption, type, passId }) => {
           return WAPI.sendFile(
             base64,
@@ -946,12 +1047,17 @@ export class SenderLayer extends AutomateLayer {
         },
         { to, base64, filename, caption, type, passId }
       )
-      if (result['erro'] == true) {
-        reject(result)
-      } else {
-        resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendFileFromBase64] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -971,83 +1077,81 @@ export class SenderLayer extends AutomateLayer {
     forcingReturn?: boolean,
     delSend?: boolean
   ) {
-    return new Promise(async (resolve, reject) => {
-      const base64 = await base64Management.getBase64(filePath)
-      let obj: { erro: boolean; to: string; text: string }
+    const base64 = await base64Management.getBase64(filePath)
+    let obj: { erro: boolean; to: string; text: string }
 
-      if (base64.error) {
-        return reject(base64.error)
+    if (base64.error) {
+      throw new Error(JSON.stringify(base64.error))
+    }
+
+    if (!filename && typeof filename !== 'string') {
+      filename = path.basename(filePath)
+    }
+
+    if (!base64.mimeType) {
+      obj = {
+        erro: true,
+        to: to,
+        text: 'Invalid base64!',
       }
+      throw new Error(JSON.stringify(obj))
+    }
 
-      if (!filename && typeof filename !== 'string') {
-        filename = path.basename(filePath)
-      }
-
-      if (!base64.mimeType) {
-        obj = {
-          erro: true,
-          to: to,
-          text: 'Invalid base64!',
-        }
-        return reject(obj)
-      }
-
-      let result = {}
-      const base64Data = base64.data
-      try {
-        result = await this.page.evaluate(
-          ({
-            to,
+    let result = {}
+    const base64Data = base64.data
+    try {
+      result = await this.page.evaluate(
+        ({
+          to,
+          base64Data,
+          filename,
+          caption,
+          passId,
+          checkNumber,
+          forcingReturn,
+          delSend,
+        }) => {
+          return WAPI.sendFile(
             base64Data,
+            to,
             filename,
             caption,
+            'sendFile',
+            undefined,
             passId,
             checkNumber,
             forcingReturn,
-            delSend,
-          }) => {
-            return WAPI.sendFile(
-              base64Data,
-              to,
-              filename,
-              caption,
-              'sendFile',
-              undefined,
-              passId,
-              checkNumber,
-              forcingReturn,
-              delSend
-            )
-          },
-          {
-            to,
-            base64Data,
-            filename,
-            caption,
-            passId,
-            checkNumber,
-            forcingReturn,
-            delSend,
-          }
-        )
-      } catch (error) {
-        result = {
-          erro: true,
-          to: to,
-          text: error.message,
+            delSend
+          )
+        },
+        {
+          to,
+          base64Data,
+          filename,
+          caption,
+          passId,
+          checkNumber,
+          forcingReturn,
+          delSend,
         }
-
-        if (error.message.includes('protocolTimeout')) {
-          await this.page.reload()
-        }
+      )
+    } catch (error) {
+      result = {
+        erro: true,
+        to: to,
+        text: error.message,
       }
 
-      if (result['erro'] == true) {
-        reject(result)
-      } else {
-        resolve(result)
+      if (error.message.includes('protocolTimeout')) {
+        await this.page.reload()
       }
-    })
+    }
+
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -1065,15 +1169,24 @@ export class SenderLayer extends AutomateLayer {
   ) {
     const base64 = await base64Management.getBase64(path)
     if (base64.error) {
-      throw new Error(base64.error.text)
+      throw new Error(JSON.stringify(base64.error))
     }
     const base64Data = base64.data
-    return await this.page.evaluate(
-      ({ to, base64Data, filename, caption }) => {
-        WAPI.sendVideoAsGif(base64Data, to, filename, caption)
-      },
-      { to, base64Data, filename, caption }
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        ({ to, base64Data, filename, caption }) => {
+          WAPI.sendVideoAsGif(base64Data, to, filename, caption)
+        },
+        { to, base64Data, filename, caption }
+      )
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendVideAsGif] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    return result
   }
 
   /**
@@ -1086,19 +1199,25 @@ export class SenderLayer extends AutomateLayer {
     contactsId: string | string[],
     name?: string
   ) {
-    return new Promise(async (resolve, reject) => {
-      const result = await this.page.evaluate(
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ to, contactsId, name }) => {
           return WAPI.sendContactVcard(to, contactsId, name)
         },
         { to, contactsId, name }
       )
-      if (result['erro'] == true) {
-        reject(result)
-      } else {
-        resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendContactVCard] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -1107,19 +1226,25 @@ export class SenderLayer extends AutomateLayer {
    * @param contacts Example: | [000@c.us, 1111@c.us]
    */
   public async sendContactVcardList(to: string, contacts: string[]) {
-    return new Promise(async (resolve, reject) => {
-      const result = await this.page.evaluate(
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ to, contacts }) => {
           return WAPI.sendContactVcardList(to, contacts)
         },
         { to, contacts }
       )
-      if (result['erro'] == true) {
-        reject(result)
-      } else {
-        resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendContactVCardList] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -1135,8 +1260,9 @@ export class SenderLayer extends AutomateLayer {
     skipMyMessages: boolean,
     limitIterationFindMessage: number
   ) {
-    return new Promise(async (resolve, reject) => {
-      const result = await this.page.evaluate(
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ to, messages, skipMyMessages, limitIterationFindMessage }) => {
           return WAPI.forwardMessages(
             to,
@@ -1147,12 +1273,17 @@ export class SenderLayer extends AutomateLayer {
         },
         { to, messages, skipMyMessages, limitIterationFindMessage }
       )
-      if (typeof result['erro'] !== 'undefined' && result['erro'] == true) {
-        reject(result)
-      } else {
-        resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - forwardMessages] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    if (typeof result['erro'] !== 'undefined' && result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -1179,19 +1310,25 @@ export class SenderLayer extends AutomateLayer {
         const _webb64 = obj['webpBase64']
         const _met = obj['metadata']
 
-        return new Promise(async (resolve, reject) => {
-          const result = await this.page.evaluate(
+        let result
+        try {
+          result = await this.page.evaluate(
             ({ _webb64, to, _met }) => {
               return WAPI.sendImageAsSticker(_webb64, to, _met, 'StickerGif')
             },
             { _webb64, to, _met }
           )
-          if (result['erro'] == true) {
-            reject(result)
-          } else {
-            resolve(result)
-          }
-        })
+        } catch (error) {
+          logger.error(
+            `[SenderLayer - sendImageAsStickerGif] message=${error.message} error=${error.stack}`
+          )
+          throw error
+        }
+        if (result['erro'] == true) {
+          throw new Error(JSON.stringify(result))
+        } else {
+          return result
+        }
       } else {
         throw {
           error: true,
@@ -1230,19 +1367,25 @@ export class SenderLayer extends AutomateLayer {
       if (typeof obj == 'object') {
         const _webb64 = obj['webpBase64']
         const _met = obj['metadata']
-        return new Promise(async (resolve, reject) => {
-          const result = await this.page.evaluate(
+        let result
+        try {
+          result = await this.page.evaluate(
             ({ _webb64, to, _met }) => {
               return WAPI.sendImageAsSticker(_webb64, to, _met, 'Sticker')
             },
             { _webb64, to, _met }
           )
-          if (result['erro'] == true) {
-            reject(result)
-          } else {
-            resolve(result)
-          }
-        })
+        } catch (error) {
+          logger.error(
+            `[SenderLayer - sendImageAsSticker] message=${error.message} error=${error.stack}`
+          )
+          throw error
+        }
+        if (result['erro'] == true) {
+          throw new Error(JSON.stringify(result))
+        } else {
+          return result
+        }
       } else {
         throw {
           error: true,
@@ -1269,19 +1412,25 @@ export class SenderLayer extends AutomateLayer {
     longitude: string,
     title: string
   ) {
-    return new Promise(async (resolve, reject) => {
-      const result = await this.page.evaluate(
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ to, latitude, longitude, title }) => {
           return WAPI.sendLocation(to, latitude, longitude, title)
         },
         { to, latitude, longitude, title }
       )
-      if (result['erro'] == true) {
-        reject(result)
-      } else {
-        resolve(result)
-      }
-    })
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendLocation] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -1290,33 +1439,39 @@ export class SenderLayer extends AutomateLayer {
    * @param checkNumber the number when submitting!
    */
   public async startTyping(chatId: string, checkNumber: boolean) {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'startTyping'
-      const type = 'string'
-      const check = [
-        {
-          param: 'chatId',
-          type: type,
-          value: chatId,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
-      const result = await this.page.evaluate(
+    const typeFunction = 'startTyping'
+    const type = 'string'
+    const check = [
+      {
+        param: 'chatId',
+        type: type,
+        value: chatId,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ chatId, checkNumber }) => WAPI.startTyping(chatId, checkNumber),
         { chatId, checkNumber }
       )
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - startTyping] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
 
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -1325,33 +1480,39 @@ export class SenderLayer extends AutomateLayer {
    * @param checkNumber the number when submitting!
    */
   public async startRecording(chatId: string, checkNumber: boolean) {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'startRecording'
-      const type = 'string'
-      const check = [
-        {
-          param: 'chatId',
-          type: type,
-          value: chatId,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
-      const result = await this.page.evaluate(
+    const typeFunction = 'startRecording'
+    const type = 'string'
+    const check = [
+      {
+        param: 'chatId',
+        type: type,
+        value: chatId,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ chatId, checkNumber }) => WAPI.startRecording(chatId, checkNumber),
         { chatId, checkNumber }
       )
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - startRecording] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
 
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -1360,33 +1521,39 @@ export class SenderLayer extends AutomateLayer {
    * @param checkNumber the number when submitting!
    */
   public async markPaused(chatId: string, checkNumber: boolean) {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'startRecording'
-      const type = 'string'
-      const check = [
-        {
-          param: 'chatId',
-          type: type,
-          value: chatId,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
-      const result = await this.page.evaluate(
+    const typeFunction = 'startRecording'
+    const type = 'string'
+    const check = [
+      {
+        param: 'chatId',
+        type: type,
+        value: chatId,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ chatId, checkNumber }) => WAPI.markPaused(chatId, checkNumber),
         { chatId, checkNumber }
       )
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - markAsPaused] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
 
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
@@ -1394,48 +1561,72 @@ export class SenderLayer extends AutomateLayer {
    * @param chatId Chat id
    */
   public async clearPresence(chatId: string) {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'clearPresence'
-      const type = 'string'
-      const check = [
-        {
-          param: 'chatId',
-          type: type,
-          value: chatId,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
+    const typeFunction = 'clearPresence'
+    const type = 'string'
+    const check = [
+      {
+        param: 'chatId',
+        type: type,
+        value: chatId,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw new Error(JSON.stringify(validating))
+    }
 
-      const result = await this.page.evaluate(
+    let result
+    try {
+      result = await this.page.evaluate(
         ({ chatId }) => WAPI.clearPresence(chatId),
         { chatId }
       )
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - clearPresence] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
 
-      if (result['erro'] == true) {
-        return reject(result)
-      } else {
-        return resolve(result)
-      }
-    })
+    if (result['erro'] == true) {
+      throw new Error(JSON.stringify(result))
+    } else {
+      return result
+    }
   }
 
   /**
    * Presence Available
    */
   public async presenceAvailable() {
-    return this.page.evaluate(() => WAPI.presenceAvailable())
+    let result
+    try {
+      result = this.page.evaluate(() => WAPI.presenceAvailable())
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - presenceAvailable] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    return result
   }
 
   /**
    * Presence Available
    */
   public async presenceUnavailable() {
-    return this.page.evaluate(() => WAPI.presenceUnavailable())
+    let result
+    try {
+      result = this.page.evaluate(() => WAPI.presenceUnavailable())
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - presenceUnavailable] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    return result
   }
 
   /**
@@ -1443,12 +1634,21 @@ export class SenderLayer extends AutomateLayer {
    *
    */
   public async sendMentioned(to: string, message: string, mentioned: string[]) {
-    return await this.page.evaluate(
-      ({ to, message, mentioned }) => {
-        WAPI.sendMessageMentioned(to, message, mentioned)
-      },
-      { to, message, mentioned }
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        ({ to, message, mentioned }) => {
+          WAPI.sendMessageMentioned(to, message, mentioned)
+        },
+        { to, message, mentioned }
+      )
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - sendMentioned] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    return result
   }
 
   /**
@@ -1457,20 +1657,38 @@ export class SenderLayer extends AutomateLayer {
    * @param chatId
    */
   public async setChatState(chatId: string, chatState: ChatState) {
-    return await this.page.evaluate(
-      ({ chatState, chatId }) => {
-        return WAPI.sendChatstate(chatState, chatId)
-      },
-      { chatState, chatId }
-    )
+    let result
+    try {
+      result = await this.page.evaluate(
+        ({ chatState, chatId }) => {
+          return WAPI.sendChatstate(chatState, chatId)
+        },
+        { chatState, chatId }
+      )
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - setChatState] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    return result
   }
 
   public async sendReactions(IdMessage: string, emoji: string) {
-    return await this.page.evaluate(
-      ({ IdMessage, emoji }) => {
-        WAPI.sendReactions(IdMessage, emoji)
-      },
-      { IdMessage, emoji }
-    )
+    let result
+    try {
+      await this.page.evaluate(
+        ({ IdMessage, emoji }) => {
+          WAPI.sendReactions(IdMessage, emoji)
+        },
+        { IdMessage, emoji }
+      )
+    } catch (error) {
+      logger.error(
+        `[SenderLayer - setChatState] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
+    return result
   }
 }
