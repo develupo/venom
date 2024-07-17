@@ -1,3 +1,11 @@
+## [1.14.2](https://github.com/develupo/venom/compare/v1.14.1...v1.14.2) (2024-07-17)
+
+
+### Bug Fixes
+
+* create group ([eb4cb99](https://github.com/develupo/venom/commit/eb4cb99184bf0b912f99fc4d0357472ff3006109))
+* protections for puppeteer ([576bcbf](https://github.com/develupo/venom/commit/576bcbf6e09613d3736db8f2dda958eef8e8e932))
+
 ## [1.14.1](https://github.com/develupo/venom/compare/v1.14.0...v1.14.1) (2024-07-04)
 
 
