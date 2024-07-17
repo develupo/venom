@@ -30,9 +30,14 @@ export async function createGroup(name, contactsId, temporarySeconds) {
   // TODO - In some cases, this is not being loaded. We need to enhance the injection from libs,
   // maybe verify if is loaded before trying to use something from Store
   const requestResult = await Store.GroupCreateJob.createGroup(
-    name,
-    contacts.filter((contact) => contact.id).map((contact) => contact.id),
-    temporarySeconds
+    {
+      title: name,
+      ephemeralDuration: temporarySeconds,
+      memberAddMode: false,
+      membershipApprovalMode: false,
+      restrict: true,
+    },
+    contacts.filter((contact) => contact.id).map((contact) => contact.id)
   )
 
   const creator = requestResult.creator._serialized
