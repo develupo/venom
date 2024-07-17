@@ -374,20 +374,28 @@ export class SenderLayer extends AutomateLayer {
       if (typeof validating === 'object') {
         return reject(validating)
       }
-      const result = await this.page.evaluate(
-        ({ to, content, passId, checkNumber, forcingReturn, delSend }) => {
-          return WAPI.sendMessage(
-            to,
-            content,
-            undefined,
-            passId,
-            checkNumber,
-            forcingReturn,
-            delSend
-          )
-        },
-        { to, content, passId, checkNumber, forcingReturn, delSend }
-      )
+      let result: object
+      try {
+        result = await this.page.evaluate(
+          ({ to, content, passId, checkNumber, forcingReturn, delSend }) => {
+            return WAPI.sendMessage(
+              to,
+              content,
+              undefined,
+              passId,
+              checkNumber,
+              forcingReturn,
+              delSend
+            )
+          },
+          { to, content, passId, checkNumber, forcingReturn, delSend }
+        )
+      } catch (error) {
+        logger.error(
+          `[SenderLayer - sendText] message=${error.message} error=${error.stack}`
+        )
+        reject(error)
+      }
       if (result['erro'] == true) {
         return reject(result)
       } else {
@@ -642,20 +650,28 @@ export class SenderLayer extends AutomateLayer {
       filename = filenameFromMimeType(filename, base64.mimeType)
 
       const base64Data = base64.data
-      const result = await this.page.evaluate(
-        ({ to, base64Data, filename, caption, passId }) => {
-          return WAPI.sendImage(
-            base64Data,
-            to,
-            filename,
-            caption,
-            'sendImage',
-            false,
-            passId
-          )
-        },
-        { to, base64Data, filename, caption, passId }
-      )
+      let result
+      try {
+        result = await this.page.evaluate(
+          ({ to, base64Data, filename, caption, passId }) => {
+            return WAPI.sendImage(
+              base64Data,
+              to,
+              filename,
+              caption,
+              'sendImage',
+              false,
+              passId
+            )
+          },
+          { to, base64Data, filename, caption, passId }
+        )
+      } catch (error) {
+        logger.error(
+          `[SenderLayer - sendImage] message=${error.message} error=${error.stack}`
+        )
+        reject(error)
+      }
 
       if (result['erro'] == true) {
         return reject(result)
@@ -739,36 +755,44 @@ export class SenderLayer extends AutomateLayer {
       if (typeof validating === 'object') {
         return reject(validating)
       }
-      const result: object = await this.page.evaluate(
-        ({
-          to,
-          content,
-          quotedMsg,
-          passId,
-          checkNumber,
-          limitIterationFindMessage,
-          sendEvenIfNotExists,
-        }) => {
-          return WAPI.reply(
+      let result: object
+      try {
+        result = await this.page.evaluate(
+          ({
             to,
             content,
             quotedMsg,
             passId,
             checkNumber,
             limitIterationFindMessage,
-            sendEvenIfNotExists
-          )
-        },
-        {
-          to,
-          content,
-          quotedMsg,
-          passId,
-          checkNumber,
-          limitIterationFindMessage,
-          sendEvenIfNotExists,
-        }
-      )
+            sendEvenIfNotExists,
+          }) => {
+            return WAPI.reply(
+              to,
+              content,
+              quotedMsg,
+              passId,
+              checkNumber,
+              limitIterationFindMessage,
+              sendEvenIfNotExists
+            )
+          },
+          {
+            to,
+            content,
+            quotedMsg,
+            passId,
+            checkNumber,
+            limitIterationFindMessage,
+            sendEvenIfNotExists,
+          }
+        )
+      } catch (error) {
+        logger.error(
+          `[SenderLayer - reply] message=${error.message} error=${error.stack}`
+        )
+        reject(error)
+      }
 
       if (result['erro'] == true) {
         reject(result)
@@ -867,26 +891,34 @@ export class SenderLayer extends AutomateLayer {
           base64.mimeType.includes('audio/wav')
         ) {
           const base64Data = base64.data
-          const result: any = await this.page.evaluate(
-            ({
-              to,
-              base64Data,
-              passId,
-              checkNumber,
-              forcingReturn,
-              delSend,
-            }) => {
-              return WAPI.sendPtt(
-                base64Data,
+          let result: any
+          try {
+            result = await this.page.evaluate(
+              ({
                 to,
+                base64Data,
                 passId,
                 checkNumber,
                 forcingReturn,
-                delSend
-              )
-            },
-            { to, base64Data, passId, checkNumber, forcingReturn, delSend }
-          )
+                delSend,
+              }) => {
+                return WAPI.sendPtt(
+                  base64Data,
+                  to,
+                  passId,
+                  checkNumber,
+                  forcingReturn,
+                  delSend
+                )
+              },
+              { to, base64Data, passId, checkNumber, forcingReturn, delSend }
+            )
+          } catch (error) {
+            logger.error(
+              `[SenderLayer - sendVoice] message=${error.message} error=${error.stack}`
+            )
+            reject(error)
+          }
           if (result['erro'] == true) {
             reject(result)
           } else {
@@ -1040,6 +1072,12 @@ export class SenderLayer extends AutomateLayer {
         if (error.message.includes('protocolTimeout')) {
           await this.page.reload()
         }
+
+        logger.error(
+          `[SenderLayer - sendFile] message=${error.message} error=${error.stack}`
+        )
+
+        reject(error)
       }
 
       if (result['erro'] == true) {
@@ -1136,17 +1174,25 @@ export class SenderLayer extends AutomateLayer {
     limitIterationFindMessage: number
   ) {
     return new Promise(async (resolve, reject) => {
-      const result = await this.page.evaluate(
-        ({ to, messages, skipMyMessages, limitIterationFindMessage }) => {
-          return WAPI.forwardMessages(
-            to,
-            messages,
-            skipMyMessages,
-            limitIterationFindMessage
-          ).catch((e) => e)
-        },
-        { to, messages, skipMyMessages, limitIterationFindMessage }
-      )
+      let result
+      try {
+        result = await this.page.evaluate(
+          ({ to, messages, skipMyMessages, limitIterationFindMessage }) => {
+            return WAPI.forwardMessages(
+              to,
+              messages,
+              skipMyMessages,
+              limitIterationFindMessage
+            ).catch((e) => e)
+          },
+          { to, messages, skipMyMessages, limitIterationFindMessage }
+        )
+      } catch (error) {
+        logger.error(
+          `[SenderLayer - forwardMessages] message=${error.message} error=${error.stack}`
+        )
+        reject(error)
+      }
       if (typeof result['erro'] !== 'undefined' && result['erro'] == true) {
         reject(result)
       } else {
