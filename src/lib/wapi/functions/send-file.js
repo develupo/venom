@@ -1,5 +1,6 @@
 import { processFiles } from './process-files'
 import { base64ToFile } from '../helper'
+import { resendMessageIfExists } from './resend-message-if-exists'
 
 export async function sendFile(
   file,
@@ -82,6 +83,17 @@ export async function sendFile(
     if (!newMsgId) {
       return WAPI.scope(chat.id, true, 404, 'Error to newId')
     }
+
+    const resultResend = await resendMessageIfExists(passId, newMsgId)
+    if (resultResend.exists) {
+      return WAPI.scope(
+        chat.id,
+        resultResend.scope.error,
+        resultResend.scope.status,
+        resultResend.scope.msg
+      )
+    }
+
     const chatWid = new Store.WidFactory.createWid(chatid)
     await Store.Chat.add(
       {
