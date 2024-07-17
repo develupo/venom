@@ -4,6 +4,7 @@ import { RetrieverLayer } from './retriever.layer'
 import { checkValuesSender } from '../helpers/layers-interface'
 import { BASE64_ERROR, base64Management, resizeImg } from '../helpers'
 import { GroupSettings } from '../model/enum'
+import { logger } from '../../utils/logger'
 
 export class GroupLayer extends RetrieverLayer {
   constructor(
@@ -336,11 +337,18 @@ export class GroupLayer extends RetrieverLayer {
     contacts: string | string[],
     temporarySeconds: number = 0
   ) {
-    return await this.page.evaluate(
-      ({ groupName, contacts, temporarySeconds }) =>
-        WAPI.createGroup(groupName, contacts, temporarySeconds),
-      { groupName, contacts, temporarySeconds }
-    )
+    try {
+      return await this.page.evaluate(
+        ({ groupName, contacts, temporarySeconds }) =>
+          WAPI.createGroup(groupName, contacts, temporarySeconds),
+        { groupName, contacts, temporarySeconds }
+      )
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - createGroup] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
   }
 
   /**
@@ -352,11 +360,18 @@ export class GroupLayer extends RetrieverLayer {
     groupId: string,
     participantId: string | string[]
   ) {
-    return await this.page.evaluate(
-      ({ groupId, participantId }) =>
-        WAPI.removeParticipant(groupId, participantId),
-      { groupId, participantId }
-    )
+    try {
+      return await this.page.evaluate(
+        ({ groupId, participantId }) =>
+          WAPI.removeParticipant(groupId, participantId),
+        { groupId, participantId }
+      )
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - removeParticipant] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
   }
 
   /**
@@ -368,11 +383,18 @@ export class GroupLayer extends RetrieverLayer {
     groupId: string,
     participantId: string | string[]
   ) {
-    return await this.page.evaluate(
-      ({ groupId, participantId }) =>
-        WAPI.addParticipant(groupId, participantId),
-      { groupId, participantId }
-    )
+    try {
+      return await this.page.evaluate(
+        ({ groupId, participantId }) =>
+          WAPI.addParticipant(groupId, participantId),
+        { groupId, participantId }
+      )
+    } catch (error) {
+      logger.error(
+        `[GroupLayer - addParticipant] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
   }
 
   /**

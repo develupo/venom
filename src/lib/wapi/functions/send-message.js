@@ -1,3 +1,5 @@
+import { resendMessageIfExists } from './resend-message-if-exists'
+
 export async function sendMessage(
   to,
   content,
@@ -48,7 +50,17 @@ export async function sendMessage(
     }
 
     if (!newMsgId) {
-      return WAPI.scope(to, true, 404, 'Error to gerate newId')
+      return WAPI.scope(to, true, 404, 'Error to generate newId')
+    }
+
+    const resultResend = await resendMessageIfExists(passId, newMsgId)
+    if (resultResend.exists) {
+      return WAPI.scope(
+        to,
+        resultResend.scope.error,
+        resultResend.scope.status,
+        resultResend.scope.msg
+      )
     }
 
     const message = {

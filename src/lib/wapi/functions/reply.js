@@ -1,3 +1,5 @@
+import { resendMessageIfExists } from './resend-message-if-exists'
+
 export async function reply(
   chatId,
   content,
@@ -57,6 +59,16 @@ export async function reply(
       const newMsgId = !passId
         ? await window.WAPI.getNewMessageId(chat.id._serialized, checkNumber)
         : await window.WAPI.setNewMessageId(passId, checkNumber)
+
+      const resultResend = await resendMessageIfExists(passId, newMsgId)
+      if (resultResend.exists) {
+        return WAPI.scope(
+          chat.id,
+          resultResend.scope.error,
+          resultResend.scope.status,
+          resultResend.scope.msg
+        )
+      }
 
       const inChat = await WAPI.getchatId(chat.id).catch(() => {})
       if (inChat) {
