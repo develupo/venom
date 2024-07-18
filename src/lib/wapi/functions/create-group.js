@@ -32,10 +32,11 @@ export async function createGroup(name, contactsId, temporarySeconds) {
   const requestResult = await Store.GroupCreateJob.createGroup(
     {
       title: name,
+      announce: true,
       ephemeralDuration: temporarySeconds,
       memberAddMode: false,
       membershipApprovalMode: false,
-      restrict: true,
+      restrict: false,
     },
     contacts.filter((contact) => contact.id).map((contact) => contact.id)
   )
