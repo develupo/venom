@@ -1,3 +1,10 @@
+## [1.14.3](https://github.com/develupo/venom/compare/v1.14.2...v1.14.3) (2024-07-18)
+
+
+### Bug Fixes
+
+* group creation ([eeeb164](https://github.com/develupo/venom/commit/eeeb1646a9f2a52923711d4c90ac1dd9f5b25673))
+
 ## [1.14.2](https://github.com/develupo/venom/compare/v1.14.1...v1.14.2) (2024-07-17)
 
 
