@@ -67,13 +67,13 @@ class PaddingTransform extends Transform {
   _flush(callback) {
     if (this.bufferedData.length > 0) {
       if (this.expectedSize + this.paddingSize === this.bufferedLength) {
-        console.log(`trimmed: ${this.paddingSize} bytes`)
+        // console.log(`trimmed: ${this.paddingSize} bytes`)
         this.bufferedData = this.bufferedData.subarray(
           0,
           this.bufferedData.length - this.paddingSize
         )
       } else if (this.bufferedLength + this.paddingSize === this.expectedSize) {
-        console.log(`adding: ${this.paddingSize} bytes`)
+        // console.log(`adding: ${this.paddingSize} bytes`)
         const padding = Buffer.alloc(this.paddingSize, this.paddingSize)
         this.bufferedData = Buffer.concat([this.bufferedData, padding])
       }
@@ -85,8 +85,6 @@ class PaddingTransform extends Transform {
 }
 
 export const magix = (fileStream: Stream, message: Message) => {
-  console.time(`decrypt file ${message.id}`)
-
   const mediaKeyBase64 = message.mediaKey
   const mediaType = message.type
 
@@ -111,7 +109,5 @@ export const magix = (fileStream: Stream, message: Message) => {
 
   fileStream.pipe(paddingTransform).pipe(passThrough)
 
-  console.timeEnd(`decrypt file ${message.id}`)
-
-  return passThrough
+  return { fileName: message.filename, id: message.id, passThrough }
 }
