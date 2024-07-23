@@ -1,7 +1,7 @@
 import { Page, Browser } from 'puppeteer'
 import { ControlsLayer } from './layers/controls.layer'
 import { Message } from './model'
-import { magix, timeout, makeOptions } from './helpers/decrypt'
+import { magix, makeOptions } from './helpers/decrypt'
 import { useragentOverride } from '../config/WAuserAgent'
 import { CreateConfig } from '../config/create-config'
 import axios from 'axios'
@@ -207,22 +207,11 @@ export class Whatsapp extends ControlsLayer {
       message.clientUrl = `https://mmg.whatsapp.net${message.directPath}`
     }
 
-    let haventGottenImageYet: boolean = true,
-      res: any
-    try {
-      while (haventGottenImageYet) {
-        res = await axios.get(message.clientUrl.trim(), options)
-        if (res.status == 200) {
-          haventGottenImageYet = false
-        } else {
-          await timeout(2000)
-        }
-      }
-    } catch (error) {
-      console.error(error)
-      throw 'Error trying to download the file.'
+    const res = await axios.get(message.clientUrl.trim(), options)
+    if (res.status !== 200) {
+      throw new Error('Error trying to download the file.')
     }
-    const buff = Buffer.from(res.data, 'binary')
-    return magix(buff, message.mediaKey, message.type, message.size)
+
+    return magix(res.data, message)
   }
 }
