@@ -1,9 +1,11 @@
-import * as crypto from 'crypto'
+import * as crypto from 'node:crypto'
 import hkdf from 'futoin-hkdf'
 import { ResponseType } from 'axios'
+import { Message } from '../model'
+import { PassThrough, Stream, Transform } from 'node:stream'
 
 export const makeOptions = (useragentOverride: string) => ({
-  responseType: 'arraybuffer' as ResponseType,
+  responseType: 'stream' as ResponseType,
   headers: {
     'User-Agent': processUA(useragentOverride),
     DNT: 1,
@@ -23,7 +25,7 @@ export const mediaTypes = {
   STICKER: 'Image',
 }
 
-const processUA = (userAgent: string) => {
+export const processUA = (userAgent: string) => {
   let ua =
     userAgent ||
     'WhatsApp/2.2108.8 Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36'
@@ -31,63 +33,81 @@ const processUA = (userAgent: string) => {
   return ua
 }
 
-export const magix = (
-  fileData: any,
-  mediaKeyBase64: any,
-  mediaType: any,
-  expectedSize?: number
-) => {
-  const encodedHex = fileData.toString('hex')
-  const encodedBytes = hexToBytes(encodedHex)
-  const mediaKeyBytes: any = base64ToBytes(mediaKeyBase64)
-  const info = `WhatsApp ${mediaTypes[mediaType.toUpperCase()]} Keys`
+class PaddingTransform extends Transform {
+  decipher
+  bufferedData
+  bufferedLength
+  expectedSize
+  paddingSize
+  _push: (chunk: any) => void
+
+  constructor(blockSize, decipher, expectedSize, options?) {
+    super(options)
+    this.decipher = decipher
+    this.expectedSize = expectedSize
+    this.bufferedData = Buffer.alloc(0)
+    this.bufferedLength = 0
+    this.paddingSize = blockSize - (this.expectedSize % blockSize)
+  }
+
+  _transform(chunk, encoding, callback) {
+    const chunkDeciphered = this.decipher.update(chunk)
+
+    this.bufferedLength += chunkDeciphered.length
+
+    if (this.bufferedLength <= this.expectedSize || this.paddingSize <= 0) {
+      this.push(chunkDeciphered)
+    } else {
+      this.bufferedData = Buffer.concat([this.bufferedData, chunkDeciphered])
+    }
+
+    callback()
+  }
+
+  _flush(callback) {
+    if (this.bufferedData.length > 0) {
+      if (this.expectedSize + this.paddingSize === this.bufferedLength) {
+        // console.log(`trimmed: ${this.paddingSize} bytes`)
+        this.bufferedData = this.bufferedData.subarray(
+          0,
+          this.bufferedData.length - this.paddingSize
+        )
+      } else if (this.bufferedLength + this.paddingSize === this.expectedSize) {
+        // console.log(`adding: ${this.paddingSize} bytes`)
+        const padding = Buffer.alloc(this.paddingSize, this.paddingSize)
+        this.bufferedData = Buffer.concat([this.bufferedData, padding])
+      }
+
+      this.push(this.bufferedData)
+    }
+    callback()
+  }
+}
+
+export const magix = (fileStream: Stream, message: Message) => {
+  const mediaKeyBase64 = message.mediaKey
+  const mediaType = message.type
+
   const hash: string = 'sha256'
-  const salt: any = new Uint8Array(32)
+  const info = `WhatsApp ${mediaTypes[mediaType.toUpperCase()]} Keys`
+  const salt: Buffer = Buffer.alloc(32)
   const expandedSize = 112
+
+  const mediaKeyBytes: Buffer = Buffer.from(mediaKeyBase64, 'base64')
   const mediaKeyExpanded = hkdf(mediaKeyBytes, expandedSize, {
     salt,
     info,
     hash,
   })
-  const iv = mediaKeyExpanded.slice(0, 16)
-  const cipherKey = mediaKeyExpanded.slice(16, 48)
+  const iv = mediaKeyExpanded.subarray(0, 16)
+  const cipherKey = mediaKeyExpanded.subarray(16, 48)
+
   const decipher = crypto.createDecipheriv('aes-256-cbc', cipherKey, iv)
-  const decoded: Buffer = decipher.update(encodedBytes)
-  const mediaDataBuffer = expectedSize
-    ? fixPadding(decoded, expectedSize)
-    : decoded
-  return mediaDataBuffer
-}
 
-const fixPadding = (data: Buffer, expectedSize: number) => {
-  const padding = (16 - (expectedSize % 16)) & 0xf
-  if (padding > 0) {
-    if (expectedSize + padding == data.length) {
-      //  console.log(`trimmed: ${padding} bytes`);
-      data = data.slice(0, data.length - padding)
-    } else if (data.length + padding == expectedSize) {
-      // console.log(`adding: ${padding} bytes`);
-      const arr = new Uint16Array(padding).map(() => padding)
-      data = Buffer.concat([data, Buffer.from(arr)])
-    }
-  }
-  //@ts-ignore
-  return Buffer.from(data, 'utf-8')
-}
+  const paddingTransform = new PaddingTransform(16, decipher, message.size)
+  const passThrough = new PassThrough()
 
-const hexToBytes = (hexStr: any) => {
-  const intArray = []
-  for (let i = 0; i < hexStr.length; i += 2) {
-    intArray.push(parseInt(hexStr.substr(i, 2), 16))
-  }
-  return new Uint8Array(intArray)
-}
+  fileStream.pipe(paddingTransform).pipe(passThrough)
 
-const base64ToBytes = (base64Str: any) => {
-  const binaryStr = Buffer.from(base64Str, 'base64').toString('binary')
-  const byteArray = new Uint8Array(binaryStr.length)
-  for (let i = 0; i < binaryStr.length; i++) {
-    byteArray[i] = binaryStr.charCodeAt(i)
-  }
-  return byteArray
+  return { fileName: message.filename, id: message.id, passThrough }
 }
