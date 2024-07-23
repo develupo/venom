@@ -170,7 +170,11 @@ export class HostLayer {
 
     let authenticated = await isAuthenticated(this.page).catch(() => null)
 
-    if (typeof authenticated === 'object' && authenticated.type) {
+    if (authenticated === null) {
+      logger.error(`[waitForLogin:${this.session}] screen returned null`)
+      statusManagement.setStatus('notLogged', this.session)
+      throw new Error('Screen returned null')
+    } else if (typeof authenticated === 'object' && authenticated.type) {
       // TODO - There's this only here if error http status 429. Can be refactored
       logger.error(
         `[waitForLogin:${this.session}] fail to authenticate: ${authenticated.type}`
