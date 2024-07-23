@@ -1,3 +1,11 @@
+# [1.15.0](https://github.com/develupo/venom/compare/v1.14.3...v1.15.0) (2024-07-23)
+
+
+### Features
+
+* improve file decrypt ([267322f](https://github.com/develupo/venom/commit/267322f3ad43f60faeeea110205ef494379aa29a))
+* improve file process performance ([c731cd8](https://github.com/develupo/venom/commit/c731cd883ec04d53de3a14a00b8a2ab02865e768))
+
 ## [1.14.3](https://github.com/develupo/venom/compare/v1.14.2...v1.14.3) (2024-07-18)
 
 
