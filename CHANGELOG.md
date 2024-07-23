@@ -1,3 +1,160 @@
+## [1.14.3](https://github.com/develupo/venom/compare/v1.14.2...v1.14.3) (2024-07-18)
+
+
+### Bug Fixes
+
+* group creation ([eeeb164](https://github.com/develupo/venom/commit/eeeb1646a9f2a52923711d4c90ac1dd9f5b25673))
+
+## [1.14.2](https://github.com/develupo/venom/compare/v1.14.1...v1.14.2) (2024-07-17)
+
+
+### Bug Fixes
+
+* create group ([eb4cb99](https://github.com/develupo/venom/commit/eb4cb99184bf0b912f99fc4d0357472ff3006109))
+* protections for puppeteer ([576bcbf](https://github.com/develupo/venom/commit/576bcbf6e09613d3736db8f2dda958eef8e8e932))
+
+## [1.14.1](https://github.com/develupo/venom/compare/v1.14.0...v1.14.1) (2024-07-04)
+
+
+### Bug Fixes
+
+* send message even if message does not exists ([428e1d5](https://github.com/develupo/venom/commit/428e1d508e267998ab9cf53708e995d582ec798e))
+
+# [1.14.0](https://github.com/develupo/venom/compare/v1.13.3...v1.14.0) (2024-07-01)
+
+
+### Features
+
+* added invalid group id ([f6955d0](https://github.com/develupo/venom/commit/f6955d01084deb73deafdff609a77ef1ff0efae2))
+
+## [1.13.3](https://github.com/develupo/venom/compare/v1.13.2...v1.13.3) (2024-06-28)
+
+
+### Bug Fixes
+
+* allow audio types ([94b6bad](https://github.com/develupo/venom/commit/94b6bada5e03699fda0d2bfcf53fe8adee996b51))
+
+## [1.13.2](https://github.com/develupo/venom/compare/v1.13.1...v1.13.2) (2024-06-28)
+
+
+### Bug Fixes
+
+* files without format ([098c1e0](https://github.com/develupo/venom/commit/098c1e0b70e3b902523af63f38024088928a4551))
+
+## [1.13.1](https://github.com/develupo/venom/compare/v1.13.0...v1.13.1) (2024-06-25)
+
+
+### Bug Fixes
+
+* deleteMessages function ([d983a9e](https://github.com/develupo/venom/commit/d983a9ed4a70923436121eaecf822508e462426f))
+* dev review ([094e599](https://github.com/develupo/venom/commit/094e599dde9c7c121a6584fca98cf8b26fc6f866))
+* scope error ([6cdd720](https://github.com/develupo/venom/commit/6cdd720147a1968ce279d4593ee521ffe8e6c374))
+
+# [1.13.0](https://github.com/develupo/venom/compare/v1.12.1...v1.13.0) (2024-06-25)
+
+
+### Features
+
+* change error messages and allow audio m4a ([4176867](https://github.com/develupo/venom/commit/4176867f1d0f6f40c3dbfd7832371ca8f1cb475b))
+
+## [1.12.1](https://github.com/develupo/venom/compare/v1.12.0...v1.12.1) (2024-06-24)
+
+
+### Bug Fixes
+
+* caption on audio and changing extension file ([9ec5f15](https://github.com/develupo/venom/commit/9ec5f15223a330b468a9ae74ea6673da3f8535a2))
+
+# [1.12.0](https://github.com/develupo/venom/compare/v1.11.5...v1.12.0) (2024-06-20)
+
+
+### Features
+
+* reload modules if it not load when whatsapp init ([2b13476](https://github.com/develupo/venom/commit/2b134766c4a57e0b9de7e99bda5acdd2493fde58))
+
+## [1.11.5](https://github.com/develupo/venom/compare/v1.11.4...v1.11.5) (2024-06-17)
+
+## [1.11.4](https://github.com/develupo/venom/compare/v1.11.3...v1.11.4) (2024-06-12)
+
+
+### Bug Fixes
+
+* missing correct url reference ([de0c491](https://github.com/develupo/venom/commit/de0c491a415e9637125d46d513c87cbd8b55bf62))
+
+## [1.11.3](https://github.com/develupo/venom/compare/v1.11.2...v1.11.3) (2024-06-10)
+
+
+### Bug Fixes
+
+* quoted message ([6687142](https://github.com/develupo/venom/commit/6687142ea54966d9a7923e3d3a9d7b6bb6ceed39))
+
+## [1.11.2](https://github.com/develupo/venom/compare/v1.11.1...v1.11.2) (2024-06-05)
+
+
+### Bug Fixes
+
+* new group id ([c4dd507](https://github.com/develupo/venom/commit/c4dd5070438ad51fdb9de6a14779f5dcb3b8e4b7))
+
+## [1.11.1](https://github.com/develupo/venom/compare/v1.11.0...v1.11.1) (2024-06-04)
+
+
+### Bug Fixes
+
+* message with 9 digits ([152948b](https://github.com/develupo/venom/commit/152948b86701a5ab0028d905651f5bb3ab0beb1e))
+
+# [1.11.0](https://github.com/develupo/venom/compare/v1.10.5...v1.11.0) (2024-05-28)
+
+
+### Bug Fixes
+
+* Fixed read qrCode throw ([886dec7](https://github.com/develupo/venom/commit/886dec79a65aa3a2e5e5cc9e47828549dcd1eeab))
+* logout ([a1543b5](https://github.com/develupo/venom/commit/a1543b5278bac473e6ea1cefb46f9d5639fa636b))
+
+
+### Features
+
+* add html cached version ([d4e3638](https://github.com/develupo/venom/commit/d4e3638816d19114dc8629c13212c444ebb4b2b8))
+* Added error message when number does not exist ([ca64cec](https://github.com/develupo/venom/commit/ca64cecee49248f410ff6a468c44f1a14137381f))
+* Added error messageconstant ([eb4b67f](https://github.com/develupo/venom/commit/eb4b67fd33313c5ddae2037d77db0ec792947589))
+* code review ([0386d92](https://github.com/develupo/venom/commit/0386d9241ca00de3d12ef319611f095bb6823ac4))
+
+## [1.10.5](https://github.com/develupo/venom/compare/v1.10.4...v1.10.5) (2024-05-20)
+
+
+### Bug Fixes
+
+* prop name ([c2d849c](https://github.com/develupo/venom/commit/c2d849c2e120715c59867fce257c15ad2d06a82a))
+
+## [1.10.4](https://github.com/develupo/venom/compare/v1.10.3...v1.10.4) (2024-05-20)
+
+
+### Bug Fixes
+
+* imports revoke messages ([ae3d6d8](https://github.com/develupo/venom/commit/ae3d6d8398f1cedf3034a8c12997342d52ed46bb))
+
+## [1.10.3](https://github.com/develupo/venom/compare/v1.10.2...v1.10.3) (2024-05-17)
+
+
+### Bug Fixes
+
+* Added Store.Chat validation to fix error at getHost ([98422f5](https://github.com/develupo/venom/commit/98422f5cca2e8f547532fc5e5e644147b3e2d1e5))
+
+## [1.10.2](https://github.com/develupo/venom/compare/v1.10.1...v1.10.2) (2024-05-16)
+
+
+### Bug Fixes
+
+* code review ([89e046a](https://github.com/develupo/venom/commit/89e046a1893009f62a53c9738227dd09b4666da2))
+* code review ([9e33215](https://github.com/develupo/venom/commit/9e33215e3918e71bd426abc457832a20b3dd2adb))
+* forward messages ([45c1179](https://github.com/develupo/venom/commit/45c1179f7732a8cac3905b6c1b124d5ebde37a6a))
+* forward messages ([69ef645](https://github.com/develupo/venom/commit/69ef645986bc7d67a261d8f60aad172e928b6e83))
+
+## [1.10.1](https://github.com/develupo/venom/compare/v1.10.0...v1.10.1) (2024-05-09)
+
+
+### Bug Fixes
+
+* state and stream events ([15d6863](https://github.com/develupo/venom/commit/15d68637cafe4beaf1d4f83e2c5e326b0a790542))
+
 # [1.10.0](https://github.com/develupo/venom/compare/v1.9.0...v1.10.0) (2024-05-07)
 
 
