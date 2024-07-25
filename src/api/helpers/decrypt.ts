@@ -3,6 +3,7 @@ import hkdf from 'futoin-hkdf'
 import { ResponseType } from 'axios'
 import { Message } from '../model'
 import { PassThrough, Stream, Transform } from 'node:stream'
+import { logger } from '../../utils/logger'
 
 export const makeOptions = (useragentOverride: string) => ({
   responseType: 'stream' as ResponseType,
@@ -39,21 +40,28 @@ class PaddingTransform extends Transform {
   bufferedLength
   expectedSize
   paddingSize
+  maxSize
   _push: (chunk: any) => void
 
-  constructor(blockSize, decipher, expectedSize, options?) {
+  constructor(blockSize, decipher, expectedSize, maxSize, options?) {
     super(options)
     this.decipher = decipher
     this.expectedSize = expectedSize
     this.bufferedData = Buffer.alloc(0)
     this.bufferedLength = 0
     this.paddingSize = blockSize - (this.expectedSize % blockSize)
+    this.maxSize = maxSize
   }
 
   _transform(chunk, encoding, callback) {
     const chunkDeciphered = this.decipher.update(chunk)
 
     this.bufferedLength += chunkDeciphered.length
+
+    if (this.bufferedLength > this.maxSize) {
+      callback(new Error(`file.size.exceeded.${this.maxSize}`))
+      return
+    }
 
     if (this.bufferedLength <= this.expectedSize || this.paddingSize <= 0) {
       this.push(chunkDeciphered)
@@ -67,15 +75,20 @@ class PaddingTransform extends Transform {
   _flush(callback) {
     if (this.bufferedData.length > 0) {
       if (this.expectedSize + this.paddingSize === this.bufferedLength) {
-        // console.log(`trimmed: ${this.paddingSize} bytes`)
         this.bufferedData = this.bufferedData.subarray(
           0,
           this.bufferedData.length - this.paddingSize
         )
+        this.bufferedLength -= this.paddingSize
       } else if (this.bufferedLength + this.paddingSize === this.expectedSize) {
-        // console.log(`adding: ${this.paddingSize} bytes`)
         const padding = Buffer.alloc(this.paddingSize, this.paddingSize)
         this.bufferedData = Buffer.concat([this.bufferedData, padding])
+        this.bufferedLength += padding
+      }
+
+      if (this.bufferedLength > this.maxSize) {
+        callback(new Error(`file.size.exceeded.${this.maxSize}`))
+        return
       }
 
       this.push(this.bufferedData)
@@ -84,7 +97,13 @@ class PaddingTransform extends Transform {
   }
 }
 
-export const magix = (fileStream: Stream, message: Message) => {
+export const magix = (
+  fileStream: Stream,
+  message: Message,
+  maxSize: number,
+  logContext: string
+) => {
+  const scope = `[VenomBot.magix:${logContext}]`
   const mediaKeyBase64 = message.mediaKey
   const mediaType = message.type
 
@@ -104,10 +123,33 @@ export const magix = (fileStream: Stream, message: Message) => {
 
   const decipher = crypto.createDecipheriv('aes-256-cbc', cipherKey, iv)
 
-  const paddingTransform = new PaddingTransform(16, decipher, message.size)
+  const paddingTransform = new PaddingTransform(
+    16,
+    decipher,
+    message.size,
+    maxSize
+  )
   const passThrough = new PassThrough()
 
-  fileStream.pipe(paddingTransform).pipe(passThrough)
+  fileStream
+    .pipe(paddingTransform)
+    .on('error', (error) => {
+      passThrough.emit('error', error)
+    })
+    .pipe(passThrough)
 
-  return { fileName: message.filename, id: message.id, passThrough }
+  passThrough.on('error', (error) => {
+    logger.error(`[${scope}] Error in passThrough stream: ${error}`)
+  })
+
+  paddingTransform.on('error', (error) => {
+    logger.error(`[${scope}] Error in paddingTransform stream: ${error}`)
+  })
+
+  return {
+    fileName: message.filename,
+    id: message.id,
+    passThrough,
+    getTotalSize: () => paddingTransform.bufferedLength,
+  }
 }
