@@ -10,6 +10,7 @@ import fs from 'fs/promises'
 import { logger } from '../utils/logger'
 import { statusManagement } from '../controllers/status-management'
 import { interfaceStatusManagement } from '../controllers/interface-management'
+import { FileSizeExceededError } from './model/file-size-exceeded-error'
 
 export class Whatsapp extends ControlsLayer {
   constructor(
@@ -203,11 +204,16 @@ export class Whatsapp extends ControlsLayer {
         : message.deprecatedMms3Url
 
     if (message.size > maxSize) {
-      throw new Error(`file.size.exceeded.${maxSize}`)
+      throw new FileSizeExceededError(
+        `file.size.exceeded.${maxSize}`,
+        message.filename,
+        message.id,
+        message.size
+      )
     }
 
     if (!message.clientUrl) {
-      throw new Error('missing.url')
+      throw new Error('missing.file.url')
     }
 
     // Not all messages come with correct url, need to address this issue
@@ -217,7 +223,7 @@ export class Whatsapp extends ControlsLayer {
 
     const res = await axios.get(message.clientUrl.trim(), options)
     if (res.status !== 200) {
-      throw new Error('error.download')
+      throw new Error(`error.downloading.file`)
     }
 
     return magix(res.data, message, maxSize, logContext)
