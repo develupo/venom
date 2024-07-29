@@ -1,8 +1,9 @@
 import * as crypto from 'node:crypto'
 import hkdf from 'futoin-hkdf'
 import { ResponseType } from 'axios'
-import { Message } from '../model'
+import { Message, FileSizeExceededError } from '../model'
 import { PassThrough, Stream, Transform } from 'node:stream'
+import { logger } from '../../utils/logger'
 
 export const makeOptions = (useragentOverride: string) => ({
   responseType: 'stream' as ResponseType,
@@ -33,27 +34,64 @@ export const processUA = (userAgent: string) => {
   return ua
 }
 
-class PaddingTransform extends Transform {
+export interface IPaddingTransform {
   decipher
   bufferedData
   bufferedLength
-  expectedSize
+  expectedSize: number
   paddingSize
+  fileName: string
+  id: string
+  maxSize: number
+  _push: (chunk: any) => void
+  validateFileSize(): boolean
+  _transform(chunk, _, callback): void
+  _flush(callback): void
+}
+class PaddingTransform extends Transform implements IPaddingTransform {
+  decipher
+  bufferedData
+  bufferedLength
+  expectedSize: number
+  paddingSize
+  fileName: string
+  id: string
+  maxSize: number
   _push: (chunk: any) => void
 
-  constructor(blockSize, decipher, expectedSize, options?) {
+  constructor(blockSize, decipher, message, maxSize, options?) {
     super(options)
     this.decipher = decipher
-    this.expectedSize = expectedSize
+    this.expectedSize = message.size
     this.bufferedData = Buffer.alloc(0)
     this.bufferedLength = 0
     this.paddingSize = blockSize - (this.expectedSize % blockSize)
+    this.fileName = message.fileName
+    this.id = message.id
+    this.maxSize = maxSize
   }
 
-  _transform(chunk, encoding, callback) {
+  validateFileSize(): boolean {
+    if (this.bufferedLength > this.maxSize) {
+      this.destroy(
+        new FileSizeExceededError(
+          `file.size.exceeded.${this.maxSize}`,
+          this.fileName,
+          this.id,
+          this.bufferedLength
+        )
+      )
+      return false
+    }
+    return true
+  }
+
+  _transform(chunk, _, callback) {
     const chunkDeciphered = this.decipher.update(chunk)
 
     this.bufferedLength += chunkDeciphered.length
+
+    if (!this.validateFileSize()) return
 
     if (this.bufferedLength <= this.expectedSize || this.paddingSize <= 0) {
       this.push(chunkDeciphered)
@@ -67,16 +105,18 @@ class PaddingTransform extends Transform {
   _flush(callback) {
     if (this.bufferedData.length > 0) {
       if (this.expectedSize + this.paddingSize === this.bufferedLength) {
-        // console.log(`trimmed: ${this.paddingSize} bytes`)
         this.bufferedData = this.bufferedData.subarray(
           0,
           this.bufferedData.length - this.paddingSize
         )
+        this.bufferedLength -= this.paddingSize
       } else if (this.bufferedLength + this.paddingSize === this.expectedSize) {
-        // console.log(`adding: ${this.paddingSize} bytes`)
         const padding = Buffer.alloc(this.paddingSize, this.paddingSize)
         this.bufferedData = Buffer.concat([this.bufferedData, padding])
+        this.bufferedLength += padding
       }
+
+      if (!this.validateFileSize()) return
 
       this.push(this.bufferedData)
     }
@@ -84,7 +124,18 @@ class PaddingTransform extends Transform {
   }
 }
 
-export const magix = (fileStream: Stream, message: Message) => {
+export const magix = (
+  fileStream: Stream,
+  message: Message,
+  maxSize: number,
+  logContext: string
+): {
+  fileName: string
+  id: string
+  passThrough: PassThrough
+  paddingTransform: IPaddingTransform
+} => {
+  const scope = `[VenomBot.magix:${logContext}]`
   const mediaKeyBase64 = message.mediaKey
   const mediaType = message.type
 
@@ -104,10 +155,20 @@ export const magix = (fileStream: Stream, message: Message) => {
 
   const decipher = crypto.createDecipheriv('aes-256-cbc', cipherKey, iv)
 
-  const paddingTransform = new PaddingTransform(16, decipher, message.size)
+  const paddingTransform = new PaddingTransform(16, decipher, message, maxSize)
   const passThrough = new PassThrough()
 
   fileStream.pipe(paddingTransform).pipe(passThrough)
 
-  return { fileName: message.filename, id: message.id, passThrough }
+  paddingTransform.on('error', (error) => {
+    logger.error(`${scope} Error in paddingTransform stream: ${error}`)
+    passThrough.emit('error', error)
+  })
+
+  return {
+    fileName: message.filename,
+    id: message.id,
+    passThrough,
+    paddingTransform,
+  }
 }
