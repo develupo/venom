@@ -1,3 +1,5 @@
+import { MESSAGE_ERRORS } from '../constants/message-errors'
+
 export async function resendMessageIfExists(passId, newMsgId) {
   if (!passId) return { exists: false }
 
@@ -15,7 +17,7 @@ export async function resendMessageIfExists(passId, newMsgId) {
       scope: {
         error: true,
         status: 400,
-        msg: `Message with passId: ${passId.id} already in process of sending`,
+        msg: MESSAGE_ERRORS.MESSAGE_ALREADY_IN_PROCESS_OF_SENDING,
       },
     }
   }
@@ -24,7 +26,7 @@ export async function resendMessageIfExists(passId, newMsgId) {
   return {
     exists: true,
     scope: {
-      error: true,
+      error: false,
       status: 200,
       msg: `Message with passId: ${passId.id} with failure resent`,
     },
