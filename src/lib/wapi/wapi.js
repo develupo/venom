@@ -57,6 +57,7 @@ import {
   sendChatstate,
   sendContactVcard,
   sendFile,
+  sendFileFromUrl,
   sendPtt,
   sendImage,
   sendImageAsSticker,
@@ -334,6 +335,7 @@ if (typeof window.WAPI === 'undefined') {
   window.WAPI.sendImage = sendImage
   window.WAPI.sendPtt = sendPtt
   window.WAPI.sendFile = sendFile
+  window.WAPI.sendFileFromUrl = sendFileFromUrl
   window.WAPI.setMyName = setMyName
   window.WAPI.setMyStatus = setMyStatus
   window.WAPI.sendVideoAsGif = sendVideoAsGif

@@ -682,6 +682,72 @@ export class SenderLayer extends AutomateLayer {
   }
 
   /**
+   * Sends image from url
+   * @param to Chat Id,
+   * @param url file url path
+   * @param filename
+   * @param caption
+   * @param passId if of new message
+   */
+  public async sendImageFromUrl(
+    to: string,
+    url: string,
+    filename: string,
+    caption: string,
+    passId: any
+  ) {
+    const allowedMimeType = [
+      'image/gif',
+      'image/png',
+      'image/jpg',
+      'image/jpeg',
+      'image/webp',
+    ]
+    const type = 'sendImage'
+    let result: SendFileResult
+    try {
+      result = await this.page.evaluate(
+        ({ to, url, filename, caption, passId, allowedMimeType, type }) => {
+          return WAPI.sendFileFromUrl(
+            to,
+            url,
+            filename,
+            caption,
+            passId,
+            allowedMimeType,
+            type
+          )
+        },
+        {
+          to,
+          url,
+          filename,
+          caption,
+          passId,
+          allowedMimeType,
+          type,
+        }
+      )
+    } catch (error) {
+      if (error.message.includes('protocolTimeout')) {
+        await this.page.reload()
+      }
+
+      logger.error(
+        `[SenderLayer - sendImageFromUrl] message=${error.message} error=${error.stack}`
+      )
+
+      throw error
+    }
+
+    if (result['erro'] == true) {
+      throw new Error(result.text)
+    } else {
+      return result
+    }
+  }
+
+  /**
    * Sends message with thumbnail
    * @param thumb
    * @param url
@@ -937,6 +1003,74 @@ export class SenderLayer extends AutomateLayer {
   }
 
   /**
+   * Sends voice from url
+   * @param to Chat Id,
+   * @param url file url path
+   * @param filename
+   * @param caption
+   * @param passId if of new message
+   */
+  public async sendVoiceFromUrl(
+    to: string,
+    url: string,
+    filename: string,
+    caption: string,
+    passId: any
+  ) {
+    const allowedMimeType = [
+      'audio/mpeg',
+      'audio/mp3',
+      'audio/aac',
+      'audio/flac',
+      'audio/vnd.dlna.adts',
+      'audio/ogg',
+      'audio/wav',
+    ]
+    const type = 'sendPtt'
+    let result: SendFileResult
+    try {
+      result = await this.page.evaluate(
+        ({ to, url, filename, caption, passId, allowedMimeType, type }) => {
+          return WAPI.sendFileFromUrl(
+            to,
+            url,
+            filename,
+            caption,
+            passId,
+            allowedMimeType,
+            type
+          )
+        },
+        {
+          to,
+          url,
+          filename,
+          caption,
+          passId,
+          allowedMimeType,
+          type,
+        }
+      )
+    } catch (error) {
+      if (error.message.includes('protocolTimeout')) {
+        await this.page.reload()
+      }
+
+      logger.error(
+        `[SenderLayer - sendVoiceFromUrl] message=${error.message} error=${error.stack}`
+      )
+
+      throw error
+    }
+
+    if (result['erro'] == true) {
+      throw new Error(result.text)
+    } else {
+      return result
+    }
+  }
+
+  /**
    * Sends file
    * base64 parameter should have mime type already defined
    * @param to Chat id
@@ -1086,6 +1220,54 @@ export class SenderLayer extends AutomateLayer {
         resolve(result)
       }
     })
+  }
+
+  /**
+   * Sends file from url
+   * @param to Chat Id,
+   * @param url file url path
+   * @param filename
+   * @param caption
+   * @param passId if of new message
+   */
+  public async sendFileFromUrl(
+    to: string,
+    url: string,
+    filename: string,
+    caption: string,
+    passId: any
+  ) {
+    let result: SendFileResult
+    try {
+      result = await this.page.evaluate(
+        ({ to, url, filename, caption, passId }) => {
+          return WAPI.sendFileFromUrl(to, url, filename, caption, passId)
+        },
+        {
+          to,
+          url,
+          filename,
+          caption,
+          passId,
+        }
+      )
+    } catch (error) {
+      if (error.message.includes('protocolTimeout')) {
+        await this.page.reload()
+      }
+
+      logger.error(
+        `[SenderLayer - sendFileFromUrl] message=${error.message} error=${error.stack}`
+      )
+
+      throw error
+    }
+
+    if (result['erro'] == true) {
+      throw new Error(result.text)
+    } else {
+      return result
+    }
   }
 
   /**
