@@ -10,6 +10,7 @@ import fs from 'fs/promises'
 import { logger } from '../utils/logger'
 import { statusManagement } from '../controllers/status-management'
 import { interfaceStatusManagement } from '../controllers/interface-management'
+import { FileSizeExceededError } from './model/file-size-exceeded-error'
 
 export class Whatsapp extends ControlsLayer {
   constructor(
@@ -187,19 +188,32 @@ export class Whatsapp extends ControlsLayer {
   /**
    * Decrypts message file
    * @param message Message object
+   * @param maxSize Max size of file allowed
+   * @param logContext Context to log information
    * @returns Decrypted file buffer (null otherwise)
    */
-  public async decryptFile(message: Message) {
+  public async decryptFile(
+    message: Message,
+    maxSize: number,
+    logContext: string
+  ) {
     const options = makeOptions(useragentOverride)
     message.clientUrl =
       message.clientUrl !== undefined
         ? message.clientUrl
         : message.deprecatedMms3Url
 
-    if (!message.clientUrl) {
-      throw new Error(
-        'message is missing critical data needed to download the file.'
+    if (message.size > maxSize) {
+      throw new FileSizeExceededError(
+        `file.size.exceeded.${maxSize}`,
+        message.filename,
+        message.id,
+        message.size
       )
+    }
+
+    if (!message.clientUrl) {
+      throw new Error('missing.file.url')
     }
 
     // Not all messages come with correct url, need to address this issue
@@ -209,9 +223,9 @@ export class Whatsapp extends ControlsLayer {
 
     const res = await axios.get(message.clientUrl.trim(), options)
     if (res.status !== 200) {
-      throw new Error('Error trying to download the file.')
+      throw new Error(`error.downloading.file`)
     }
 
-    return magix(res.data, message)
+    return magix(res.data, message, maxSize, logContext)
   }
 }
