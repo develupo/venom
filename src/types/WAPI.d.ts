@@ -145,6 +145,15 @@ interface WAPI {
     forcingReturn?: boolean,
     delSend?: boolean
   ) => Promise<SendFileResult>
+  sendFileFromUrl: (
+    to: string,
+    url: string,
+    passId: Object,
+    caption: string,
+    filename: string,
+    allowedMimeType?: (string | RegExp)[],
+    type?: string
+  ) => Promise<SendFileResult>
   sendImage: (
     imgBase64: string,
     to: string,

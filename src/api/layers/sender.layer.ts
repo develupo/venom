@@ -682,6 +682,42 @@ export class SenderLayer extends AutomateLayer {
   }
 
   /**
+   * Sends image from url
+   * @param to Chat Id,
+   * @param url file url path
+   * @param filename
+   * @param caption
+   * @param passId if of new message
+   */
+  public async sendImageFromUrl(
+    to: string,
+    url: string,
+    filename: string,
+    caption: string,
+    passId: any
+  ) {
+    const scope = '[SenderLayer - sendImageFromUrl]'
+    const allowedMimeType = [
+      'image/gif',
+      'image/png',
+      'image/jpg',
+      'image/jpeg',
+      'image/webp',
+    ]
+    const type = 'sendImage'
+    return await this.sendFileFromUrlGeneric(
+      scope,
+      to,
+      url,
+      caption,
+      passId,
+      filename,
+      allowedMimeType,
+      type
+    )
+  }
+
+  /**
    * Sends message with thumbnail
    * @param thumb
    * @param url
@@ -937,6 +973,44 @@ export class SenderLayer extends AutomateLayer {
   }
 
   /**
+   * Sends voice from url
+   * @param to Chat Id,
+   * @param url file url path
+   * @param filename
+   * @param caption
+   * @param passId if of new message
+   */
+  public async sendVoiceFromUrl(
+    to: string,
+    url: string,
+    filename: string,
+    caption: string,
+    passId: any
+  ) {
+    const scope = '[SenderLayer - sendVoiceFromUrl]'
+    const allowedMimeType = [
+      'audio/mpeg',
+      'audio/mp3',
+      'audio/aac',
+      'audio/flac',
+      'audio/vnd.dlna.adts',
+      'audio/ogg',
+      'audio/wav',
+    ]
+    const type = 'sendPtt'
+    return await this.sendFileFromUrlGeneric(
+      scope,
+      to,
+      url,
+      caption,
+      passId,
+      filename,
+      allowedMimeType,
+      type
+    )
+  }
+
+  /**
    * Sends file
    * base64 parameter should have mime type already defined
    * @param to Chat id
@@ -1086,6 +1160,32 @@ export class SenderLayer extends AutomateLayer {
         resolve(result)
       }
     })
+  }
+
+  /**
+   * Sends file from url
+   * @param to Chat Id,
+   * @param url file url path
+   * @param filename
+   * @param caption
+   * @param passId if of new message
+   */
+  public async sendFileFromUrl(
+    to: string,
+    url: string,
+    filename: string,
+    caption: string,
+    passId: any
+  ) {
+    const scope = '[SenderLayer - sendFileFromFromUrl]'
+    return await this.sendFileFromUrlGeneric(
+      scope,
+      to,
+      url,
+      caption,
+      passId,
+      filename
+    )
   }
 
   /**
@@ -1518,5 +1618,56 @@ export class SenderLayer extends AutomateLayer {
       },
       { IdMessage, emoji }
     )
+  }
+
+  private async sendFileFromUrlGeneric(
+    scope: string,
+    to: string,
+    url: string,
+    caption: string,
+    passId: any,
+    filename: string,
+    allowedMimeType?: string[],
+    type?: string
+  ) {
+    let result: SendFileResult
+    try {
+      result = await this.page.evaluate(
+        ({ to, url, caption, passId, filename, allowedMimeType, type }) => {
+          return WAPI.sendFileFromUrl(
+            to,
+            url,
+            caption,
+            passId,
+            filename,
+            allowedMimeType,
+            type
+          )
+        },
+        {
+          to,
+          url,
+          caption,
+          passId,
+          filename,
+          allowedMimeType,
+          type,
+        }
+      )
+    } catch (error) {
+      if (error.message.includes('protocolTimeout')) {
+        await this.page.reload()
+      }
+
+      logger.error(`${scope} message=${error.message} error=${error.stack}`)
+
+      throw error
+    }
+
+    if (result['erro'] == true) {
+      throw new Error(result.text)
+    } else {
+      return result
+    }
   }
 }
