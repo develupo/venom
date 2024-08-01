@@ -1,3 +1,22 @@
+# [1.17.0](https://github.com/develupo/venom/compare/v1.16.0...v1.17.0) (2024-08-01)
+
+
+### Bug Fixes
+
+* puppeteer calls to browser functions with waitForFunction ([7505a84](https://github.com/develupo/venom/commit/7505a84529743b1670fd3f677299bdd523d565ec))
+
+
+### Features
+
+* change evaluate to waitForFunction ([195b023](https://github.com/develupo/venom/commit/195b023f5c2ad7f9df50891ef4969be320108c4e))
+* major internar ajustments on puppeteer calls and timeout handle ([4dde340](https://github.com/develupo/venom/commit/4dde34012c73ba7a89596ab9f18310035345f8b5))
+
+
+### Performance Improvements
+
+* code review ([6da0385](https://github.com/develupo/venom/commit/6da0385d9553a7754d6c1f2834c7cb1b9cd9f487))
+* enhance send file ([29e38e9](https://github.com/develupo/venom/commit/29e38e99cdb8cb2a5185c89f118e2c6adfca44b6))
+
 # [1.16.0](https://github.com/develupo/venom/compare/v1.15.0...v1.16.0) (2024-07-29)
 
 
