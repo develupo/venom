@@ -705,7 +705,7 @@ export class SenderLayer extends AutomateLayer {
     caption: string,
     passId: any
   ) {
-    const scope = '[SenderLayer - sendImageFromUrl]'
+    const scope = '[SenderLayer.sendImageFromUrl]'
     const allowedMimeType = [
       'image/gif',
       'image/png',
@@ -977,7 +977,7 @@ export class SenderLayer extends AutomateLayer {
     caption: string,
     passId: any
   ) {
-    const scope = '[SenderLayer - sendVoiceFromUrl]'
+    const scope = '[SenderLayer.sendVoiceFromUrl]'
     const allowedMimeType = [
       'audio/mpeg',
       'audio/mp3',
@@ -1157,7 +1157,7 @@ export class SenderLayer extends AutomateLayer {
     caption: string,
     passId: any
   ) {
-    const scope = '[SenderLayer - sendFileFromFromUrl]'
+    const scope = '[SenderLayer.sendFileFromFromUrl]'
     return await this.sendFileFromUrlGeneric(
       scope,
       to,
@@ -1253,32 +1253,33 @@ export class SenderLayer extends AutomateLayer {
     skipMyMessages: boolean,
     limitIterationFindMessage: number
   ) {
-    return new Promise(async (resolve, reject) => {
-      let result
-      try {
-        result = await this.page.evaluate(
-          ({ to, messages, skipMyMessages, limitIterationFindMessage }) => {
-            return WAPI.forwardMessages(
-              to,
-              messages,
-              skipMyMessages,
-              limitIterationFindMessage
-            ).catch((e) => e)
-          },
-          { to, messages, skipMyMessages, limitIterationFindMessage }
-        )
-      } catch (error) {
-        logger.error(
-          `[SenderLayer - forwardMessages] message=${error.message} error=${error.stack}`
-        )
-        reject(error)
+    try {
+      const functionResult = await this.page.waitForFunction(
+        ({ to, messages, skipMyMessages, limitIterationFindMessage }) => {
+          return WAPI.forwardMessages(
+            to,
+            messages,
+            skipMyMessages,
+            limitIterationFindMessage
+          ).catch((e) => e)
+        },
+        { timeout: 5000 }, // 5 seconds timeout
+        { to, messages, skipMyMessages, limitIterationFindMessage }
+      )
+
+      const result = await functionResult.jsonValue()
+
+      if (result?.erro == true) {
+        throw result
       }
-      if (typeof result['erro'] !== 'undefined' && result['erro'] == true) {
-        reject(result)
-      } else {
-        resolve(result)
-      }
-    })
+
+      return result
+    } catch (error) {
+      logger.error(
+        `[SenderLayer.forwardMessages] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
   }
 
   /**
@@ -1610,9 +1611,8 @@ export class SenderLayer extends AutomateLayer {
     allowedMimeType?: string[],
     type?: string
   ) {
-    let result: SendFileResult
     try {
-      result = await this.page.evaluate(
+      const functionResult = await this.page.waitForFunction(
         ({ to, url, caption, passId, filename, allowedMimeType, type }) => {
           return WAPI.sendFileFromUrl(
             to,
@@ -1624,6 +1624,7 @@ export class SenderLayer extends AutomateLayer {
             type
           )
         },
+        { timeout: 20000 }, // 20 seconds timeout
         {
           to,
           url,
@@ -1634,20 +1635,20 @@ export class SenderLayer extends AutomateLayer {
           type,
         }
       )
-    } catch (error) {
-      if (error.message.includes('protocolTimeout')) {
-        await this.page.reload()
+
+      const result = await functionResult.jsonValue()
+
+      if (result['erro'] == true) {
+        throw result
       }
 
-      logger.error(`${scope} message=${error.message} error=${error.stack}`)
-
-      throw error
-    }
-
-    if (result['erro'] == true) {
-      throw new Error(result.text)
-    } else {
       return result
+    } catch (error) {
+      // if (error.message.includes('protocolTimeout')) {
+      //   await this.page.reload()
+      // }
+      logger.error(`${scope} message=${error.message} error=${error.stack}`)
+      throw error
     }
   }
 }

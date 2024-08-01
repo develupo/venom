@@ -338,14 +338,17 @@ export class GroupLayer extends RetrieverLayer {
     temporarySeconds: number = 0
   ) {
     try {
-      return await this.page.evaluate(
+      const functionResult = await this.page.waitForFunction(
         ({ groupName, contacts, temporarySeconds }) =>
           WAPI.createGroup(groupName, contacts, temporarySeconds),
+        { timeout: 5000 }, // 5 seconds timeout
         { groupName, contacts, temporarySeconds }
       )
+
+      return await functionResult.jsonValue()
     } catch (error) {
       logger.error(
-        `[GroupLayer - createGroup] message=${error.message} error=${error.stack}`
+        `[GroupLayer.createGroup] message=${error.message} error=${error.stack}`
       )
       throw error
     }
@@ -361,14 +364,17 @@ export class GroupLayer extends RetrieverLayer {
     participantId: string | string[]
   ) {
     try {
-      return await this.page.evaluate(
+      const functionResult = await this.page.waitForFunction(
         ({ groupId, participantId }) =>
           WAPI.removeParticipant(groupId, participantId),
+        { timeout: 5000 }, // 5 seconds timeout
         { groupId, participantId }
       )
+
+      return await functionResult.jsonValue()
     } catch (error) {
       logger.error(
-        `[GroupLayer - removeParticipant] message=${error.message} error=${error.stack}`
+        `[GroupLayer.removeParticipant] message=${error.message} error=${error.stack}`
       )
       throw error
     }
@@ -384,14 +390,17 @@ export class GroupLayer extends RetrieverLayer {
     participantId: string | string[]
   ) {
     try {
-      return await this.page.evaluate(
+      const functionResult = await this.page.waitForFunction(
         ({ groupId, participantId }) =>
           WAPI.addParticipant(groupId, participantId),
+        { timeout: 5000 }, // 5 seconds timeout
         { groupId, participantId }
       )
+
+      return await functionResult.jsonValue()
     } catch (error) {
       logger.error(
-        `[GroupLayer - addParticipant] message=${error.message} error=${error.stack}`
+        `[GroupLayer.addParticipant] message=${error.message} error=${error.stack}`
       )
       throw error
     }
