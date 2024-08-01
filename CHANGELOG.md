@@ -1,3 +1,24 @@
+# [1.16.0](https://github.com/develupo/venom/compare/v1.15.0...v1.16.0) (2024-07-29)
+
+
+### Bug Fixes
+
+* messages of error when was sending message ([7d4a8c5](https://github.com/develupo/venom/commit/7d4a8c5af67d085a00262d3bb0b90a69cec17666))
+
+
+### Features
+
+* code review ([bfae65e](https://github.com/develupo/venom/commit/bfae65e91d848caf570c1b9402785d751db9d2fe))
+* limit max download size in descrypt ([7421957](https://github.com/develupo/venom/commit/742195744b25aa0f25f4d7fb441f851fd6b32677))
+
+# [1.15.0](https://github.com/develupo/venom/compare/v1.14.3...v1.15.0) (2024-07-23)
+
+
+### Features
+
+* improve file decrypt ([267322f](https://github.com/develupo/venom/commit/267322f3ad43f60faeeea110205ef494379aa29a))
+* improve file process performance ([c731cd8](https://github.com/develupo/venom/commit/c731cd883ec04d53de3a14a00b8a2ab02865e768))
+
 ## [1.14.3](https://github.com/develupo/venom/compare/v1.14.2...v1.14.3) (2024-07-18)
 
 

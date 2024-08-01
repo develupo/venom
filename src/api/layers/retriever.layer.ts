@@ -87,7 +87,11 @@ export class RetrieverLayer extends SenderLayer {
    * @returns obj
    */
   public async getStateConnection() {
-    return await this.page.evaluate(() => WAPI.getStateConnection())
+    const functionResult = await this.page.waitForFunction(
+      () => WAPI.getStateConnection(),
+      { timeout: 10000 }
+    )
+    return await functionResult.jsonValue()
   }
 
   /**
