@@ -328,14 +328,22 @@ export class HostLayer {
    * @returns Current host device details
    */
   public async getHostDevice(): Promise<Object> {
-    return await this.page.evaluate(() => WAPI.getHost())
+    const functionResult = await this.page.waitForFunction(
+      () => WAPI.getHost(),
+      { timeout: 10000 }
+    )
+    return await functionResult.jsonValue()
   }
 
   /**
    * Retrieves WA version
    */
   public async getWAVersion() {
-    return await this.page.evaluate(() => WAPI.getWAVersion())
+    const functionResult = await this.page.waitForFunction(
+      () => WAPI.getWAVersion(),
+      { timeout: 10000 }
+    )
+    return await functionResult.jsonValue()
   }
 
   /**
