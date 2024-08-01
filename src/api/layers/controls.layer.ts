@@ -180,49 +180,50 @@ export class ControlsLayer extends UILayer {
     chatId: string,
     messageId: string[]
   ): Promise<Object> {
-    return new Promise(async (resolve, reject) => {
-      const typeFunction = 'deleteMessage'
-      const type = 'string'
-      const check = [
-        {
-          param: 'chatId',
-          type: type,
-          value: chatId,
-          function: typeFunction,
-          isUser: true,
-        },
-        {
-          param: 'messageId',
-          type: 'object',
-          value: messageId,
-          function: typeFunction,
-          isUser: true,
-        },
-      ]
+    const typeFunction = 'deleteMessage'
+    const type = 'string'
+    const check = [
+      {
+        param: 'chatId',
+        type: type,
+        value: chatId,
+        function: typeFunction,
+        isUser: true,
+      },
+      {
+        param: 'messageId',
+        type: 'object',
+        value: messageId,
+        function: typeFunction,
+        isUser: true,
+      },
+    ]
 
-      const validating = checkValuesSender(check)
-      if (typeof validating === 'object') {
-        return reject(validating)
-      }
-      let result
-      try {
-        result = await this.page.evaluate(
-          ({ chatId, messageId }) => WAPI.deleteMessages(chatId, messageId),
-          { chatId, messageId }
-        )
-      } catch (error) {
-        logger.error(
-          `[ControlsLayer - deleteMessage] message=${error.message} error=${error.stack}`
-        )
-        reject(error)
-      }
+    const validating = checkValuesSender(check)
+    if (typeof validating === 'object') {
+      throw validating
+    }
+
+    try {
+      const functionResult = await this.page.waitForFunction(
+        ({ chatId, messageId }) => WAPI.deleteMessages(chatId, messageId),
+        { timeout: 5000 }, // 5 seconds timeout
+        { chatId, messageId }
+      )
+
+      const result = await functionResult.jsonValue()
 
       if (result['erro'] === true) {
-        return reject(result)
-      } else {
-        return resolve(result)
+        throw result
       }
-    })
+
+      return result
+    } catch (error) {
+      logger.error(
+        `[ControlsLayer.deleteMessage] message=${error.message} error=${error.stack}`
+      )
+      throw error
+    }
   }
 
   /**
