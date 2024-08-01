@@ -17,13 +17,13 @@ export const NOT_ALLOWED_MIMETYPE = {
 export async function sendFileFromUrl(
   chatId,
   url,
-  filename,
   caption,
   passId,
+  filename,
   allowedMimeType,
   type = 'sendFile'
 ) {
-  const errorValidation = validateParameters(chatId, caption, filename)
+  const errorValidation = validateParameters(chatId, caption, filename, type)
   if (errorValidation) {
     return WAPI.scope(chatId, true, 400, errorValidation)
   }
@@ -124,10 +124,12 @@ export async function sendFileFromUrl(
         mediaKey: enc.mediaKey,
         size: media.filesize,
         caption,
-        filename,
+        filename: type === 'sendPtt' ? undefined : filename,
       }
 
-      const result = await window.Store.addAndSendMsgToChat(chat, message)
+      const result = await Promise.all(
+        window.Store.addAndSendMsgToChat(chat, message)
+      )
       if (result[1]) {
         return WAPI.scope(newMsgId, false, result[1], null, m)
       } else {
@@ -141,16 +143,16 @@ export async function sendFileFromUrl(
   }
 }
 
-function validateParameters(chatId, caption, filename) {
-  if (typeof filename !== 'string') {
-    return 'incorrect parameter filename, insert a string'
+function validateParameters(chatId, caption, filename, type) {
+  if (typeof filename !== 'string' && type !== 'sendPtt') {
+    return 'incorrect parameter filename, insert a string for files other than sendPtt'
   }
 
   if (typeof chatId !== 'string' || chatId.length === 0) {
     return 'incorrect parameter chatId, insert a string.'
   }
 
-  if (typeof caption !== 'string') {
+  if (caption && typeof caption !== 'string') {
     return 'incorrect parameter caption, insert a string'
   }
 }

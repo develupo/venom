@@ -696,6 +696,7 @@ export class SenderLayer extends AutomateLayer {
     caption: string,
     passId: any
   ) {
+    const scope = '[SenderLayer - sendImageFromUrl]'
     const allowedMimeType = [
       'image/gif',
       'image/png',
@@ -704,47 +705,16 @@ export class SenderLayer extends AutomateLayer {
       'image/webp',
     ]
     const type = 'sendImage'
-    let result: SendFileResult
-    try {
-      result = await this.page.evaluate(
-        ({ to, url, filename, caption, passId, allowedMimeType, type }) => {
-          return WAPI.sendFileFromUrl(
-            to,
-            url,
-            filename,
-            caption,
-            passId,
-            allowedMimeType,
-            type
-          )
-        },
-        {
-          to,
-          url,
-          filename,
-          caption,
-          passId,
-          allowedMimeType,
-          type,
-        }
-      )
-    } catch (error) {
-      if (error.message.includes('protocolTimeout')) {
-        await this.page.reload()
-      }
-
-      logger.error(
-        `[SenderLayer - sendImageFromUrl] message=${error.message} error=${error.stack}`
-      )
-
-      throw error
-    }
-
-    if (result['erro'] == true) {
-      throw new Error(result.text)
-    } else {
-      return result
-    }
+    return await this.sendFileFromUrlGeneric(
+      scope,
+      to,
+      url,
+      caption,
+      passId,
+      filename,
+      allowedMimeType,
+      type
+    )
   }
 
   /**
@@ -1017,6 +987,7 @@ export class SenderLayer extends AutomateLayer {
     caption: string,
     passId: any
   ) {
+    const scope = '[SenderLayer - sendVoiceFromUrl]'
     const allowedMimeType = [
       'audio/mpeg',
       'audio/mp3',
@@ -1027,47 +998,16 @@ export class SenderLayer extends AutomateLayer {
       'audio/wav',
     ]
     const type = 'sendPtt'
-    let result: SendFileResult
-    try {
-      result = await this.page.evaluate(
-        ({ to, url, filename, caption, passId, allowedMimeType, type }) => {
-          return WAPI.sendFileFromUrl(
-            to,
-            url,
-            filename,
-            caption,
-            passId,
-            allowedMimeType,
-            type
-          )
-        },
-        {
-          to,
-          url,
-          filename,
-          caption,
-          passId,
-          allowedMimeType,
-          type,
-        }
-      )
-    } catch (error) {
-      if (error.message.includes('protocolTimeout')) {
-        await this.page.reload()
-      }
-
-      logger.error(
-        `[SenderLayer - sendVoiceFromUrl] message=${error.message} error=${error.stack}`
-      )
-
-      throw error
-    }
-
-    if (result['erro'] == true) {
-      throw new Error(result.text)
-    } else {
-      return result
-    }
+    return await this.sendFileFromUrlGeneric(
+      scope,
+      to,
+      url,
+      caption,
+      passId,
+      filename,
+      allowedMimeType,
+      type
+    )
   }
 
   /**
@@ -1237,37 +1177,15 @@ export class SenderLayer extends AutomateLayer {
     caption: string,
     passId: any
   ) {
-    let result: SendFileResult
-    try {
-      result = await this.page.evaluate(
-        ({ to, url, filename, caption, passId }) => {
-          return WAPI.sendFileFromUrl(to, url, filename, caption, passId)
-        },
-        {
-          to,
-          url,
-          filename,
-          caption,
-          passId,
-        }
-      )
-    } catch (error) {
-      if (error.message.includes('protocolTimeout')) {
-        await this.page.reload()
-      }
-
-      logger.error(
-        `[SenderLayer - sendFileFromUrl] message=${error.message} error=${error.stack}`
-      )
-
-      throw error
-    }
-
-    if (result['erro'] == true) {
-      throw new Error(result.text)
-    } else {
-      return result
-    }
+    const scope = '[SenderLayer - sendFileFromFromUrl]'
+    return await this.sendFileFromUrlGeneric(
+      scope,
+      to,
+      url,
+      caption,
+      passId,
+      filename
+    )
   }
 
   /**
@@ -1700,5 +1618,56 @@ export class SenderLayer extends AutomateLayer {
       },
       { IdMessage, emoji }
     )
+  }
+
+  private async sendFileFromUrlGeneric(
+    scope: string,
+    to: string,
+    url: string,
+    caption: string,
+    passId: any,
+    filename: string,
+    allowedMimeType?: string[],
+    type?: string
+  ) {
+    let result: SendFileResult
+    try {
+      result = await this.page.evaluate(
+        ({ to, url, caption, passId, filename, allowedMimeType, type }) => {
+          return WAPI.sendFileFromUrl(
+            to,
+            url,
+            caption,
+            passId,
+            filename,
+            allowedMimeType,
+            type
+          )
+        },
+        {
+          to,
+          url,
+          caption,
+          passId,
+          filename,
+          allowedMimeType,
+          type,
+        }
+      )
+    } catch (error) {
+      if (error.message.includes('protocolTimeout')) {
+        await this.page.reload()
+      }
+
+      logger.error(`${scope} message=${error.message} error=${error.stack}`)
+
+      throw error
+    }
+
+    if (result['erro'] == true) {
+      throw new Error(result.text)
+    } else {
+      return result
+    }
   }
 }
