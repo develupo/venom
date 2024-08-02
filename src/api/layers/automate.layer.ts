@@ -18,7 +18,7 @@ export class AutomateLayer extends ListenerLayer {
   }
 
   private async selectChatViaTyping(chatId: string): Promise<boolean> {
-    const xpath = '//*[@id="side"]/div[1]/div/div[2]/div[2]/div/div[1]/p'
+    const xpath = 'xpath=//*[@id="side"]/div[1]/div/div[2]/div[2]/div/div[1]/p'
     const ids = await this.page.evaluate(() => {
       return WAPI.getAllChatIds()
     })
@@ -27,7 +27,7 @@ export class AutomateLayer extends ListenerLayer {
     }
 
     try {
-      const search_element = await this.page.waitForXPath(xpath, {
+      const search_element = await this.page.waitForSelector(xpath, {
         timeout: 1000,
       })
       // @ts-ignore
@@ -75,9 +75,9 @@ export class AutomateLayer extends ListenerLayer {
     }
 
     const plus_button_xpath =
-      '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/div/div/span'
+      'xpath=//*[@id="main"]/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/div/div/span'
     try {
-      const plus_button = await this.page.waitForXPath(plus_button_xpath)
+      const plus_button = await this.page.waitForSelector(plus_button_xpath)
       // @ts-ignore
       await plus_button.click()
     } catch (error) {
