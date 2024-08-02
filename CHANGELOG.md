@@ -1,3 +1,12 @@
+# [1.18.0](https://github.com/develupo/venom/compare/v1.17.0...v1.18.0) (2024-08-02)
+
+
+### Features
+
+* add framedetached error handler ([9370493](https://github.com/develupo/venom/commit/93704937691b3b4f53376e307f79a46838566cf3))
+* update puppeteer version ([30463d9](https://github.com/develupo/venom/commit/30463d92b724f050290932115c83729ae1950f4c))
+* wrap send function to handle errors ([b55ef58](https://github.com/develupo/venom/commit/b55ef58204bf74958d98cb45b2fc85c7d235762e))
+
 # [1.17.0](https://github.com/develupo/venom/compare/v1.16.0...v1.17.0) (2024-08-01)
 
 
