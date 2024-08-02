@@ -375,43 +375,28 @@ export class SenderLayer extends AutomateLayer {
       throw validating
     }
 
-    try {
-      const functionResult = await this.page.waitForFunction(
-        ({ to, content, passId, checkNumber, forcingReturn, delSend }) => {
-          return WAPI.sendMessage(
-            to,
-            content,
-            undefined,
-            passId,
-            checkNumber,
-            forcingReturn,
-            delSend
-          )
-        },
-        { timeout: 5000 }, // 5 seconds timeout
-        {
+    return this.processBrowserFunction(
+      '[SenderLayer.sendText]',
+      {
+        to,
+        content,
+        passId,
+        checkNumber,
+        forcingReturn,
+        delSend,
+      },
+      ({ to, content, passId, checkNumber, forcingReturn, delSend }) => {
+        return WAPI.sendMessage(
           to,
           content,
+          undefined,
           passId,
           checkNumber,
           forcingReturn,
-          delSend,
-        }
-      )
-
-      const result = await functionResult.jsonValue()
-
-      if (result['erro'] == true) {
-        throw result
+          delSend
+        )
       }
-
-      return result
-    } catch (error) {
-      logger.error(
-        `[SenderLayer.sendText] message=${error.message} error=${error.stack}`
-      )
-      throw error
-    }
+    )
   }
 
   /**
@@ -658,36 +643,22 @@ export class SenderLayer extends AutomateLayer {
 
     filename = filenameFromMimeType(filename, base64.mimeType)
 
-    try {
-      const functionResult = await this.page.waitForFunction(
-        ({ to, base64Data, filename, caption, passId }) => {
-          return WAPI.sendImage(
-            base64Data,
-            to,
-            filename,
-            caption,
-            'sendImage',
-            false,
-            passId
-          )
-        },
-        { timeout: 20000 }, // 20 seconds timeout
-        { to, base64Data: base64.data, filename, caption, passId }
-      )
-
-      const result = await functionResult.jsonValue()
-
-      if (result['erro'] == true) {
-        throw result
-      }
-
-      return result as SendFileResult
-    } catch (error) {
-      logger.error(
-        `[SenderLayer.sendImage] message=${error.message} error=${error.stack}`
-      )
-      throw error
-    }
+    return this.processBrowserFunction(
+      `[SenderLayer.sendImage]`,
+      { to, base64Data: base64.data, filename, caption, passId },
+      ({ to, base64Data, filename, caption, passId }) => {
+        return WAPI.sendImage(
+          base64Data,
+          to,
+          filename,
+          caption,
+          'sendImage',
+          false,
+          passId
+        )
+      },
+      20000 // 20 seconds timeout
+    )
   }
 
   /**
@@ -801,51 +772,37 @@ export class SenderLayer extends AutomateLayer {
       throw validating
     }
 
-    try {
-      const functionResult = await this.page.waitForFunction(
-        ({
+    return this.processBrowserFunction(
+      '[SenderLayer.reply]',
+      {
+        to,
+        content,
+        quotedMsg,
+        passId,
+        checkNumber,
+        limitIterationFindMessage,
+        sendEvenIfNotExists,
+      },
+      ({
+        to,
+        content,
+        quotedMsg,
+        passId,
+        checkNumber,
+        limitIterationFindMessage,
+        sendEvenIfNotExists,
+      }) => {
+        return WAPI.reply(
           to,
           content,
           quotedMsg,
           passId,
           checkNumber,
           limitIterationFindMessage,
-          sendEvenIfNotExists,
-        }) => {
-          return WAPI.reply(
-            to,
-            content,
-            quotedMsg,
-            passId,
-            checkNumber,
-            limitIterationFindMessage,
-            sendEvenIfNotExists
-          )
-        },
-        { timeout: 5000 }, // 5 seconds timeout
-        {
-          to,
-          content,
-          quotedMsg,
-          passId,
-          checkNumber,
-          limitIterationFindMessage,
-          sendEvenIfNotExists,
-        }
-      )
-      const result = await functionResult.jsonValue()
-
-      if (result['erro'] == true) {
-        throw result
+          sendEvenIfNotExists
+        )
       }
-
-      return result
-    } catch (error) {
-      logger.error(
-        `[SenderLayer.reply] message=${error.message} error=${error.stack}`
-      )
-      throw error
-    }
+    )
   }
 
   /**
@@ -910,56 +867,42 @@ export class SenderLayer extends AutomateLayer {
     forcingReturn?: boolean,
     delSend?: boolean
   ) {
-    try {
-      const base64 = await base64Management.getBase64(filePath, [
-        'audio/mpeg',
-        'audio/mp3',
-        'audio/aac',
-        'audio/flac',
-        'audio/vnd.dlna.adts',
-        'audio/ogg',
-        'audio/wav',
-      ])
+    const base64 = await base64Management.getBase64(filePath, [
+      'audio/mpeg',
+      'audio/mp3',
+      'audio/aac',
+      'audio/flac',
+      'audio/vnd.dlna.adts',
+      'audio/ogg',
+      'audio/wav',
+    ])
 
-      if (base64.error) {
-        throw base64.error
-      }
+    if (base64.error) {
+      throw base64.error
+    }
 
-      const functionResult = await this.page.waitForFunction(
-        ({ to, base64Data, passId, checkNumber, forcingReturn, delSend }) => {
-          return WAPI.sendPtt(
-            base64Data,
-            to,
-            passId,
-            checkNumber,
-            forcingReturn,
-            delSend
-          )
-        },
-        { timeout: 20000 }, // 20 seconds timeout
-        {
+    return this.processBrowserFunction(
+      `[SenderLayer.sendVoice]`,
+      {
+        to,
+        base64Data: base64.data,
+        passId,
+        checkNumber,
+        forcingReturn,
+        delSend,
+      },
+      ({ to, base64Data, passId, checkNumber, forcingReturn, delSend }) => {
+        return WAPI.sendPtt(
+          base64Data,
           to,
-          base64Data: base64.data,
           passId,
           checkNumber,
           forcingReturn,
-          delSend,
-        }
-      )
-
-      const result = await functionResult.jsonValue()
-
-      if (result['erro'] == true) {
-        throw result
-      }
-
-      return result
-    } catch (error) {
-      logger.error(
-        `[SenderLayer.sendVoice] message=${error.message} error=${error.stack}`
-      )
-      throw error
-    }
+          delSend
+        )
+      },
+      20000 // 20 seconds timeout
+    )
   }
 
   /**
@@ -1085,61 +1028,43 @@ export class SenderLayer extends AutomateLayer {
       throw obj
     }
 
-    try {
-      const functionResult = await this.page.waitForFunction(
-        ({
-          to,
+    return this.processBrowserFunction(
+      '[SenderLayer.sendFile]',
+      {
+        to,
+        base64Data: base64.data,
+        filename,
+        caption,
+        passId,
+        checkNumber,
+        forcingReturn,
+        delSend,
+      },
+      ({
+        to,
+        base64Data,
+        filename,
+        caption,
+        passId,
+        checkNumber,
+        forcingReturn,
+        delSend,
+      }) => {
+        return WAPI.sendFile(
           base64Data,
-          filename,
-          caption,
-          passId,
-          checkNumber,
-          forcingReturn,
-          delSend,
-        }) => {
-          return WAPI.sendFile(
-            base64Data,
-            to,
-            filename,
-            caption,
-            'sendFile',
-            undefined,
-            passId,
-            checkNumber,
-            forcingReturn,
-            delSend
-          )
-        },
-        { timeout: 20000 }, // 20 seconds timeout
-        {
           to,
-          base64Data: base64.data,
           filename,
           caption,
+          'sendFile',
+          undefined,
           passId,
           checkNumber,
           forcingReturn,
-          delSend,
-        }
-      )
-
-      const result = await functionResult.jsonValue()
-
-      if (result['erro'] == true) {
-        throw result
-      }
-
-      return result
-    } catch (error) {
-      // if (error.message.includes('protocolTimeout')) {
-      //   await this.page.reload()
-      // }
-      logger.error(
-        `[SenderLayer.sendFile] message=${error.message} error=${error.stack}`
-      )
-
-      throw error
-    }
+          delSend
+        )
+      },
+      20000 // 20 seconds timeout
+    )
   }
 
   /**
@@ -1253,33 +1178,19 @@ export class SenderLayer extends AutomateLayer {
     skipMyMessages: boolean,
     limitIterationFindMessage: number
   ) {
-    try {
-      const functionResult = await this.page.waitForFunction(
-        ({ to, messages, skipMyMessages, limitIterationFindMessage }) => {
-          return WAPI.forwardMessages(
-            to,
-            messages,
-            skipMyMessages,
-            limitIterationFindMessage
-          ).catch((e) => e)
-        },
-        { timeout: 5000 }, // 5 seconds timeout
-        { to, messages, skipMyMessages, limitIterationFindMessage }
-      )
-
-      const result = await functionResult.jsonValue()
-
-      if (result?.erro == true) {
-        throw result
-      }
-
-      return result
-    } catch (error) {
-      logger.error(
-        `[SenderLayer.forwardMessages] message=${error.message} error=${error.stack}`
-      )
-      throw error
-    }
+    return this.processBrowserFunction(
+      `[SenderLayer.forwardMessages]`,
+      { to, messages, skipMyMessages, limitIterationFindMessage },
+      ({ to, messages, skipMyMessages, limitIterationFindMessage }) => {
+        return WAPI.forwardMessages(
+          to,
+          messages,
+          skipMyMessages,
+          limitIterationFindMessage
+        ).catch((e) => e)
+      },
+      10000 // 10 seconds timeout
+    )
   }
 
   /**
@@ -1611,29 +1522,43 @@ export class SenderLayer extends AutomateLayer {
     allowedMimeType?: string[],
     type?: string
   ) {
-    try {
-      const functionResult = await this.page.waitForFunction(
-        ({ to, url, caption, passId, filename, allowedMimeType, type }) => {
-          return WAPI.sendFileFromUrl(
-            to,
-            url,
-            caption,
-            passId,
-            filename,
-            allowedMimeType,
-            type
-          )
-        },
-        { timeout: 20000 }, // 20 seconds timeout
-        {
+    return this.processBrowserFunction(
+      scope,
+      {
+        to,
+        url,
+        caption,
+        passId,
+        filename,
+        allowedMimeType,
+        type,
+      },
+      ({ to, url, caption, passId, filename, allowedMimeType, type }) => {
+        return WAPI.sendFileFromUrl(
           to,
           url,
           caption,
           passId,
           filename,
           allowedMimeType,
-          type,
-        }
+          type
+        )
+      },
+      40000 // 40 seconds timeout
+    )
+  }
+
+  private async processBrowserFunction(
+    scope: string,
+    payload: any,
+    waitForFunction: (...args) => Promise<any>,
+    timeout: number = 5000
+  ) {
+    try {
+      const functionResult = await this.page.waitForFunction(
+        waitForFunction,
+        { timeout },
+        payload
       )
 
       const result = await functionResult.jsonValue()
@@ -1644,10 +1569,26 @@ export class SenderLayer extends AutomateLayer {
 
       return result
     } catch (error) {
-      // if (error.message.includes('protocolTimeout')) {
-      //   await this.page.reload()
-      // }
       logger.error(`${scope} message=${error.message} error=${error.stack}`)
+
+      const errorTextList = [error.message, error.text, error.stack]
+      const isProtocolTimeoutError = errorTextList.some((errorText) =>
+        errorText?.includes('protocolTimeout')
+      )
+      // const isTargetClosedError = errorTextList.some((errorText) =>
+      //   errorText?.includes('TargetCloseError')
+      // )
+      // const isTimeoutError = errorTextList.some((errorText) =>
+      //   errorText?.includes('TimeoutError')
+      // )
+
+      // if (isTargetClosedError) {
+      //   logger.error(`${scope} target closed`)
+      // }
+      if (isProtocolTimeoutError) {
+        await this.page.reload()
+      }
+
       throw error
     }
   }

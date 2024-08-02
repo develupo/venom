@@ -18,7 +18,7 @@ export interface CreateConfig {
    * Headless chrome
    * @default "old"
    */
-  headless?: false | 'new' | 'old'
+  headless?: false | 'shell'
   /**
    * Open devtools by default
    * @default false
@@ -143,7 +143,7 @@ export interface CreateConfig {
 export const defaultOptions: CreateConfig = {
   folderNameToken: 'tokens',
   mkdirFolderToken: '',
-  headless: 'old',
+  headless: 'shell',
   devtools: false,
   debug: false,
   logQR: true,
