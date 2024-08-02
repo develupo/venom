@@ -21,6 +21,11 @@ export class Whatsapp extends ControlsLayer {
   ) {
     super(browser, page, session, options)
 
+    this.page.on('framedetached', async () => {
+      logger.error(`[page.framedetached] frame deatched from page, reloading.`)
+      await this.page.reload()
+    })
+
     this.page.on('load', async () => {
       // FIXME - This process is a problem. Every time wpp reload (and it do a lot), this is inject.
       // Therefore, if we close, cancel, send message and is reloading, it will not work and get error. Mostly protocol error.
@@ -31,7 +36,7 @@ export class Whatsapp extends ControlsLayer {
           .catch(() => {})
         await this.addChatWapi()
       } catch (error) {
-        console.error('failed loading page', error)
+        logger.error('[page.load] failed loading page', error)
       }
     })
   }
