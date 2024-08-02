@@ -27,7 +27,7 @@ export interface options {
    * Headless chrome
    * @default "old"
    */
-  headless?: boolean | 'new' | 'old'
+  headless?: boolean | 'shell'
   /**
    * If you want to use browserWSEndpoint
    */
@@ -117,7 +117,7 @@ export const defaultOptions: options = {
   disableWelcome: false,
   BrowserFetcher: true,
   updatesLog: true,
-  headless: 'old',
+  headless: 'shell',
   logQR: true,
   devtools: false,
   mkdirFolderToken: '',

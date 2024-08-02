@@ -22,7 +22,7 @@ import { logger } from '../utils/logger'
 import { whatsappCacheManagement } from './whatsapp-cache-management'
 
 type CustomLaunchOptions = LaunchOptions & {
-  headless?: boolean | 'new' | 'old'
+  headless?: boolean | 'shell'
   mkdirFolderToken?: options['mkdirFolderToken']
   folderNameToken?: options['folderNameToken']
   session?: options['session']
@@ -242,12 +242,11 @@ export async function initBrowser(
     )
   }
   if (
-    options.headless !== 'new' &&
-    options.headless !== 'old' &&
+    options.headless !== 'shell' &&
     options.headless !== false &&
     options.headless !== true
   ) {
-    throw new Error('Now use only headless: "new", "true" or false')
+    throw new Error('Now use only headless: "shell", "true" or "false"')
   }
 
   const platform = os.platform()
@@ -275,7 +274,7 @@ export async function initBrowser(
         headless:
           options.headless === true || options.headless === false
             ? options.headless
-            : 'new',
+            : 'shell',
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
       })
 
@@ -312,12 +311,8 @@ export async function initBrowser(
     })
   }
 
-  if (options.headless === 'old') {
-    puppeteerConfig.chromiumArgs.push(`--headless=old`)
-  }
-
   const launchOptions = {
-    headless: options.headless as 'new' | boolean,
+    headless: options.headless,
     devtools: options.devtools,
     args: options.browserArgs ?? puppeteerConfig.chromiumArgs,
     ...options.puppeteerOptions,
