@@ -1,3 +1,10 @@
+## [1.18.1](https://github.com/develupo/venom/compare/v1.18.0...v1.18.1) (2024-08-06)
+
+
+### Bug Fixes
+
+* not send messages already sent ([d08c1ed](https://github.com/develupo/venom/commit/d08c1edefeb1f6f453207673336e6f96ccf77186))
+
 # [1.18.0](https://github.com/develupo/venom/compare/v1.17.0...v1.18.0) (2024-08-02)
 
 
