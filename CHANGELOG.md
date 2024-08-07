@@ -1,3 +1,10 @@
+# [1.19.0](https://github.com/develupo/venom/compare/v1.18.1...v1.19.0) (2024-08-07)
+
+
+### Features
+
+* improve file processing method ([c9bcba4](https://github.com/develupo/venom/commit/c9bcba4a9136be0c8fcb699dd5f47d74f5089e60))
+
 ## [1.18.1](https://github.com/develupo/venom/compare/v1.18.0...v1.18.1) (2024-08-06)
 
 
