@@ -1,5 +1,6 @@
 import { processFiles } from './process-files'
 import { resendMessageIfExists } from './resend-message-if-exists'
+import * as jsSHA from '../jssha'
 
 export const FILE_DOWNLOAD_ERROR = {
   INVALID_URL_PATH: 'invalid.url.path',
@@ -141,8 +142,6 @@ function validateParameters(chatId, caption, filename, type) {
     return 'incorrect parameter caption, insert a string'
   }
 }
-
-import * as jsSHA from '../jssha'
 
 /**
  * @param {string} url File Url
