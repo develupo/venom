@@ -1,5 +1,6 @@
 import { processFiles } from './process-files'
 import { resendMessageIfExists } from './resend-message-if-exists'
+import * as jsSHA from '../jssha'
 
 export const FILE_DOWNLOAD_ERROR = {
   INVALID_URL_PATH: 'invalid.url.path',
@@ -63,81 +64,66 @@ export async function sendFileFromUrl(
       resultResend.scope.msg
     )
   }
-  let mediaBlob
-  try {
-    mediaBlob = await downloadFile(url, allowedMimeType, filename)
-  } catch (error) {
-    if (error.message === FILE_DOWNLOAD_ERROR.CONTENT_TYPE_NOT_ALLOWED) {
-      return WAPI.scope(
-        chatId,
-        true,
-        400,
-        FILE_DOWNLOAD_ERROR.CONTENT_TYPE_NOT_ALLOWED
-      )
-    }
-    return WAPI.scope(chatId, true, 400, FILE_DOWNLOAD_ERROR.UNKNOWN_ERROR)
-  }
 
   const chatWid = new Store.WidFactory.createWid(chatId)
   await Store.Chat.add({ createdLocally: true, id: chatWid }, { merge: true })
 
-  const m = {
-    type: type,
-    filename: filename,
-    text: caption,
-    mimeType: mediaBlob.type,
-  }
-
   try {
-    const _chat = await Store.Chat.find(chat.id)
-    const mc = await processFiles(_chat, mediaBlob, type)
+    const file = await downloadFile(url, allowedMimeType, filename)
 
-    if (mc && mc._models && mc._models[0]) {
-      const media = mc._models[0]
-      const enc = await WAPI.encryptAndUploadFile(media.type, mediaBlob)
-
-      if (!enc) {
-        throw new Error('Error to encryptAndUploadFile', 400)
-      }
-
-      const fromwWid = await Store.MaybeMeUser.getMaybeMeUser()
-      const message = {
-        id: newMsgId,
-        ack: 0,
-        from: fromwWid,
-        to: chat.id,
-        local: true,
-        self: 'out',
-        t: Math.floor(Date.now() / 1000),
-        isNewMsg: true,
-        invis: true,
-        type: type === 'sendPtt' ? 'ptt' : media.type,
-        duration:
-          type === 'sendPtt' ? media?.__x_mediaPrep?._mediaData?.duration : '',
-        deprecatedMms3Url: enc.url,
-        directPath: enc.directPath,
-        encFilehash: enc.encFilehash,
-        filehash: enc.filehash,
-        mediaKeyTimestamp: enc.mediaKeyTimestamp,
-        mimetype: media.mimetype,
-        ephemeralStartTimestamp: enc.mediaKeyTimestamp,
-        mediaKey: enc.mediaKey,
-        size: media.filesize,
-        caption,
-        filename: type === 'sendPtt' ? undefined : filename,
-      }
-
-      const result = await Promise.all(
-        window.Store.addAndSendMsgToChat(chat, message)
-      )
-      if (result[1]) {
-        return WAPI.scope(newMsgId, false, result[1], null, m)
-      } else {
-        throw new Error('The message was not sent')
-      }
-    } else {
-      throw new Error('Error to models')
+    const messagePayload = {
+      type: type,
+      filename: filename,
+      text: caption,
+      mimeType: file.type,
     }
+
+    const _chat = await Store.Chat.find(chat.id)
+    const mc = await processFiles(_chat, file, type)
+
+    const media = mc?._models?.shift()
+
+    if (!media) throw new Error('Error to models')
+
+    const encryptedFile = await WAPI.encryptAndUploadFileV2(media.type, file)
+
+    if (!encryptedFile) throw new Error('Error to encryptAndUploadFile', 400)
+
+    const fromwWid = await Store.MaybeMeUser.getMaybeMeUser()
+
+    const message = {
+      id: newMsgId,
+      ack: 0,
+      from: fromwWid,
+      to: chat.id,
+      local: true,
+      self: 'out',
+      t: Math.floor(Date.now() / 1000),
+      isNewMsg: true,
+      invis: true,
+      type: type === 'sendPtt' ? 'ptt' : media.type,
+      duration:
+        type === 'sendPtt' ? media?.__x_mediaPrep?._mediaData?.duration : '',
+      deprecatedMms3Url: encryptedFile.url,
+      directPath: encryptedFile.directPath,
+      encFilehash: encryptedFile.encFilehash,
+      filehash: encryptedFile.filehash,
+      mediaKeyTimestamp: encryptedFile.mediaKeyTimestamp,
+      mimetype: media.mimetype,
+      ephemeralStartTimestamp: encryptedFile.mediaKeyTimestamp,
+      mediaKey: encryptedFile.mediaKey,
+      size: media.filesize,
+      caption,
+      filename: type === 'sendPtt' ? undefined : filename,
+    }
+
+    const result = await Promise.all(
+      window.Store.addAndSendMsgToChat(chat, message)
+    )
+
+    if (!result[1]) throw new Error('The message was not sent')
+
+    return WAPI.scope(newMsgId, false, result[1], null, messagePayload)
   } catch (e) {
     return WAPI.scope(chat.id, true, 500, e.message)
   }
@@ -157,32 +143,71 @@ function validateParameters(chatId, caption, filename, type) {
   }
 }
 
-async function downloadFile(url, allowedMimeTypes, filename) {
+/**
+ * @param {string} url File Url
+ * @param {string} filename File name
+ * @returns {File} The download file as an instance of File.
+ */
+export async function downloadFile(url, allowedMimeTypeList, filename) {
   const response = await fetch(url)
-  const mimeType = response.headers.get('content-type')
-  if (allowedMimeTypes) {
-    verifyAllowedMimeType(mimeType, allowedMimeTypes, url)
+
+  const mimeType = response.headers.get(`content-type`)
+  if (!mimeType) {
+    throw new Error(`BASE64_ERROR.INVALID_MIME`)
   }
-  return new File([await response.arrayBuffer()], filename, {
-    type: mimeType,
+
+  verifyAllowedMimeType(mimeType, allowedMimeTypeList, url)
+
+  const reader = await response.body.getReader()
+
+  const sha = new jsSHA('SHA-256', 'ARRAYBUFFER')
+  const chunks = []
+  let readResult
+  do {
+    readResult = await reader.read()
+    if (readResult?.value) {
+      chunks.push(readResult.value)
+      sha.update(readResult.value)
+    }
+  } while (!!readResult?.value && !readResult?.done)
+
+  const buffer = new Uint8Array(
+    chunks.reduce((acc, chunk) => acc + chunk.length, 0)
+  )
+
+  let offset = 0
+  chunks.forEach((chunk) => {
+    buffer.set(chunk, offset)
+    offset += chunk.length
   })
+
+  const file = new File([buffer], filename, { type: mimeType })
+  file.hash = sha.getHash('B64')
+  return file
 }
 
-function verifyAllowedMimeType(mimeType, allowedMimeList, url) {
+function verifyAllowedMimeType(mimeType, allowedMimeTypeList, url) {
+  if (!allowedMimeTypeList) return
+  if (!Array.isArray(allowedMimeTypeList))
+    throw new Error(FILE_DOWNLOAD_ERROR.INVALID_MIME_LIST)
+  if (allowedMimeTypeList.length > 0) return
+
   if (mimeType.includes(NOT_ALLOWED_MIMETYPE.VIDEO_WEBM)) {
     console.error(`Content-Type "${mimeType}" of ${url} is not allowed`)
     throw new Error(FILE_DOWNLOAD_ERROR.CONTENT_TYPE_NOT_ALLOWED)
   }
 
-  const isAllowed = allowedMimeList.some((mime) => {
+  const isAllowed = allowedMimeTypeList?.some((mime) => {
     if (typeof mime === 'string') {
       return mimeType === mime
     }
     return mime.exec(mimeType)
   })
+
   if (!isAllowed) {
     console.error(`Content-Type "${mimeType}" from ${url} is not allowed`)
     throw new Error(FILE_DOWNLOAD_ERROR.CONTENT_TYPE_NOT_ALLOWED)
   }
+
   return isAllowed
 }

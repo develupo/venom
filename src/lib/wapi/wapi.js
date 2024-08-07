@@ -13,6 +13,7 @@ import {
   demoteParticipant,
   downloadFile,
   encryptAndUploadFile,
+  encryptAndUploadFileV2,
   forwardMessages,
   getAllChatIds,
   getAllChats,
@@ -347,6 +348,7 @@ if (typeof window.WAPI === 'undefined') {
   window.WAPI.reply = reply
   window.WAPI._sendSticker = sendSticker
   window.WAPI.encryptAndUploadFile = encryptAndUploadFile
+  window.WAPI.encryptAndUploadFileV2 = encryptAndUploadFileV2
   window.WAPI.sendImageAsSticker = sendImageAsSticker
   window.WAPI.sendImageAsStickerGif = sendImageAsSticker
   window.WAPI.startTyping = startTyping
