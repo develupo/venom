@@ -1,3 +1,10 @@
+## [1.19.2](https://github.com/develupo/venom/compare/v1.19.1...v1.19.2) (2024-08-07)
+
+
+### Bug Fixes
+
+* improve functions timeout ([2d8e94c](https://github.com/develupo/venom/commit/2d8e94c551e32d2540fe868dd24e1acc1c3ee65b))
+
 ## [1.19.1](https://github.com/develupo/venom/compare/v1.19.0...v1.19.1) (2024-08-07)
 
 
