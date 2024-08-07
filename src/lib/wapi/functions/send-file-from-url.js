@@ -192,8 +192,6 @@ function verifyAllowedMimeType(mimeType, allowedMimeTypeList, url) {
     throw new Error(FILE_DOWNLOAD_ERROR.INVALID_MIME_LIST)
   if (allowedMimeTypeList.length > 0) return
 
-  console.log(`allowedMimeTypeList`, allowedMimeTypeList)
-
   if (mimeType.includes(NOT_ALLOWED_MIMETYPE.VIDEO_WEBM)) {
     console.error(`Content-Type "${mimeType}" of ${url} is not allowed`)
     throw new Error(FILE_DOWNLOAD_ERROR.CONTENT_TYPE_NOT_ALLOWED)
