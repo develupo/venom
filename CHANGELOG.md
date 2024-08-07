@@ -1,3 +1,11 @@
+## [1.19.1](https://github.com/develupo/venom/compare/v1.19.0...v1.19.1) (2024-08-07)
+
+
+### Bug Fixes
+
+* mime type validation ([9257da0](https://github.com/develupo/venom/commit/9257da0519b6201aff6c157564d724d391c2216a))
+* throw error ([4a0a764](https://github.com/develupo/venom/commit/4a0a7648fbbd7948e73b7b602f2d6b17be418471))
+
 # [1.19.0](https://github.com/develupo/venom/compare/v1.18.1...v1.19.0) (2024-08-07)
 
 
