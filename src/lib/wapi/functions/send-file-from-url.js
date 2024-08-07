@@ -124,8 +124,8 @@ export async function sendFileFromUrl(
     if (!result[1]) throw new Error('The message was not sent')
 
     return WAPI.scope(newMsgId, false, result[1], null, messagePayload)
-  } catch (e) {
-    return WAPI.scope(chat.id, true, 500, e.message)
+  } catch (error) {
+    return WAPI.scope(chat.id, true, 500, error.message)
   }
 }
 
@@ -156,7 +156,7 @@ export async function downloadFile(url, allowedMimeTypeList, filename) {
     throw new Error(`BASE64_ERROR.INVALID_MIME`)
   }
 
-  verifyAllowedMimeType(mimeType, allowedMimeTypeList, url)
+  verifyAllowedMimeType(mimeType, allowedMimeTypeList)
 
   const reader = await response.body.getReader()
 
@@ -186,14 +186,18 @@ export async function downloadFile(url, allowedMimeTypeList, filename) {
   return file
 }
 
-function verifyAllowedMimeType(mimeType, allowedMimeTypeList, url) {
-  if (!allowedMimeTypeList) return
+/**
+ * @param {string} mimeType File mime type
+ * @param {string[]} allowedMimeTypeList List of allowed mime types
+ * @returns
+ */
+function verifyAllowedMimeType(mimeType, allowedMimeTypeList) {
+  if (!allowedMimeTypeList) return `!allowedMimeTypeList`
   if (!Array.isArray(allowedMimeTypeList))
     throw new Error(FILE_DOWNLOAD_ERROR.INVALID_MIME_LIST)
-  if (allowedMimeTypeList.length > 0) return
+  if (allowedMimeTypeList.length === 0) return
 
   if (mimeType.includes(NOT_ALLOWED_MIMETYPE.VIDEO_WEBM)) {
-    console.error(`Content-Type "${mimeType}" of ${url} is not allowed`)
     throw new Error(FILE_DOWNLOAD_ERROR.CONTENT_TYPE_NOT_ALLOWED)
   }
 
@@ -205,7 +209,6 @@ function verifyAllowedMimeType(mimeType, allowedMimeTypeList, url) {
   })
 
   if (!isAllowed) {
-    console.error(`Content-Type "${mimeType}" from ${url} is not allowed`)
     throw new Error(FILE_DOWNLOAD_ERROR.CONTENT_TYPE_NOT_ALLOWED)
   }
 
