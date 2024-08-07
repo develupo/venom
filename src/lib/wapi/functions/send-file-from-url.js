@@ -153,7 +153,7 @@ export async function downloadFile(url, allowedMimeTypeList, filename) {
 
   const mimeType = response.headers.get(`content-type`)
   if (!mimeType) {
-    throw new Error(`BASE64_ERROR.INVALID_MIME`)
+    throw new Error(FILE_DOWNLOAD_ERROR.INVALID_MIME)
   }
 
   verifyAllowedMimeType(mimeType, allowedMimeTypeList)
