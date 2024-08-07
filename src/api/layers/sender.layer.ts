@@ -657,7 +657,7 @@ export class SenderLayer extends AutomateLayer {
           passId
         )
       },
-      20000 // 20 seconds timeout
+      10000 // 10 seconds timeout
     )
   }
 
@@ -1188,8 +1188,7 @@ export class SenderLayer extends AutomateLayer {
           skipMyMessages,
           limitIterationFindMessage
         ).catch((e) => e)
-      },
-      10000 // 10 seconds timeout
+      }
     )
   }
 
