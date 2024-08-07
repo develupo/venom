@@ -1,3 +1,4 @@
+import { ACK } from '../constants/ack'
 import { MESSAGE_ERRORS } from '../constants/message-errors'
 
 export async function resendMessageIfExists(passId, newMsgId) {
@@ -10,6 +11,17 @@ export async function resendMessageIfExists(passId, newMsgId) {
   )
 
   if (!previousMsg || previousMsg?.erro) return { exists: false }
+
+  if (previousMsg.ack >= ACK.SENT) {
+    return {
+      exists: true,
+      scope: {
+        error: true,
+        status: 400,
+        msg: MESSAGE_ERRORS.MESSAGE_ALREADY_SENT,
+      },
+    }
+  }
 
   if (!previousMsg?.isSendFailure) {
     return {
