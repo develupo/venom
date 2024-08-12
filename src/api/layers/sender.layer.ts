@@ -14,8 +14,6 @@ import { AutomateLayer } from './automate.layer'
 import { Scope, checkValuesSender } from '../helpers/layers-interface'
 import { logger } from '../../utils/logger'
 
-let obj: Scope
-
 export class SenderLayer extends AutomateLayer {
   constructor(
     public browser: Browser,
@@ -512,7 +510,7 @@ export class SenderLayer extends AutomateLayer {
       const mimeType = base64Management.getBase64MimeType(base64)
 
       if (!mimeType) {
-        obj = {
+        const obj = {
           erro: true,
           to: to,
           text: 'Invalid base64!',
@@ -816,7 +814,7 @@ export class SenderLayer extends AutomateLayer {
       const mimeType = base64Management.getBase64MimeType(base64)
 
       if (!mimeType) {
-        obj = {
+        const obj = {
           erro: true,
           to: to,
           text: 'Invalid base64!',
@@ -841,7 +839,7 @@ export class SenderLayer extends AutomateLayer {
           resolve(result)
         }
       } else {
-        obj = {
+        const obj = {
           erro: true,
           to: to,
           text: 'Use the MP3 format to be able to send an audio!',
@@ -962,7 +960,7 @@ export class SenderLayer extends AutomateLayer {
       const mimeType = base64Management.getBase64MimeType(base64)
 
       if (!mimeType) {
-        obj = {
+        const obj = {
           erro: true,
           to: to,
           text: 'Invalid base64!',
