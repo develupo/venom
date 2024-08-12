@@ -1,3 +1,25 @@
+## [1.19.2](https://github.com/develupo/venom/compare/v1.19.1...v1.19.2) (2024-08-07)
+
+
+### Bug Fixes
+
+* improve functions timeout ([2d8e94c](https://github.com/develupo/venom/commit/2d8e94c551e32d2540fe868dd24e1acc1c3ee65b))
+
+## [1.19.1](https://github.com/develupo/venom/compare/v1.19.0...v1.19.1) (2024-08-07)
+
+
+### Bug Fixes
+
+* mime type validation ([9257da0](https://github.com/develupo/venom/commit/9257da0519b6201aff6c157564d724d391c2216a))
+* throw error ([4a0a764](https://github.com/develupo/venom/commit/4a0a7648fbbd7948e73b7b602f2d6b17be418471))
+
+# [1.19.0](https://github.com/develupo/venom/compare/v1.18.1...v1.19.0) (2024-08-07)
+
+
+### Features
+
+* improve file processing method ([c9bcba4](https://github.com/develupo/venom/commit/c9bcba4a9136be0c8fcb699dd5f47d74f5089e60))
+
 ## [1.18.1](https://github.com/develupo/venom/compare/v1.18.0...v1.18.1) (2024-08-06)
 
 
