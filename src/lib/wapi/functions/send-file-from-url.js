@@ -1,6 +1,6 @@
-import { processFiles } from './process-files'
-import { resendMessageIfExists } from './resend-message-if-exists'
-import * as jsSHA from '../jssha'
+// import { processFiles } from './process-files'
+// import { resendMessageIfExists } from './resend-message-if-exists'
+// import * as jsSHA from '../jssha'
 
 export const FILE_DOWNLOAD_ERROR = {
   INVALID_URL_PATH: 'invalid.url.path',
@@ -47,7 +47,7 @@ export async function sendFileFromUrl(
       : ''
   }
 
-  const newMsgId = passId
+  /* const newMsgId = passId
     ? await window.WAPI.setNewMessageId(passId, true)
     : await window.WAPI.getNewMessageId(chat.id._serialized, true)
 
@@ -63,15 +63,19 @@ export async function sendFileFromUrl(
       resultResend.scope.status,
       resultResend.scope.msg
     )
-  }
-
-  const chatWid = new Store.WidFactory.createWid(chatId)
-  await Store.Chat.add({ createdLocally: true, id: chatWid }, { merge: true })
+  } */
 
   try {
     const file = await downloadFile(url, allowedMimeType, filename)
 
-    const messagePayload = {
+    var mc = new Store.MediaCollection(chat)
+    await mc.processAttachments([{ file }, 1], 1, chat)
+    const media = mc._models[0]
+    const result = await media.sendToChat(chat, { caption: caption })
+    // TODO - Não retorna o ID ou pode ser passado um outro id
+    return WAPI.scope(null, false, result, null)
+
+    /* const messagePayload = {
       type: type,
       filename: filename,
       text: caption,
@@ -123,7 +127,7 @@ export async function sendFileFromUrl(
 
     if (!result[1]) throw new Error('The message was not sent')
 
-    return WAPI.scope(newMsgId, false, result[1], null, messagePayload)
+    return WAPI.scope(newMsgId, false, result[1], null) */
   } catch (error) {
     return WAPI.scope(chat.id, true, 500, error.message)
   }
@@ -150,6 +154,14 @@ function validateParameters(chatId, caption, filename, type) {
  */
 export async function downloadFile(url, allowedMimeTypeList, filename) {
   const response = await fetch(url)
+  const mimeType = response.headers.get('content-type')
+  if (allowedMimeTypeList) {
+    verifyAllowedMimeType(mimeType, allowedMimeTypeList, url)
+  }
+  return new File([await response.arrayBuffer()], filename, {
+    type: mimeType,
+  })
+  /* const response = await fetch(url)
 
   const mimeType = response.headers.get(`content-type`)
   if (!mimeType) {
@@ -183,7 +195,7 @@ export async function downloadFile(url, allowedMimeTypeList, filename) {
 
   const file = new File([buffer], filename, { type: mimeType })
   file.hash = sha.getHash('B64')
-  return file
+  return file */
 }
 
 /**
