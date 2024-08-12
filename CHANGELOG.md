@@ -1,3 +1,15 @@
+## [1.19.3](https://github.com/develupo/venom/compare/v1.19.2...v1.19.3) (2024-08-12)
+
+
+### Bug Fixes
+
+* remove global object ([730a38c](https://github.com/develupo/venom/commit/730a38ce3c22505733e13a35f5922ab628ac9dcb))
+
+
+### Performance Improvements
+
+* send file ([b81998f](https://github.com/develupo/venom/commit/b81998fc7d739b7c84403f43359eff56f87316ac))
+
 ## [1.19.2](https://github.com/develupo/venom/compare/v1.19.1...v1.19.2) (2024-08-07)
 
 
