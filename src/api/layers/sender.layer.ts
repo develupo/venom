@@ -13,6 +13,15 @@ import { ChatState } from '../model/enum'
 import { AutomateLayer } from './automate.layer'
 import { Scope, checkValuesSender } from '../helpers/layers-interface'
 import { logger } from '../../utils/logger'
+import {
+  AnyMediaMessageContent,
+  encodeBase64EncodedStringForUpload,
+  generateWAMessage,
+  getUrlInfo,
+  MEDIA_PATH_MAP,
+  WAMediaUploadFunction,
+} from '../../Baileys/src'
+import axios from 'axios'
 
 export class SenderLayer extends AutomateLayer {
   constructor(
@@ -1587,6 +1596,182 @@ export class SenderLayer extends AutomateLayer {
       }
 
       throw error
+    }
+  }
+
+  /*
+  message.data.to,
+  message.data.file.url,
+  message.data.file.name,
+  message.data.text,
+  this.generateSerializableMessageId(message.data.id, message.data.to),
+*/
+
+  async sendFileEncrypting(
+    chatId,
+    url,
+    filename,
+    caption,
+    mediaType: string,
+    passId
+  ) {
+    const checkNumber = true
+    const newMsgId = await this.processBrowserFunction(
+      null,
+      {
+        passId,
+        checkNumber,
+      },
+      async ({ passId, checkNumber }) => {
+        return WAPI.setNewMessageId(passId, checkNumber)
+      },
+      40000 // 40 seconds timeout
+    )
+    const hostDevice = (await this.getHostDevice()) as { id: { user: string } }
+
+    // const messageId = `true_556481422014@c.us_${newMsgId.id}`
+    // const jid = '556481422014@s.whatsapp.net'
+    // const userJid = '556492748515:60@s.whatsapp.net'
+    // const content = { image: { url: 'https://i.imgur.com/8PUI9na.png' } }
+
+    const content = {} as AnyMediaMessageContent // TODO - ADICIONAR MAIS DADOS NO CONTENT
+    content[mediaType] = { url } // image | video | audio | sticker | document
+
+    const fullMsg = await generateWAMessage(chatId, content, {
+      logger,
+      userJid: `${hostDevice.id.user}@c.us`,
+      getUrlInfo: (text) =>
+        getUrlInfo(text, {
+          thumbnailWidth: 192,
+          fetchOpts: {
+            timeout: 3_000,
+          },
+          logger,
+          uploadImage: this.uploadToWpp(),
+        }),
+      upload: this.uploadToWpp(),
+      messageId: newMsgId.id,
+    })
+
+    const keyMap = {
+      image: 'imageMessage',
+    }
+
+    const message = {
+      // TODO - ADICIONAR MAIS INFORMAÇÕES AQUI NA MENSAGEM (AUDIO, VIDEO E IMAGEM)
+      id: newMsgId,
+      ack: 0,
+      to: chatId,
+      local: true,
+      self: 'out',
+      t: Math.floor(Date.now() / 1000),
+      isNewMsg: true,
+      invis: true,
+      type: 'document', // TODO - AVALIAR
+      deprecatedMms3Url: fullMsg.message[keyMap[mediaType]].url,
+      directPath: fullMsg.message[keyMap[mediaType]].directPath,
+      encFilehash: btoa(
+        String.fromCharCode.apply(
+          null,
+          fullMsg.message[keyMap[mediaType]].fileEncSha256
+        )
+      ),
+      filehash: btoa(
+        String.fromCharCode.apply(
+          null,
+          fullMsg.message[keyMap[mediaType]].fileSha256
+        )
+      ),
+      mediaKeyTimestamp: parseInt(
+        fullMsg.message[keyMap[mediaType]].mediaKeyTimestamp
+      ),
+      mimetype: fullMsg.message[keyMap[mediaType]].mimetype,
+      ephemeralStartTimestamp: parseInt(
+        fullMsg.message[keyMap[mediaType]].mediaKeyTimestamp
+      ),
+      mediaKey: btoa(
+        String.fromCharCode.apply(
+          null,
+          fullMsg.message[keyMap[mediaType]].mediaKey
+        )
+      ),
+      size: parseInt(fullMsg.message[keyMap[mediaType]].fileLength),
+      caption,
+      filename,
+    }
+
+    return this.processBrowserFunction(
+      null,
+      {
+        message,
+        chatId,
+        passId,
+      },
+      ({ message, chatId, passId }) => {
+        return WAPI.sendFileFromMessage(message, chatId, passId)
+      },
+      40000 // 40 seconds timeout
+    )
+  }
+
+  private uploadToWpp = (): WAMediaUploadFunction => {
+    return async (stream, { mediaType, fileEncSha256B64, timeoutMs }) => {
+      // send a query JSON to obtain the url & auth token to upload our media
+      let uploadInfo = await this.getMediaConn(false)
+
+      let urls: { mediaUrl: string; directPath: string } | undefined
+
+      fileEncSha256B64 = encodeBase64EncodedStringForUpload(fileEncSha256B64)
+
+      for (const { hostname } of uploadInfo.hosts) {
+        logger.debug(`uploading to "${hostname}"`)
+
+        const auth = encodeURIComponent(uploadInfo.auth) // the auth token
+        const url = `https://${hostname}${MEDIA_PATH_MAP[mediaType]}/${fileEncSha256B64}?auth=${auth}&token=${fileEncSha256B64}`
+        let result: any
+        try {
+          const body = await axios.post(url, stream, {
+            headers: {
+              'Content-Type': 'application/octet-stream',
+              Origin: 'https://web.whatsapp.com',
+            },
+            // httpsAgent: fetchAgent,
+            timeout: timeoutMs,
+            responseType: 'json',
+            maxBodyLength: Infinity,
+            maxContentLength: Infinity,
+          })
+          result = body.data
+
+          if (result?.url || result?.directPath) {
+            urls = {
+              mediaUrl: result.url,
+              directPath: result.direct_path,
+            }
+            break
+          } else {
+            uploadInfo = await this.getMediaConn(true)
+            throw new Error(`upload failed, reason: ${JSON.stringify(result)}`)
+          }
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            result = error.response?.data
+          }
+
+          const isLast =
+            hostname === uploadInfo.hosts[uploadInfo.hosts.length - 1]?.hostname
+          logger.warn(
+            { trace: error.stack, uploadResult: result },
+            `Error in uploading to ${hostname} ${isLast ? '' : ', retrying...'}`
+          )
+        }
+      }
+
+      if (!urls) {
+        throw new Error('Media upload failed on all hosts')
+      }
+
+      return urls
     }
   }
 }

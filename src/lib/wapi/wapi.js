@@ -33,6 +33,7 @@ import {
   getGroupParticipant,
   getHost,
   getMe,
+  getMediaConn,
   getMessageById,
   getMyContacts,
   getNewId,
@@ -58,6 +59,7 @@ import {
   sendChatstate,
   sendContactVcard,
   sendFile,
+  sendFileFromMessage,
   sendFileFromUrl,
   sendPtt,
   sendImage,
@@ -336,6 +338,7 @@ if (typeof window.WAPI === 'undefined') {
   window.WAPI.sendImage = sendImage
   window.WAPI.sendPtt = sendPtt
   window.WAPI.sendFile = sendFile
+  window.WAPI.sendFileFromMessage = sendFileFromMessage
   window.WAPI.sendFileFromUrl = sendFileFromUrl
   window.WAPI.setMyName = setMyName
   window.WAPI.setMyStatus = setMyStatus
@@ -416,6 +419,7 @@ if (typeof window.WAPI === 'undefined') {
   window.WAPI.isConnected = isConnected
   window.WAPI.isLoggedIn = isLoggedIn
   window.WAPI.getBatteryLevel = getBatteryLevel
+  window.WAPI.getMediaConn = getMediaConn
   window.WAPI.base64ImageToFile = base64ToFile
   window.WAPI.base64ToFile = base64ToFile
   window.WAPI.restartService = restartService

@@ -45,4 +45,8 @@ export const filterObjects = [
     type: 'sendRevokeMsgs',
     when: (module) => (module.sendRevokeMsgs ? module.sendRevokeMsgs : null),
   },
+  {
+    type: 'WAWebMediaHosts',
+    when: (module) => (module.mediaHosts ? module.mediaHosts : null),
+  },
 ]
