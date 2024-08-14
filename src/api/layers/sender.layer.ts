@@ -717,13 +717,29 @@ export class SenderLayer extends AutomateLayer {
     filename: string,
     passId: any
   ) {
+    const response = await axios.get(url, { responseType: 'stream' })
+    const mimeType = response.headers['content-type'] as string
+
+    const pptMimeTypeList = [
+      'audio/aac',
+      'audio/vnd.dlna.adts',
+      'audio/ogg',
+      'audio/mp3',
+      'audio/wav',
+    ]
+
+    const ptt = pptMimeTypeList.some((pptMimeType) => {
+      return pptMimeType.includes(mimeType)
+    })
+
     return await this.sendEncryptedFile(
       to,
       url,
       filename,
       undefined,
       'audio',
-      passId
+      passId,
+      ptt
     )
   }
 
@@ -1631,12 +1647,13 @@ export class SenderLayer extends AutomateLayer {
   */
 
   async sendEncryptedFile(
-    chatId,
-    url,
-    filename,
-    caption,
+    chatId: string,
+    url: string,
+    filename: string,
+    caption: string,
     mediaType: string,
-    passId
+    passId: string,
+    ptt: boolean = false
   ) {
     // TODO -  Validações de mimeType
 
@@ -1659,7 +1676,7 @@ export class SenderLayer extends AutomateLayer {
     // const userJid = '556492748515:60@s.whatsapp.net'
     // const content = { image: { url: 'https://i.imgur.com/8PUI9na.png' } }
 
-    const content = {} as AnyMediaMessageContent // TODO - ADICIONAR MAIS DADOS NO CONTENT
+    const content = { ptt } as AnyMediaMessageContent // TODO - ADICIONAR MAIS DADOS NO CONTENT
     content[mediaType] = { url } // image | video | audio | sticker | document
 
     const fullMsg = await generateWAMessage(chatId, content, {
@@ -1683,6 +1700,7 @@ export class SenderLayer extends AutomateLayer {
       caption,
       filename,
       mediaType,
+      ptt,
     })
 
     return this.processBrowserFunction(
@@ -1699,7 +1717,7 @@ export class SenderLayer extends AutomateLayer {
     )
   }
 
-  private prepareMessage({ fullMsg, caption, filename, mediaType }) {
+  private prepareMessage({ fullMsg, caption, filename, mediaType, ptt }) {
     const keyMap = {
       image: 'imageMessage',
       video: 'videoMessage',
@@ -1754,9 +1772,11 @@ export class SenderLayer extends AutomateLayer {
         // width = undefined // Não sei se precisa, tem de analisar
         break
       case 'audio':
-        // preview = undefined // Não sei se precisa, tem de analisar
-        // waveform = undefined // TEM QUE FAZER
-        // duration = undefined // TEM QUE FAZER
+        result.duration = realMessage.seconds // TEM QUE FAZER
+        result.waveform = realMessage.waveform // TEM QUE FAZER
+        if (ptt) {
+          result.type = 'ptt'
+        }
         break
       case 'document':
         result.filename = filename
