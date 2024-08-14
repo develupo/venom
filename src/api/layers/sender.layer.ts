@@ -719,6 +719,7 @@ export class SenderLayer extends AutomateLayer {
     caption: string,
     passId: any
   ) {
+    // TODO - Validações de mimeType
     const scope = '[SenderLayer.sendImageFromSocket]'
     return await this.sendEncryptedFile(
       scope,
@@ -744,6 +745,7 @@ export class SenderLayer extends AutomateLayer {
     caption: string,
     passId: any
   ) {
+    // TODO - Validações de mimeType
     const scope = '[SenderLayer.sendVideoFromSocket]'
     return await this.sendEncryptedFile(
       scope,
@@ -769,6 +771,7 @@ export class SenderLayer extends AutomateLayer {
     filename: string,
     passId: any
   ) {
+    // TODO - Validações de mimeType
     const scope = '[SenderLayer.sendVoiceFromSocket]'
     return await this.sendEncryptedFile(
       scope,
@@ -777,6 +780,32 @@ export class SenderLayer extends AutomateLayer {
       filename,
       undefined,
       'audio',
+      passId
+    )
+  }
+
+  /**
+   * Sends document from socket
+   * @param to chat id
+   * @param url file url path
+   * @param filename file name
+   * @param passId if of new message
+   */
+  public async sendDocumentFromSocket(
+    to: string,
+    url: string,
+    filename: string,
+    caption: string,
+    passId: any
+  ) {
+    const scope = '[SenderLayer.sendDocumentFromSocket]'
+    return await this.sendEncryptedFile(
+      scope,
+      to,
+      url,
+      filename,
+      caption,
+      'document',
       passId
     )
   }
@@ -1685,7 +1714,6 @@ export class SenderLayer extends AutomateLayer {
     mediaType: keyof typeof MEDIA_PATH,
     passId: string
   ) {
-    // TODO - Validações de mimeType
     // TODO - Validação se está em processo de envio
     const checkNumber = true
     const newMsgId = await this.processBrowserFunction(
@@ -1743,7 +1771,7 @@ export class SenderLayer extends AutomateLayer {
   }
 
   private prepareMessage(
-    scope,
+    scope: string,
     { fullMsg, caption, filename, mediaType, mimeType }
   ) {
     const key = getContentType(fullMsg.message)
@@ -1795,7 +1823,6 @@ export class SenderLayer extends AutomateLayer {
       case MEDIA_PATH.document:
         result.filename = filename
         result.caption = caption
-        // preview = undefined // Não sei se precisa, tem de analisar
         break
       default:
         logger.error(
