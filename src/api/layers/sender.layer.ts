@@ -14,15 +14,16 @@ import { AutomateLayer } from './automate.layer'
 import { Scope, checkValuesSender } from '../helpers/layers-interface'
 import { logger } from '../../utils/logger'
 import {
-  AnyMediaMessageContent,
   encodeBase64EncodedStringForUpload,
   generateWAMessage,
   getContentType,
   getUrlInfo,
+  MEDIA_PATH,
   MEDIA_PATH_MAP,
   WAMediaUploadFunction,
 } from '../../Baileys/src'
 import axios from 'axios'
+import { fileTypeChecker } from '../helpers/file-type-checker'
 
 export class SenderLayer extends AutomateLayer {
   constructor(
@@ -769,21 +770,6 @@ export class SenderLayer extends AutomateLayer {
     passId: any
   ) {
     const scope = '[SenderLayer.sendVoiceFromSocket]'
-    const response = await axios.get(url, { responseType: 'stream' })
-    const mimeType = response.headers['content-type'] as string
-
-    const pptMimeTypeList = [
-      'audio/aac',
-      'audio/vnd.dlna.adts',
-      'audio/ogg',
-      'audio/mp3',
-      'audio/wav',
-    ]
-
-    const ptt = pptMimeTypeList.some((pptMimeType) => {
-      return pptMimeType.includes(mimeType)
-    })
-
     return await this.sendEncryptedFile(
       scope,
       to,
@@ -791,8 +777,7 @@ export class SenderLayer extends AutomateLayer {
       filename,
       undefined,
       'audio',
-      passId,
-      ptt
+      passId
     )
   }
 
@@ -1691,27 +1676,17 @@ export class SenderLayer extends AutomateLayer {
     }
   }
 
-  /*
-  message.data.to,
-  message.data.file.url,
-  message.data.file.name,
-  message.data.text,
-  this.generateSerializableMessageId(message.data.id, message.data.to),
-  */
-
   async sendEncryptedFile(
     scope: string,
     chatId: string,
     url: string,
     filename: string,
     caption: string,
-    mediaType: 'image' | 'video' | 'audio' | 'document',
-    passId: string,
-    ptt: boolean = false
+    mediaType: keyof typeof MEDIA_PATH,
+    passId: string
   ) {
     // TODO - Validações de mimeType
     // TODO - Validação se está em processo de envio
-
     const checkNumber = true
     const newMsgId = await this.processBrowserFunction(
       null,
@@ -1726,8 +1701,8 @@ export class SenderLayer extends AutomateLayer {
     )
     const hostDevice = (await this.getHostDevice()) as { id: { user: string } }
 
-    const content = { ptt } as AnyMediaMessageContent
-    content[mediaType] = { url }
+    const response = await axios.get(url, { responseType: 'stream' })
+    const content = fileTypeChecker.getFileContent(response, mediaType)
 
     const fullMsg = await generateWAMessage(chatId, content, {
       logger,
@@ -1750,7 +1725,7 @@ export class SenderLayer extends AutomateLayer {
       caption,
       filename,
       mediaType,
-      ptt,
+      mimeType: content.mimetype,
     })
 
     return this.processBrowserFunction(
@@ -1769,7 +1744,7 @@ export class SenderLayer extends AutomateLayer {
 
   private prepareMessage(
     scope,
-    { fullMsg, caption, filename, mediaType, ptt }
+    { fullMsg, caption, filename, mediaType, mimeType }
   ) {
     const key = getContentType(fullMsg.message)
 
@@ -1805,21 +1780,19 @@ export class SenderLayer extends AutomateLayer {
     }
 
     switch (mediaType) {
-      case 'image':
-      case 'video':
+      case MEDIA_PATH.image:
+      case MEDIA_PATH.video:
         result.caption = caption
         result.preview = this.bufferToBase64(realMessage.jpegThumbnail)
         result.height = realMessage.height
         result.width = realMessage.width
         break
-      case 'audio':
-        result.duration = realMessage.seconds // TEM QUE FAZER
-        result.waveform = realMessage.waveform // TEM QUE FAZER
-        if (ptt) {
-          result.type = 'ptt'
-        }
+      case MEDIA_PATH.audio:
+        result.duration = realMessage.seconds
+        result.waveform = this.bufferToBase64(realMessage.waveform)
+        result.type = fileTypeChecker.normalizeAudioType(mimeType)
         break
-      case 'document':
+      case MEDIA_PATH.document:
         result.filename = filename
         result.caption = caption
         // preview = undefined // Não sei se precisa, tem de analisar
