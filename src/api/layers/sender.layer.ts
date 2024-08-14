@@ -731,6 +731,31 @@ export class SenderLayer extends AutomateLayer {
   }
 
   /**
+   * Sends video from socket
+   * @param to chat id
+   * @param url file url path
+   * @param caption caption
+   * @param passId if of new message
+   */
+  public async sendVideoFromSocket(
+    to: string,
+    url: string,
+    caption: string,
+    passId: any
+  ) {
+    const scope = '[SenderLayer.sendVideoFromSocket]'
+    return await this.sendEncryptedFile(
+      scope,
+      to,
+      url,
+      undefined,
+      caption,
+      'video',
+      passId
+    )
+  }
+
+  /**
    * Sends voice from socket
    * @param to chat id
    * @param url file url path
@@ -1762,9 +1787,7 @@ export class SenderLayer extends AutomateLayer {
       case 'image':
       case 'video':
         result.caption = caption
-        result.preview = this.bufferToBase64(
-          fullMsg.message.imageMessage.jpegThumbnail
-        )
+        result.preview = this.bufferToBase64(realMessage.jpegThumbnail)
         result.height = realMessage.height
         result.width = realMessage.width
         break
