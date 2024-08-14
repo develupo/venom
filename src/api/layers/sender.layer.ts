@@ -705,6 +705,29 @@ export class SenderLayer extends AutomateLayer {
   }
 
   /**
+   * Sends from from socket
+   * @param to chat id
+   * @param url file url path
+   * @param filename file name
+   * @param passId if of new message
+   */
+  public async sendVoiceFromSocket(
+    to: string,
+    url: string,
+    filename: string,
+    passId: any
+  ) {
+    return await this.sendEncryptedFile(
+      to,
+      url,
+      filename,
+      undefined,
+      'audio',
+      passId
+    )
+  }
+
+  /**
    * Sends message with thumbnail
    * @param thumb
    * @param url
@@ -1605,9 +1628,9 @@ export class SenderLayer extends AutomateLayer {
   message.data.file.name,
   message.data.text,
   this.generateSerializableMessageId(message.data.id, message.data.to),
-*/
+  */
 
-  async sendFileEncrypting(
+  async sendEncryptedFile(
     chatId,
     url,
     filename,
@@ -1655,10 +1678,17 @@ export class SenderLayer extends AutomateLayer {
       messageId: newMsgId.id,
     })
 
+    const messagePayload = this.prepareMessage({
+      fullMsg,
+      caption,
+      filename,
+      mediaType,
+    })
+
     return this.processBrowserFunction(
       null,
       {
-        message: this.prepareMessage({ fullMsg, caption, filename, mediaType }),
+        message: messagePayload,
         chatId,
         passId,
       },
