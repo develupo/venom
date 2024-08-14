@@ -1,3 +1,14 @@
+function checkSendResult(result) {
+  const sendResult = result?.[1]
+  const sendFailed = !(
+    sendResult === 'success' ||
+    sendResult === 'OK' ||
+    sendResult.messageSendResult === 'OK'
+  )
+
+  if (!sendResult || sendFailed) throw new Error('The message was not sent')
+}
+
 export async function sendFileFromMessage(message, chatId, passId) {
   const chat = await WAPI.sendExist(chatId)
   if (!chat || chat.status === 404 || !chat.id) {
@@ -20,7 +31,7 @@ export async function sendFileFromMessage(message, chatId, passId) {
       window.Store.addAndSendMsgToChat(chat, messageToSend)
     )
 
-    if (!result[1]) throw new Error('The message was not sent')
+    checkSendResult(result)
 
     return WAPI.scope(message.id, false, result[1], null)
   } catch (error) {
