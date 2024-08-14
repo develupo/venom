@@ -17,6 +17,7 @@ import {
   AnyMediaMessageContent,
   encodeBase64EncodedStringForUpload,
   generateWAMessage,
+  getContentType,
   getUrlInfo,
   MEDIA_PATH_MAP,
   WAMediaUploadFunction,
@@ -705,7 +706,32 @@ export class SenderLayer extends AutomateLayer {
   }
 
   /**
-   * Sends from from socket
+   * Sends image from socket
+   * @param to chat id
+   * @param url file url path
+   * @param caption caption
+   * @param passId if of new message
+   */
+  public async sendImageFromSocket(
+    to: string,
+    url: string,
+    caption: string,
+    passId: any
+  ) {
+    const scope = '[SenderLayer.sendImageFromSocket]'
+    return await this.sendEncryptedFile(
+      scope,
+      to,
+      url,
+      undefined,
+      caption,
+      'image',
+      passId
+    )
+  }
+
+  /**
+   * Sends voice from socket
    * @param to chat id
    * @param url file url path
    * @param filename file name
@@ -717,7 +743,9 @@ export class SenderLayer extends AutomateLayer {
     filename: string,
     passId: any
   ) {
+    const scope = '[SenderLayer.sendVoiceFromSocket]'
     return await this.sendEncryptedFile(
+      scope,
       to,
       url,
       filename,
@@ -1631,14 +1659,16 @@ export class SenderLayer extends AutomateLayer {
   */
 
   async sendEncryptedFile(
-    chatId,
-    url,
-    filename,
-    caption,
-    mediaType: string,
-    passId
+    scope: string,
+    chatId: string,
+    url: string,
+    filename: string,
+    caption: string,
+    mediaType: 'image' | 'video' | 'audio' | 'document',
+    passId: any
   ) {
-    // TODO -  Validações de mimeType
+    // TODO - Validações de mimeType
+    // TODO - Validação se está em processo de envio
 
     const checkNumber = true
     const newMsgId = await this.processBrowserFunction(
@@ -1654,13 +1684,8 @@ export class SenderLayer extends AutomateLayer {
     )
     const hostDevice = (await this.getHostDevice()) as { id: { user: string } }
 
-    // const messageId = `true_556481422014@c.us_${newMsgId.id}`
-    // const jid = '556481422014@s.whatsapp.net'
-    // const userJid = '556492748515:60@s.whatsapp.net'
-    // const content = { image: { url: 'https://i.imgur.com/8PUI9na.png' } }
-
-    const content = {} as AnyMediaMessageContent // TODO - ADICIONAR MAIS DADOS NO CONTENT
-    content[mediaType] = { url } // image | video | audio | sticker | document
+    const content = {} as AnyMediaMessageContent
+    content[mediaType] = { url }
 
     const fullMsg = await generateWAMessage(chatId, content, {
       logger,
@@ -1678,7 +1703,7 @@ export class SenderLayer extends AutomateLayer {
       messageId: newMsgId.id,
     })
 
-    const messagePayload = this.prepareMessage({
+    const messagePayload = this.prepareMessage(scope, {
       fullMsg,
       caption,
       filename,
@@ -1699,21 +1724,16 @@ export class SenderLayer extends AutomateLayer {
     )
   }
 
-  private prepareMessage({ fullMsg, caption, filename, mediaType }) {
-    const keyMap = {
-      image: 'imageMessage',
-      video: 'videoMessage',
-      audio: 'audioMessage',
-      document: 'documentMessage',
-    }
+  private prepareMessage(scope, { fullMsg, caption, filename, mediaType }) {
+    const key = getContentType(fullMsg.message)
 
-    const realMessage = fullMsg.message[keyMap[mediaType]]
+    const realMessage = fullMsg.message[key]
 
     const result = {
       ack: 0,
       local: true,
       self: 'out',
-      t: Math.floor(Date.now() / 1000),
+      t: Math.floor(Date.now() / 1000), // Verificar se é  um problema esse tempo aqui
       isNewMsg: true,
       invis: true,
       type: mediaType,
@@ -1740,18 +1760,13 @@ export class SenderLayer extends AutomateLayer {
 
     switch (mediaType) {
       case 'image':
+      case 'video':
         result.caption = caption
         result.preview = this.bufferToBase64(
           fullMsg.message.imageMessage.jpegThumbnail
         )
         result.height = realMessage.height
         result.width = realMessage.width
-        break
-      case 'video':
-        result.caption = caption
-        // preview = undefined // Não sei se precisa, tem de analisar
-        // height = undefined // Não sei se precisa, tem de analisar
-        // width = undefined // Não sei se precisa, tem de analisar
         break
       case 'audio':
         // preview = undefined // Não sei se precisa, tem de analisar
@@ -1765,10 +1780,11 @@ export class SenderLayer extends AutomateLayer {
         break
       default:
         logger.error(
-          `[VenomBot.sender.prepareMessage] mediaType not allowed: ${mediaType}. Message: ${JSON.stringify(
+          `${scope} mediaType not allowed: ${mediaType}. Message: ${JSON.stringify(
             fullMsg
           )}`
         )
+        // TODO - Throw aqui ou solução melhor
         break
     }
 
@@ -1781,7 +1797,6 @@ export class SenderLayer extends AutomateLayer {
 
   private uploadToWpp = (): WAMediaUploadFunction => {
     return async (stream, { mediaType, fileEncSha256B64, timeoutMs }) => {
-      // send a query JSON to obtain the url & auth token to upload our media
       let uploadInfo = await this.getMediaConn(false)
 
       let urls: { mediaUrl: string; directPath: string } | undefined
@@ -1791,7 +1806,7 @@ export class SenderLayer extends AutomateLayer {
       for (const { hostname } of uploadInfo.hosts) {
         logger.debug(`uploading to "${hostname}"`)
 
-        const auth = encodeURIComponent(uploadInfo.auth) // the auth token
+        const auth = encodeURIComponent(uploadInfo.auth)
         const url = `https://${hostname}${MEDIA_PATH_MAP[mediaType]}/${fileEncSha256B64}?auth=${auth}&token=${fileEncSha256B64}`
         let result: any
         try {
@@ -1800,7 +1815,6 @@ export class SenderLayer extends AutomateLayer {
               'Content-Type': 'application/octet-stream',
               Origin: 'https://web.whatsapp.com',
             },
-            // httpsAgent: fetchAgent,
             timeout: timeoutMs,
             responseType: 'json',
             maxBodyLength: Infinity,
