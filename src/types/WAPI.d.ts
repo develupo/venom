@@ -3,6 +3,8 @@ import {
   Contact,
   ContactStatus,
   GroupCreation,
+  Id,
+  MediaConn,
   Message,
   // PartialMessage,
   SendFileResult,
@@ -54,6 +56,7 @@ interface WAPI {
   ) => Message[]
 
   getBatteryLevel: () => number
+  getMediaConn: () => MediaConn
   getBlockList: () => Contact[]
   getBusinessProfilesProducts: (to: string) => any
   getChat: (contactId: string) => Chat
@@ -69,6 +72,7 @@ interface WAPI {
   getHost: () => any //HostDevice;
   getListMute: (type?: string) => object
   getStateConnection: () => String
+  setNewMessageId: (passId: any, checkNumber: boolean) => Id
   getNewMessageId: (chatId: string) => Object
   getMessageById: (messageId: string) => Promise<Message>
   getNumberProfile: (contactId: string) => Object
@@ -144,6 +148,11 @@ interface WAPI {
     checkNumber?: boolean,
     forcingReturn?: boolean,
     delSend?: boolean
+  ) => Promise<SendFileResult>
+  sendFileFromMessage: (
+    message: any,
+    chatId: string,
+    passId: any
   ) => Promise<SendFileResult>
   sendFileFromUrl: (
     to: string,
