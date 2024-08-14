@@ -1716,7 +1716,8 @@ export class SenderLayer extends AutomateLayer {
   ) {
     // TODO - Validação se está em processo de envio
     const checkNumber = true
-    const newMsgId = await this.processBrowserFunction(
+
+    const newMessageId = await this.processBrowserFunction(
       null,
       {
         passId,
@@ -1732,7 +1733,7 @@ export class SenderLayer extends AutomateLayer {
     const response = await axios.get(url, { responseType: 'stream' })
     const content = fileTypeChecker.getFileContent(response, mediaType)
 
-    const fullMsg = await generateWAMessage(chatId, content, {
+    const fullMessage = await generateWAMessage(chatId, content, {
       logger,
       userJid: `${hostDevice.id.user}@c.us`,
       getUrlInfo: (text) =>
@@ -1745,15 +1746,15 @@ export class SenderLayer extends AutomateLayer {
           uploadImage: this.uploadToWpp(),
         }),
       upload: this.uploadToWpp(),
-      messageId: newMsgId.id,
+      messageId: newMessageId.id,
     })
 
     const messagePayload = this.prepareMessage(scope, {
-      fullMsg,
+      fullMessage,
       caption,
       filename,
       mediaType,
-      mimeType: content.mimetype,
+      content,
     })
 
     return this.processBrowserFunction(
@@ -1772,13 +1773,15 @@ export class SenderLayer extends AutomateLayer {
 
   private prepareMessage(
     scope: string,
-    { fullMsg, caption, filename, mediaType, mimeType }
+    { fullMessage, caption, filename, mediaType, content }
   ) {
-    const key = getContentType(fullMsg.message)
-
-    const realMessage = fullMsg.message[key]
+    const key = getContentType(fullMessage.message)
+    const realMessage = fullMessage.message[key]
 
     const result = {
+      // id: newMsgId,
+      // from: fromwWid,
+      // to: chat.id,
       ack: 0,
       local: true,
       self: 'out',
@@ -1816,9 +1819,10 @@ export class SenderLayer extends AutomateLayer {
         result.width = realMessage.width
         break
       case MEDIA_PATH.audio:
+        result.filename = filename
         result.duration = realMessage.seconds
-        result.waveform = this.bufferToBase64(realMessage.waveform)
-        result.type = fileTypeChecker.normalizeAudioType(mimeType)
+        result.waveform = realMessage.waveform
+        result.type = fileTypeChecker.normalizeAudioType(content.ptt)
         break
       case MEDIA_PATH.document:
         result.filename = filename
@@ -1827,7 +1831,7 @@ export class SenderLayer extends AutomateLayer {
       default:
         logger.error(
           `${scope} mediaType not allowed: ${mediaType}. Message: ${JSON.stringify(
-            fullMsg
+            fullMessage
           )}`
         )
         // TODO - Throw aqui ou solução melhor

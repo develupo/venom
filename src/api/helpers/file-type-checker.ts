@@ -13,20 +13,17 @@ export class FileTypeChecked {
       case MEDIA_PATH.image:
         content = {
           image: { stream: response.data },
-          mimetype: mimeType,
         }
         return content
       case MEDIA_PATH.video:
         content = {
           video: { stream: response.data },
-          mimetype: mimeType,
         }
         return content
       case MEDIA_PATH.audio:
         content = {
           audio: { stream: response.data },
           ptt: this.isPtt(mimeType),
-          mimetype: mimeType,
         }
         return content
       default:
@@ -38,8 +35,8 @@ export class FileTypeChecked {
     }
   }
 
-  normalizeAudioType(mimeType: string): 'audio' | 'ptt' {
-    return this.isPtt(mimeType) ? 'ptt' : 'audio'
+  normalizeAudioType(isPtt: boolean): 'audio' | 'ptt' {
+    return isPtt ? 'ptt' : 'audio'
   }
 
   isPtt(mimeType: string): boolean {
