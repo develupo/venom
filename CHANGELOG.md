@@ -1,3 +1,10 @@
+# [1.21.0](https://github.com/develupo/venom/compare/v1.20.0...v1.21.0) (2024-08-15)
+
+
+### Features
+
+* improve send timeout ([22a4fd2](https://github.com/develupo/venom/commit/22a4fd2c15b64f9efa94ecb2fb17516f68ae8047))
+
 # [1.20.0](https://github.com/develupo/venom/compare/v1.19.3...v1.20.0) (2024-08-15)
 
 
