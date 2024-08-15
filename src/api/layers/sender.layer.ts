@@ -24,6 +24,10 @@ import {
 } from '../../Baileys/src'
 import axios from 'axios'
 import { fileTypeChecker } from '../helpers/file-type-checker'
+import { ValidationMessageError } from '../model/validation-message-error'
+import { VALIDATION_MESSAGE_ERROR } from '../model/enum/validation-message-error-list'
+import { isValidURL } from '../helpers/is-valid-url'
+import { PassId } from '../model/pass-id'
 
 export class SenderLayer extends AutomateLayer {
   constructor(
@@ -1710,11 +1714,18 @@ export class SenderLayer extends AutomateLayer {
     chatId: string,
     url: string,
     filename: string,
-    caption: string,
+    caption: string | undefined,
     mediaType: keyof typeof MEDIA_PATH,
-    passId: Object | undefined
+    passId: PassId | undefined
   ) {
-    // TODO - Validações de campos
+    this.validateSendEncryptedFileArgs(
+      scope,
+      chatId,
+      url,
+      filename,
+      mediaType,
+      passId
+    )
 
     const preSendFileFromSocketResult = await this.processBrowserFunction(
       scope,
@@ -1770,6 +1781,126 @@ export class SenderLayer extends AutomateLayer {
       },
       1000 // 1 seconds timeout
     )
+  }
+
+  private validateSendEncryptedFileArgs(
+    scope: string,
+    chatId: string,
+    url: string,
+    filename: string,
+    mediaType: keyof typeof MEDIA_PATH,
+    passId: PassId | undefined
+  ) {
+    if (
+      typeof chatId !== 'string' ||
+      (!chatId.endsWith('@g.us') && !chatId.endsWith('@c.us'))
+    ) {
+      logger.error(`${scope} invalid chatId: ${chatId}`)
+      throw new ValidationMessageError(
+        VALIDATION_MESSAGE_ERROR.INVALID_CONTACT_ID,
+        { chatId, url, filename, mediaType, passId }
+      )
+    }
+
+    if (typeof url !== 'string' || !url.trim() || !isValidURL(url)) {
+      logger.error(`${scope} invalid url: ${url}`)
+      throw new ValidationMessageError(VALIDATION_MESSAGE_ERROR.INVALID_URL, {
+        chatId,
+        url,
+        filename,
+        mediaType,
+        passId,
+      })
+    }
+
+    if (typeof filename !== 'string' || !filename.trim()) {
+      logger.error(`${scope} invalid filename: ${filename}`)
+      throw new ValidationMessageError(
+        VALIDATION_MESSAGE_ERROR.INVALID_FILENAME,
+        {
+          chatId,
+          url,
+          filename,
+          mediaType,
+          passId,
+        }
+      )
+    }
+
+    if (!Object.keys(MEDIA_PATH).includes(mediaType)) {
+      logger.error(`${scope} mediaType not allowed: ${mediaType}`)
+      throw new ValidationMessageError(
+        VALIDATION_MESSAGE_ERROR.MEDIA_TYPE_NOT_ALLOWED,
+        {
+          chatId,
+          url,
+          filename,
+          mediaType,
+          passId,
+        }
+      )
+    }
+
+    // Validate passId
+    if (passId !== undefined) {
+      if (typeof passId !== 'object' || passId === null) {
+        logger.error(`${scope} passId not object: ${passId}`)
+        throw new ValidationMessageError(
+          VALIDATION_MESSAGE_ERROR.INVALID_PASS_ID,
+          {
+            chatId,
+            url,
+            filename,
+            mediaType,
+            passId,
+          }
+        )
+      }
+
+      const { number, _serialized, id } = passId
+
+      if (typeof number !== 'string' || !number.trim()) {
+        logger.error(`${scope} - Invalid passId number: ${passId}`)
+        throw new ValidationMessageError(
+          VALIDATION_MESSAGE_ERROR.INVALID_PASS_ID,
+          {
+            chatId,
+            url,
+            filename,
+            mediaType,
+            passId,
+          }
+        )
+      }
+
+      if (typeof _serialized !== 'string' || !_serialized.trim()) {
+        logger.error(`${scope} - Invalid passId _serialized: ${passId}`)
+        throw new ValidationMessageError(
+          VALIDATION_MESSAGE_ERROR.INVALID_PASS_ID,
+          {
+            chatId,
+            url,
+            filename,
+            mediaType,
+            passId,
+          }
+        )
+      }
+
+      if (typeof id !== 'string' || !id.trim()) {
+        logger.error(`${scope} - Invalid passId id: ${passId}`)
+        throw new ValidationMessageError(
+          VALIDATION_MESSAGE_ERROR.INVALID_PASS_ID,
+          {
+            chatId,
+            url,
+            filename,
+            mediaType,
+            passId,
+          }
+        )
+      }
+    }
   }
 
   private prepareMessage(
@@ -1836,8 +1967,10 @@ export class SenderLayer extends AutomateLayer {
             fullMessage
           )}`
         )
-        // TODO - Throw aqui ou solução melhor
-        break
+        throw new ValidationMessageError(
+          VALIDATION_MESSAGE_ERROR.MEDIA_TYPE_NOT_ALLOWED,
+          { mediaType, fullMessage }
+        )
     }
 
     return result
