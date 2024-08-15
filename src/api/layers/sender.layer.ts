@@ -13,6 +13,21 @@ import { ChatState } from '../model/enum'
 import { AutomateLayer } from './automate.layer'
 import { Scope, checkValuesSender } from '../helpers/layers-interface'
 import { logger } from '../../utils/logger'
+import {
+  encodeBase64EncodedStringForUpload,
+  generateWAMessage,
+  getContentType,
+  getUrlInfo,
+  MEDIA_PATH,
+  MEDIA_PATH_MAP,
+  WAMediaUploadFunction,
+} from '../../Baileys/src'
+import axios from 'axios'
+import { fileTypeChecker } from '../helpers/file-type-checker'
+import { ValidationMessageError } from '../model/validation-message-error'
+import { VALIDATION_MESSAGE_ERROR } from '../model/enum/validation-message-error-list'
+import { isValidURL } from '../helpers/is-valid-url'
+import { PassId } from '../model/pass-id'
 
 export class SenderLayer extends AutomateLayer {
   constructor(
@@ -692,6 +707,110 @@ export class SenderLayer extends AutomateLayer {
       filename,
       allowedMimeType,
       type
+    )
+  }
+
+  /**
+   * Sends image from socket
+   * @param to chat id
+   * @param url file url path
+   * @param caption caption
+   * @param passId if of new message
+   */
+  public async sendImageFromSocket(
+    to: string,
+    url: string,
+    caption: string,
+    passId: any
+  ) {
+    // TODO - Validações de mimeType
+    const scope = '[SenderLayer.sendImageFromSocket]'
+    return await this.sendEncryptedFile(
+      scope,
+      to,
+      url,
+      undefined,
+      caption,
+      'image',
+      passId
+    )
+  }
+
+  /**
+   * Sends video from socket
+   * @param to chat id
+   * @param url file url path
+   * @param caption caption
+   * @param passId if of new message
+   */
+  public async sendVideoFromSocket(
+    to: string,
+    url: string,
+    caption: string,
+    passId: any
+  ) {
+    // TODO - Validações de mimeType
+    const scope = '[SenderLayer.sendVideoFromSocket]'
+    return await this.sendEncryptedFile(
+      scope,
+      to,
+      url,
+      undefined,
+      caption,
+      'video',
+      passId
+    )
+  }
+
+  /**
+   * Sends voice from socket
+   * @param to chat id
+   * @param url file url path
+   * @param filename file name
+   * @param passId if of new message
+   */
+  public async sendVoiceFromSocket(
+    to: string,
+    url: string,
+    filename: string,
+    passId: any
+  ) {
+    // TODO - Validações de mimeType
+    const scope = '[SenderLayer.sendVoiceFromSocket]'
+    return await this.sendEncryptedFile(
+      scope,
+      to,
+      url,
+      filename,
+      undefined,
+      'audio',
+      passId
+    )
+  }
+
+  /**
+   * Sends document from socket
+   * @param to chat id
+   * @param url file url path
+   * @param filename file name
+   * @param passId if of new message
+   */
+  public async sendDocumentFromSocket(
+    to: string,
+    url: string,
+    filename: string,
+    caption: string,
+    passId: any
+  ) {
+    const scope = '[SenderLayer.sendDocumentFromSocket]'
+    return await this.sendEncryptedFile(
+      scope,
+      to,
+      url,
+      filename,
+      caption,
+      'document',
+      passId
     )
   }
 
@@ -1587,6 +1706,336 @@ export class SenderLayer extends AutomateLayer {
       }
 
       throw error
+    }
+  }
+
+  async sendEncryptedFile(
+    scope: string,
+    chatId: string,
+    url: string,
+    filename: string,
+    caption: string | undefined,
+    mediaType: keyof typeof MEDIA_PATH,
+    passId: PassId | undefined
+  ) {
+    this.validateSendEncryptedFileArgs(
+      scope,
+      chatId,
+      url,
+      filename,
+      mediaType,
+      passId
+    )
+
+    const preSendFileFromSocketResult = await this.processBrowserFunction(
+      scope,
+      {
+        chatId,
+        passId,
+      },
+      async ({ chatId, passId }) => {
+        return WAPI.preSendFileFromSocket(chatId, passId)
+      },
+      2000 // 2 seconds timeout
+    )
+    const response = await axios.get(url, { responseType: 'stream' })
+    const content = fileTypeChecker.getFileContent(response, mediaType)
+
+    const fullMessage = await generateWAMessage(chatId, content, {
+      logger,
+      userJid: preSendFileFromSocketResult.instanceNumber,
+      getUrlInfo: (text) =>
+        getUrlInfo(text, {
+          thumbnailWidth: 192,
+          fetchOpts: {
+            timeout: 3_000,
+          },
+          logger,
+          uploadImage: this.uploadToWpp(),
+        }),
+      upload: this.uploadToWpp(),
+      messageId: preSendFileFromSocketResult.newMessageId,
+    })
+
+    const payload = {
+      message: this.prepareMessage(scope, {
+        fullMessage,
+        caption,
+        filename,
+        mediaType,
+        content,
+      }),
+      chatId,
+      passId,
+    }
+
+    return this.processBrowserFunction(
+      scope,
+      payload,
+      (payload) => {
+        return WAPI.sendFileFromMessage(
+          payload.message,
+          payload.chatId,
+          payload.passId
+        )
+      },
+      1000 // 1 seconds timeout
+    )
+  }
+
+  private validateSendEncryptedFileArgs(
+    scope: string,
+    chatId: string,
+    url: string,
+    filename: string,
+    mediaType: keyof typeof MEDIA_PATH,
+    passId: PassId | undefined
+  ) {
+    if (
+      typeof chatId !== 'string' ||
+      (!chatId.endsWith('@g.us') && !chatId.endsWith('@c.us'))
+    ) {
+      logger.error(`${scope} invalid chatId: ${chatId}`)
+      throw new ValidationMessageError(
+        VALIDATION_MESSAGE_ERROR.INVALID_CONTACT_ID,
+        { chatId, url, filename, mediaType, passId }
+      )
+    }
+
+    if (typeof url !== 'string' || !url.trim() || !isValidURL(url)) {
+      logger.error(`${scope} invalid url: ${url}`)
+      throw new ValidationMessageError(VALIDATION_MESSAGE_ERROR.INVALID_URL, {
+        chatId,
+        url,
+        filename,
+        mediaType,
+        passId,
+      })
+    }
+
+    if (typeof filename !== 'string' || !filename.trim()) {
+      logger.error(`${scope} invalid filename: ${filename}`)
+      throw new ValidationMessageError(
+        VALIDATION_MESSAGE_ERROR.INVALID_FILENAME,
+        {
+          chatId,
+          url,
+          filename,
+          mediaType,
+          passId,
+        }
+      )
+    }
+
+    if (!Object.keys(MEDIA_PATH).includes(mediaType)) {
+      logger.error(`${scope} mediaType not allowed: ${mediaType}`)
+      throw new ValidationMessageError(
+        VALIDATION_MESSAGE_ERROR.MEDIA_TYPE_NOT_ALLOWED,
+        {
+          chatId,
+          url,
+          filename,
+          mediaType,
+          passId,
+        }
+      )
+    }
+
+    // Validate passId
+    if (passId !== undefined) {
+      if (typeof passId !== 'object' || passId === null) {
+        logger.error(`${scope} passId not object: ${passId}`)
+        throw new ValidationMessageError(
+          VALIDATION_MESSAGE_ERROR.INVALID_PASS_ID,
+          {
+            chatId,
+            url,
+            filename,
+            mediaType,
+            passId,
+          }
+        )
+      }
+
+      const { number, _serialized, id } = passId
+
+      if (typeof number !== 'string' || !number.trim()) {
+        logger.error(`${scope} - Invalid passId number: ${passId}`)
+        throw new ValidationMessageError(
+          VALIDATION_MESSAGE_ERROR.INVALID_PASS_ID,
+          {
+            chatId,
+            url,
+            filename,
+            mediaType,
+            passId,
+          }
+        )
+      }
+
+      if (typeof _serialized !== 'string' || !_serialized.trim()) {
+        logger.error(`${scope} - Invalid passId _serialized: ${passId}`)
+        throw new ValidationMessageError(
+          VALIDATION_MESSAGE_ERROR.INVALID_PASS_ID,
+          {
+            chatId,
+            url,
+            filename,
+            mediaType,
+            passId,
+          }
+        )
+      }
+
+      if (typeof id !== 'string' || !id.trim()) {
+        logger.error(`${scope} - Invalid passId id: ${passId}`)
+        throw new ValidationMessageError(
+          VALIDATION_MESSAGE_ERROR.INVALID_PASS_ID,
+          {
+            chatId,
+            url,
+            filename,
+            mediaType,
+            passId,
+          }
+        )
+      }
+    }
+  }
+
+  private prepareMessage(
+    scope: string,
+    { fullMessage, caption, filename, mediaType, content }
+  ) {
+    const key = getContentType(fullMessage.message)
+
+    const generatedMessage = fullMessage.message[key]
+
+    const result = {
+      // id: newMessageId,
+      // from: fromwWid,
+      // to: chat.id,
+      ack: 0,
+      local: true,
+      self: 'out',
+      t: Math.floor(Date.now() / 1000),
+      isNewMsg: true,
+      invis: true,
+      type: mediaType,
+      deprecatedMms3Url: generatedMessage.url,
+      directPath: generatedMessage.directPath,
+      encFilehash: this.bufferToBase64(generatedMessage.fileEncSha256),
+      filehash: this.bufferToBase64(generatedMessage.fileSha256),
+      mediaKeyTimestamp: parseInt(generatedMessage.mediaKeyTimestamp),
+      mimetype: generatedMessage.mimetype,
+      ephemeralStartTimestamp: parseInt(generatedMessage.mediaKeyTimestamp),
+      mediaKey: this.bufferToBase64(generatedMessage.mediaKey),
+      size: parseInt(generatedMessage.fileLength),
+      url: generatedMessage.url,
+      staticUrl: generatedMessage.url,
+
+      caption: undefined,
+      filename: undefined,
+      preview: undefined,
+      height: undefined,
+      width: undefined,
+      waveform: undefined,
+      duration: undefined,
+    }
+
+    switch (mediaType) {
+      case MEDIA_PATH.image:
+      case MEDIA_PATH.video:
+        result.caption = caption
+        result.preview = this.bufferToBase64(generatedMessage.jpegThumbnail)
+        result.height = generatedMessage.height
+        result.width = generatedMessage.width
+        break
+      case MEDIA_PATH.audio:
+        result.filename = filename
+        result.duration = generatedMessage.seconds
+        result.waveform = generatedMessage.waveform
+        result.type = fileTypeChecker.normalizeAudioType(content.ptt)
+        break
+      case MEDIA_PATH.document:
+        result.filename = filename
+        result.caption = caption
+        break
+      default:
+        logger.error(
+          `${scope} mediaType not allowed: ${mediaType}. Message: ${JSON.stringify(
+            fullMessage
+          )}`
+        )
+        throw new ValidationMessageError(
+          VALIDATION_MESSAGE_ERROR.MEDIA_TYPE_NOT_ALLOWED,
+          { mediaType, fullMessage }
+        )
+    }
+
+    return result
+  }
+
+  private bufferToBase64(buffer: Buffer): string {
+    return btoa(String.fromCharCode.apply(null, buffer))
+  }
+
+  private uploadToWpp = (): WAMediaUploadFunction => {
+    return async (stream, { mediaType, fileEncSha256B64, timeoutMs }) => {
+      let uploadInfo = await this.getMediaConn(false)
+
+      let urls: { mediaUrl: string; directPath: string } | undefined
+
+      fileEncSha256B64 = encodeBase64EncodedStringForUpload(fileEncSha256B64)
+
+      for (const { hostname } of uploadInfo.hosts) {
+        logger.debug(`uploading to "${hostname}"`)
+
+        const auth = encodeURIComponent(uploadInfo.auth)
+        const url = `https://${hostname}${MEDIA_PATH_MAP[mediaType]}/${fileEncSha256B64}?auth=${auth}&token=${fileEncSha256B64}`
+        let result: any
+        try {
+          const body = await axios.post(url, stream, {
+            headers: {
+              'Content-Type': 'application/octet-stream',
+              Origin: 'https://web.whatsapp.com',
+            },
+            timeout: timeoutMs,
+            responseType: 'json',
+            maxBodyLength: Infinity,
+            maxContentLength: Infinity,
+          })
+          result = body.data
+
+          if (result?.url || result?.directPath) {
+            urls = {
+              mediaUrl: result.url,
+              directPath: result.direct_path,
+            }
+            break
+          } else {
+            uploadInfo = await this.getMediaConn(true)
+            throw new Error(`upload failed, reason: ${JSON.stringify(result)}`)
+          }
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            result = error.response?.data
+          }
+
+          const isLast =
+            hostname === uploadInfo.hosts[uploadInfo.hosts.length - 1]?.hostname
+          logger.warn(
+            { trace: error.stack, uploadResult: result },
+            `Error in uploading to ${hostname} ${isLast ? '' : ', retrying...'}`
+          )
+        }
+      }
+
+      if (!urls) {
+        throw new Error('Media upload failed on all hosts')
+      }
+
+      return urls
     }
   }
 }

@@ -15,10 +15,12 @@ import { sleep } from '../../utils/sleep'
 import { logger } from '../../utils/logger'
 import { statusManagement } from '../../controllers/status-management'
 import { interfaceStatusManagement } from '../../controllers/interface-management'
+import { MediaConn } from '../model'
 
 export class HostLayer {
   readonly session: string
   readonly options: CreateConfig
+  protected mediaConn: MediaConn
   protected autoCloseInterval = null
 
   constructor(
@@ -347,7 +349,7 @@ export class HostLayer {
   }
 
   /**
-   * Retrieves the connecction state
+   * Retrieves the connection state
    */
   public async getConnectionState(): Promise<SocketState> {
     return await this.page.evaluate(() => {
@@ -374,5 +376,23 @@ export class HostLayer {
    */
   public async getBatteryLevel() {
     return await this.page.evaluate(() => WAPI.getBatteryLevel())
+  }
+
+  /**
+   * Retrieves mediaConn hosts and auth
+   * @param forceGet - force a request to be made, instead of returning a cached value
+   */
+  protected async getMediaConn(forceGet: boolean = false) {
+    if (
+      forceGet ||
+      !this.mediaConn ||
+      new Date().getTime() >= this.mediaConn.authExpirationTime
+    ) {
+      const functionResult = await this.page.waitForFunction(() =>
+        WAPI.getMediaConn()
+      )
+      this.mediaConn = await functionResult.jsonValue()
+    }
+    return this.mediaConn
   }
 }

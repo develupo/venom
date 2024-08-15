@@ -3,7 +3,11 @@ import {
   Contact,
   ContactStatus,
   GroupCreation,
+  Id,
+  MediaConn,
   Message,
+  PreSendFileFromSocketResult,
+  ScopeResult,
   // PartialMessage,
   SendFileResult,
   SendLinkResult,
@@ -54,6 +58,7 @@ interface WAPI {
   ) => Message[]
 
   getBatteryLevel: () => number
+  getMediaConn: () => MediaConn
   getBlockList: () => Contact[]
   getBusinessProfilesProducts: (to: string) => any
   getChat: (contactId: string) => Chat
@@ -69,6 +74,7 @@ interface WAPI {
   getHost: () => any //HostDevice;
   getListMute: (type?: string) => object
   getStateConnection: () => String
+  setNewMessageId: (passId: any, checkNumber: boolean) => Id
   getNewMessageId: (chatId: string) => Object
   getMessageById: (messageId: string) => Promise<Message>
   getNumberProfile: (contactId: string) => Object
@@ -144,6 +150,11 @@ interface WAPI {
     checkNumber?: boolean,
     forcingReturn?: boolean,
     delSend?: boolean
+  ) => Promise<SendFileResult>
+  sendFileFromMessage: (
+    message: any,
+    chatId: string,
+    passId: any
   ) => Promise<SendFileResult>
   sendFileFromUrl: (
     to: string,
@@ -286,6 +297,11 @@ interface WAPI {
   processMessageObj: (a: any, b: any, c: any) => any
   createCommunity: (name: string, description: string) => void
   sendPollCreation: (to: string, poll: any) => void
+  resendMessageIfExists: (passId: any, newMsgId: any) => any
+  preSendFileFromSocket: (
+    chatId: string,
+    passId: any
+  ) => PreSendFileFromSocketResult | ScopeResult
 }
 
 declare global {

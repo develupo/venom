@@ -3,6 +3,7 @@ export { Contact } from './contact'
 export { GroupMetadata } from './group-metadata'
 export { Id } from './id'
 export { Message, LastReceivedKey } from './message'
+export { MediaConn } from './media-conn'
 export { ParticipantEvent } from './participant-event'
 export { PartialMessage } from './partial-message'
 export { Ack } from './ack'
@@ -16,4 +17,10 @@ export { ChatStatus } from './chat-status'
 export { InterfaceChangeMode } from './interface-mode'
 export { Revoke } from './revoke'
 export { FileSizeExceededError } from './file-size-exceeded-error'
-export * from './result'
+export {
+  ScopeResult,
+  SendFileResult,
+  SendStickerResult,
+  SendLinkResult,
+  PreSendFileFromSocketResult,
+} from './result'

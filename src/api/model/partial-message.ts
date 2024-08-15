@@ -16,7 +16,7 @@ export interface PartialMessage {
   labels: any[]
 }
 
-interface ID {
+export interface ID {
   fromMe: boolean
   remote: string
   id: string
