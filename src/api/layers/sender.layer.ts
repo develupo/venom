@@ -731,7 +731,7 @@ export class SenderLayer extends AutomateLayer {
       url,
       undefined,
       caption,
-      'image',
+      MEDIA_PATH.image,
       passId
     )
   }
@@ -757,7 +757,7 @@ export class SenderLayer extends AutomateLayer {
       url,
       undefined,
       caption,
-      'video',
+      MEDIA_PATH.video,
       passId
     )
   }
@@ -783,7 +783,7 @@ export class SenderLayer extends AutomateLayer {
       url,
       filename,
       undefined,
-      'audio',
+      MEDIA_PATH.audio,
       passId
     )
   }
@@ -809,7 +809,7 @@ export class SenderLayer extends AutomateLayer {
       url,
       filename,
       caption,
-      'document',
+      MEDIA_PATH.document,
       passId
     )
   }
@@ -1715,7 +1715,7 @@ export class SenderLayer extends AutomateLayer {
     url: string,
     filename: string,
     caption: string | undefined,
-    mediaType: keyof typeof MEDIA_PATH,
+    mediaType: MEDIA_PATH,
     passId: PassId | undefined
   ) {
     this.validateSendEncryptedFileArgs(
@@ -1739,23 +1739,32 @@ export class SenderLayer extends AutomateLayer {
       2000 // 2 seconds timeout
     )
     const response = await axios.get(url, { responseType: 'stream' })
-    const content = fileTypeChecker.getFileContent(response, mediaType)
+    const fileTypeCheckedResult = fileTypeChecker.getFileContent(
+      response,
+      mediaType
+    )
 
-    const fullMessage = await generateWAMessage(chatId, content, {
-      logger,
-      userJid: preSendFileFromSocketResult.instanceNumber,
-      getUrlInfo: (text) =>
-        getUrlInfo(text, {
-          thumbnailWidth: 192,
-          fetchOpts: {
-            timeout: 3_000,
-          },
-          logger,
-          uploadImage: this.uploadToWpp(),
-        }),
-      upload: this.uploadToWpp(),
-      messageId: preSendFileFromSocketResult.newMessageId,
-    })
+    mediaType = preSendFileFromSocketResult.mediaType
+
+    const fullMessage = await generateWAMessage(
+      chatId,
+      fileTypeCheckedResult.content,
+      {
+        logger,
+        userJid: preSendFileFromSocketResult.instanceNumber,
+        getUrlInfo: (text) =>
+          getUrlInfo(text, {
+            thumbnailWidth: 192,
+            fetchOpts: {
+              timeout: 3_000,
+            },
+            logger,
+            uploadImage: this.uploadToWpp(),
+          }),
+        upload: this.uploadToWpp(),
+        messageId: preSendFileFromSocketResult.newMessageId,
+      }
+    )
 
     const payload = {
       message: this.prepareMessage(scope, {
@@ -1763,7 +1772,7 @@ export class SenderLayer extends AutomateLayer {
         caption,
         filename,
         mediaType,
-        content,
+        content: fileTypeCheckedResult.content,
       }),
       chatId,
       passId,
@@ -1788,7 +1797,7 @@ export class SenderLayer extends AutomateLayer {
     chatId: string,
     url: string,
     filename: string,
-    mediaType: keyof typeof MEDIA_PATH,
+    mediaType: MEDIA_PATH,
     passId: PassId | undefined
   ) {
     if (
