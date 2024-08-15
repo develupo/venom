@@ -1725,7 +1725,7 @@ export class SenderLayer extends AutomateLayer {
       async ({ chatId, passId }) => {
         return WAPI.preSendFileFromSocket(chatId, passId)
       },
-      40000 // 40 seconds timeout
+      2000 // 2 seconds timeout
     )
     const response = await axios.get(url, { responseType: 'stream' })
     const content = fileTypeChecker.getFileContent(response, mediaType)
@@ -1746,25 +1746,29 @@ export class SenderLayer extends AutomateLayer {
       messageId: preSendFileFromSocketResult.newMessageId,
     })
 
-    const messagePayload = this.prepareMessage(scope, {
-      fullMessage,
-      caption,
-      filename,
-      mediaType,
-      content,
-    })
+    const payload = {
+      message: this.prepareMessage(scope, {
+        fullMessage,
+        caption,
+        filename,
+        mediaType,
+        content,
+      }),
+      chatId,
+      passId,
+    }
 
     return this.processBrowserFunction(
-      null,
-      {
-        message: messagePayload,
-        chatId,
-        passId,
+      scope,
+      payload,
+      (payload) => {
+        return WAPI.sendFileFromMessage(
+          payload.message,
+          payload.chatId,
+          payload.passId
+        )
       },
-      ({ message, chatId, passId }) => {
-        return WAPI.sendFileFromMessage(message, chatId, passId)
-      },
-      40000 // 40 seconds timeout
+      1000 // 1 seconds timeout
     )
   }
 
