@@ -1668,7 +1668,7 @@ export class SenderLayer extends AutomateLayer {
     scope: string,
     payload: any,
     waitForFunction: (...args) => Promise<any>,
-    timeout: number = 5000
+    timeout: number = 10000
   ) {
     try {
       const functionResult = await this.page.waitForFunction(
@@ -1736,7 +1736,7 @@ export class SenderLayer extends AutomateLayer {
       async ({ chatId, passId }) => {
         return WAPI.preSendFileFromSocket(chatId, passId)
       },
-      2000 // 2 seconds timeout
+      5000 // 5 seconds timeout
     )
     const response = await axios.get(url, { responseType: 'stream' })
     const content = fileTypeChecker.getFileContent(response, mediaType)
@@ -1779,7 +1779,7 @@ export class SenderLayer extends AutomateLayer {
           payload.passId
         )
       },
-      1000 // 1 seconds timeout
+      5000 // 5 seconds timeout
     )
   }
 
