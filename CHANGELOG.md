@@ -1,3 +1,27 @@
+# [1.20.0](https://github.com/develupo/venom/compare/v1.19.3...v1.20.0) (2024-08-15)
+
+
+### Bug Fixes
+
+* remove duplicated call to getAudioWaveForm ([d4627cc](https://github.com/develupo/venom/commit/d4627ccc8898abe77239ae8c2c9ea44ed3bc9dcc))
+* send audio from socket ([b2e9b16](https://github.com/develupo/venom/commit/b2e9b163a8305a71c1621fdae65651c46b6cce84))
+* send image from socket ([048141d](https://github.com/develupo/venom/commit/048141d0049b4726f7f672446750251a7f30a39d))
+
+
+### Features
+
+* add baileys ([c2db75d](https://github.com/develupo/venom/commit/c2db75d6d894ebba92c283b9fce34f22d4e15ce8))
+* add protections to venom ([e4601e0](https://github.com/develupo/venom/commit/e4601e037409fb86ee891b170fc7b868a632605f))
+* add send document by socket ([0349852](https://github.com/develupo/venom/commit/03498522a77ef2f64f4f80eea38a1ff1210c2d7d))
+* base audio function with baileys ([60a3bf1](https://github.com/develupo/venom/commit/60a3bf14a8e47d47b475a81e65a80341c5f81e59))
+* change content type from url to stream and improve audio processing ([fcce395](https://github.com/develupo/venom/commit/fcce3950840366ee4f82c31810eccd5772a71ceb))
+* change timeouts and refactor ([601b89f](https://github.com/develupo/venom/commit/601b89f0b167ea35867059f2d1fa12eb503ccd22))
+* configure audio messages ([2ee4899](https://github.com/develupo/venom/commit/2ee489944ad8758f7f03c9ef9e317ad4f25f4d70))
+* improve check send result ([a8a20e6](https://github.com/develupo/venom/commit/a8a20e6249b551624cdb569202407f2e0f7ad5f3))
+* send video from socket ([e9bceff](https://github.com/develupo/venom/commit/e9bceff096927239b859975738f575bb95f3c113))
+* sendFileFromMessage: image ([adebfee](https://github.com/develupo/venom/commit/adebfeef462f3803c200874d481baaa8e437af53))
+* validations for send encrypted file ([4010bab](https://github.com/develupo/venom/commit/4010bab7127121a3c2a834a13b450d8b4e21b67d))
+
 ## [1.19.3](https://github.com/develupo/venom/compare/v1.19.2...v1.19.3) (2024-08-12)
 
 
