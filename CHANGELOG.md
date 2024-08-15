@@ -1,3 +1,10 @@
+## [1.21.1](https://github.com/develupo/venom/compare/v1.21.0...v1.21.1) (2024-08-15)
+
+
+### Bug Fixes
+
+* send image missing filename parameter ([7d01bc0](https://github.com/develupo/venom/commit/7d01bc0bdc4862aa19250bed104a7a8cfbe24172))
+
 # [1.21.0](https://github.com/develupo/venom/compare/v1.20.0...v1.21.0) (2024-08-15)
 
 
