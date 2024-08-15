@@ -127,7 +127,8 @@ export { sendTypeButtons } from './send-type-buttons'
 export { onlySendAdmin } from './only-send-admin'
 export { createCommunity } from './create-community'
 export { pollCreation } from './poll-creation'
-
+export { resendMessageIfExists } from './resend-message-if-exists'
+export { preSendFileFromSocket } from './pre-send-file-from-socket'
 /////
 export { baseSendMessage } from './send-message-scope'
 export { setGroupImage } from './set-group-image'

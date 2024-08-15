@@ -126,6 +126,8 @@ import {
   onlySendAdmin,
   createCommunity,
   pollCreation,
+  resendMessageIfExists,
+  preSendFileFromSocket,
 } from './functions'
 import {
   base64ToFile,
@@ -372,6 +374,8 @@ if (typeof window.WAPI === 'undefined') {
   window.WAPI.addChatWapi = addChatWapi
   window.WAPI.sendTypeButtons = sendTypeButtons
   window.WAPI.sendPollCreation = pollCreation
+  window.WAPI.resendMessageIfExists = resendMessageIfExists
+  window.WAPI.preSendFileFromSocket = preSendFileFromSocket
 
   //////block functions
   window.WAPI.blockContact = blockContact

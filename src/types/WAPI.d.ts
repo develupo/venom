@@ -6,6 +6,8 @@ import {
   Id,
   MediaConn,
   Message,
+  PreSendFileFromSocketResult,
+  ScopeResult,
   // PartialMessage,
   SendFileResult,
   SendLinkResult,
@@ -295,6 +297,11 @@ interface WAPI {
   processMessageObj: (a: any, b: any, c: any) => any
   createCommunity: (name: string, description: string) => void
   sendPollCreation: (to: string, poll: any) => void
+  resendMessageIfExists: (passId: any, newMsgId: any) => any
+  preSendFileFromSocket: (
+    chatId: string,
+    passId: any
+  ) => PreSendFileFromSocketResult | ScopeResult
 }
 
 declare global {

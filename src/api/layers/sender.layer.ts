@@ -1712,30 +1712,27 @@ export class SenderLayer extends AutomateLayer {
     filename: string,
     caption: string,
     mediaType: keyof typeof MEDIA_PATH,
-    passId: string
+    passId: Object | undefined
   ) {
-    // TODO - Validação se está em processo de envio
-    const checkNumber = true
+    // TODO - Validações de campos
 
-    const newMessageId = await this.processBrowserFunction(
-      null,
+    const preSendFileFromSocketResult = await this.processBrowserFunction(
+      scope,
       {
+        chatId,
         passId,
-        checkNumber,
       },
-      async ({ passId, checkNumber }) => {
-        return WAPI.setNewMessageId(passId, checkNumber)
+      async ({ chatId, passId }) => {
+        return WAPI.preSendFileFromSocket(chatId, passId)
       },
       40000 // 40 seconds timeout
     )
-    const hostDevice = (await this.getHostDevice()) as { id: { user: string } }
-
     const response = await axios.get(url, { responseType: 'stream' })
     const content = fileTypeChecker.getFileContent(response, mediaType)
 
     const fullMessage = await generateWAMessage(chatId, content, {
       logger,
-      userJid: `${hostDevice.id.user}@c.us`,
+      userJid: preSendFileFromSocketResult.instanceNumber,
       getUrlInfo: (text) =>
         getUrlInfo(text, {
           thumbnailWidth: 192,
@@ -1746,7 +1743,7 @@ export class SenderLayer extends AutomateLayer {
           uploadImage: this.uploadToWpp(),
         }),
       upload: this.uploadToWpp(),
-      messageId: newMessageId.id,
+      messageId: preSendFileFromSocketResult.newMessageId,
     })
 
     const messagePayload = this.prepareMessage(scope, {
@@ -1776,30 +1773,31 @@ export class SenderLayer extends AutomateLayer {
     { fullMessage, caption, filename, mediaType, content }
   ) {
     const key = getContentType(fullMessage.message)
-    const realMessage = fullMessage.message[key]
+
+    const generatedMessage = fullMessage.message[key]
 
     const result = {
-      // id: newMsgId,
+      // id: newMessageId,
       // from: fromwWid,
       // to: chat.id,
       ack: 0,
       local: true,
       self: 'out',
-      t: Math.floor(Date.now() / 1000), // Verificar se é  um problema esse tempo aqui
+      t: Math.floor(Date.now() / 1000),
       isNewMsg: true,
       invis: true,
       type: mediaType,
-      deprecatedMms3Url: realMessage.url,
-      directPath: realMessage.directPath,
-      encFilehash: this.bufferToBase64(realMessage.fileEncSha256),
-      filehash: this.bufferToBase64(realMessage.fileSha256),
-      mediaKeyTimestamp: parseInt(realMessage.mediaKeyTimestamp),
-      mimetype: realMessage.mimetype,
-      ephemeralStartTimestamp: parseInt(realMessage.mediaKeyTimestamp),
-      mediaKey: this.bufferToBase64(realMessage.mediaKey),
-      size: parseInt(realMessage.fileLength),
-      url: realMessage.url,
-      staticUrl: realMessage.url,
+      deprecatedMms3Url: generatedMessage.url,
+      directPath: generatedMessage.directPath,
+      encFilehash: this.bufferToBase64(generatedMessage.fileEncSha256),
+      filehash: this.bufferToBase64(generatedMessage.fileSha256),
+      mediaKeyTimestamp: parseInt(generatedMessage.mediaKeyTimestamp),
+      mimetype: generatedMessage.mimetype,
+      ephemeralStartTimestamp: parseInt(generatedMessage.mediaKeyTimestamp),
+      mediaKey: this.bufferToBase64(generatedMessage.mediaKey),
+      size: parseInt(generatedMessage.fileLength),
+      url: generatedMessage.url,
+      staticUrl: generatedMessage.url,
 
       caption: undefined,
       filename: undefined,
@@ -1814,14 +1812,14 @@ export class SenderLayer extends AutomateLayer {
       case MEDIA_PATH.image:
       case MEDIA_PATH.video:
         result.caption = caption
-        result.preview = this.bufferToBase64(realMessage.jpegThumbnail)
-        result.height = realMessage.height
-        result.width = realMessage.width
+        result.preview = this.bufferToBase64(generatedMessage.jpegThumbnail)
+        result.height = generatedMessage.height
+        result.width = generatedMessage.width
         break
       case MEDIA_PATH.audio:
         result.filename = filename
-        result.duration = realMessage.seconds
-        result.waveform = realMessage.waveform
+        result.duration = generatedMessage.seconds
+        result.waveform = generatedMessage.waveform
         result.type = fileTypeChecker.normalizeAudioType(content.ptt)
         break
       case MEDIA_PATH.document:

@@ -17,4 +17,10 @@ export { ChatStatus } from './chat-status'
 export { InterfaceChangeMode } from './interface-mode'
 export { Revoke } from './revoke'
 export { FileSizeExceededError } from './file-size-exceeded-error'
-export * from './result'
+export {
+  ScopeResult,
+  SendFileResult,
+  SendStickerResult,
+  SendLinkResult,
+  PreSendFileFromSocketResult,
+} from './result'
