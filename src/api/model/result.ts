@@ -1,5 +1,6 @@
 import { LastReceivedKey } from './message'
 import { HostDevice } from './host-device'
+import { Id } from './id'
 
 export interface ScopeResult {
   me: HostDevice
@@ -31,4 +32,9 @@ export interface SendLinkResult extends ScopeResult {
   type: string
   url: string
   text: string
+}
+
+export interface PreSendFileFromSocketResult {
+  newMessageId: Id
+  instanceNumber: string
 }
