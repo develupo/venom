@@ -1740,16 +1740,14 @@ export class SenderLayer extends AutomateLayer {
       5000 // 5 seconds timeout
     )
     const response = await axios.get(url, { responseType: 'stream' })
-    const fileTypeCheckedResult = fileTypeChecker.getFileContent(
+    const fileTypeCheckResult = fileTypeChecker.getFileContent(
       response,
       mediaType
     )
 
-    mediaType = preSendFileFromSocketResult.mediaType
-
     const fullMessage = await generateWAMessage(
       chatId,
-      fileTypeCheckedResult.content,
+      fileTypeCheckResult.content,
       {
         logger,
         userJid: preSendFileFromSocketResult.instanceNumber,
@@ -1772,8 +1770,7 @@ export class SenderLayer extends AutomateLayer {
         fullMessage,
         caption,
         filename,
-        mediaType,
-        content: fileTypeCheckedResult.content,
+        mediaType: fileTypeCheckResult.mediaType,
       }),
       chatId,
       passId,
@@ -1915,7 +1912,7 @@ export class SenderLayer extends AutomateLayer {
 
   private prepareMessage(
     scope: string,
-    { fullMessage, caption, filename, mediaType, content }
+    { fullMessage, caption, filename, mediaType }
   ) {
     const key = getContentType(fullMessage.message)
 
@@ -1961,11 +1958,11 @@ export class SenderLayer extends AutomateLayer {
         result.height = generatedMessage.height
         result.width = generatedMessage.width
         break
+      case MEDIA_PATH.ptt:
       case MEDIA_PATH.audio:
         result.filename = filename
         result.duration = generatedMessage.seconds
         result.waveform = generatedMessage.waveform
-        result.type = fileTypeChecker.normalizeAudioType(content.ptt)
         break
       case MEDIA_PATH.document:
         result.filename = filename

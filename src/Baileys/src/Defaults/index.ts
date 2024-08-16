@@ -89,6 +89,7 @@ export enum MEDIA_PATH {
 	video = 'video',
 	document = 'document',
 	audio = 'audio',
+	ptt = 'ptt',
 }
 
 export const MEDIA_PATH_MAP: { [T in MediaType]?: string } = {

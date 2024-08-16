@@ -2,12 +2,12 @@ import { AxiosResponse } from 'axios'
 import { MEDIA_PATH } from '../../Baileys/src/Defaults'
 import { AnyMediaMessageContent } from '../../Baileys/src/Types'
 
-export type FileTypeCheckedResult = {
+export type FileTypeCheckResult = {
   content: AnyMediaMessageContent
   mediaType: MEDIA_PATH
 }
 
-export class FileTypeChecked {
+export class FileTypeChecker {
   mimeTypeList = {
     image: [
       'image/x-xbitmap',
@@ -42,29 +42,25 @@ export class FileTypeChecked {
       'audio/vnd.dlna.adts',
       'audio/mp3',
     ],
+    ptt: [
+      'audio/aac',
+      'audio/vnd.dlna.adts',
+      'audio/ogg',
+      'audio/mp3',
+      'audio/wav',
+      'audio/mpeg',
+    ],
   }
-
-  pptMimeTypeList = [
-    'audio/aac',
-    'audio/vnd.dlna.adts',
-    'audio/ogg',
-    'audio/mp3',
-    'audio/wav',
-    'audio/mpeg',
-  ]
 
   getFileContent(
     response: AxiosResponse<any, any>,
     mediaType: MEDIA_PATH
-  ): FileTypeCheckedResult {
-    let content: AnyMediaMessageContent
+  ): FileTypeCheckResult {
     const mimetype = response.headers['content-type'] as string
+    const normalizedMediaType = this.normalizeMediaType(mediaType, mimetype)
 
-    if (this.verifyIfNeedsToChangeToDocument(mimetype)) {
-      mediaType = MEDIA_PATH.document
-    }
-
-    switch (mediaType) {
+    let content: AnyMediaMessageContent
+    switch (normalizedMediaType) {
       case MEDIA_PATH.image:
         content = {
           image: { stream: response.data },
@@ -75,6 +71,7 @@ export class FileTypeChecked {
           video: { stream: response.data },
         }
         break
+      case MEDIA_PATH.ptt:
       case MEDIA_PATH.audio:
         content = {
           audio: { stream: response.data },
@@ -88,25 +85,34 @@ export class FileTypeChecked {
         }
         break
     }
-    return { content, mediaType }
+
+    return { content, mediaType: normalizedMediaType }
   }
 
-  verifyIfNeedsToChangeToDocument(mimetype: string): boolean {
-    if (mimetype === MEDIA_PATH.document) {
-      return true
+  normalizeMediaType(mediaType: MEDIA_PATH, mimetype: string): MEDIA_PATH {
+    const isDocument = mediaType === MEDIA_PATH.document
+    const isAudio = mediaType === MEDIA_PATH.audio
+
+    if (isAudio && this.isPtt(mimetype)) {
+      return MEDIA_PATH.ptt
     }
-    return !this.mimeTypeList[mimetype].includes(mimetype)
-  }
 
-  normalizeAudioType(isPtt: boolean): 'audio' | 'ptt' {
-    return isPtt ? 'ptt' : 'audio'
+    const mimeTypeMatchesMediaType = this.mimeTypeList[mediaType]?.some(
+      (checkMimeType) => checkMimeType === mimetype
+    )
+
+    if (isDocument || !mimeTypeMatchesMediaType) {
+      return MEDIA_PATH.document
+    }
+
+    return mediaType
   }
 
   isPtt(mimeType: string): boolean {
-    return this.pptMimeTypeList.some((pptMimeType) => {
+    return this.mimeTypeList.ptt.some((pptMimeType) => {
       return pptMimeType.includes(mimeType)
     })
   }
 }
 
-export const fileTypeChecker = new FileTypeChecked()
+export const fileTypeChecker = new FileTypeChecker()
