@@ -90,18 +90,18 @@ export class FileTypeChecker {
   }
 
   normalizeMediaType(mediaType: MEDIA_PATH, mimetype: string): MEDIA_PATH {
-    const isDocument = mediaType === MEDIA_PATH.document
-    const isAudio = mediaType === MEDIA_PATH.audio
+    const fileMimeType = mimetype.split('/')[0]
+    const isAudio = fileMimeType === MEDIA_PATH.audio
 
     if (isAudio && this.isPtt(mimetype)) {
       return MEDIA_PATH.ptt
     }
 
-    const mimeTypeMatchesMediaType = this.mimeTypeList[mediaType]?.some(
+    const mimeTypeMatchesMediaType = this.mimeTypeList[fileMimeType]?.some(
       (checkMimeType) => checkMimeType === mimetype
     )
 
-    if (isDocument || !mimeTypeMatchesMediaType) {
+    if (!mimeTypeMatchesMediaType) {
       return MEDIA_PATH.document
     }
 
