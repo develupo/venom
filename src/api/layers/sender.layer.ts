@@ -720,6 +720,7 @@ export class SenderLayer extends AutomateLayer {
   public async sendImageFromSocket(
     to: string,
     url: string,
+    filename: string,
     caption: string,
     passId: any
   ) {
@@ -729,7 +730,7 @@ export class SenderLayer extends AutomateLayer {
       scope,
       to,
       url,
-      undefined,
+      filename,
       caption,
       MEDIA_PATH.image,
       passId
