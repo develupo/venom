@@ -1,6 +1,7 @@
 import { AxiosResponse } from 'axios'
 import { MEDIA_PATH } from '../../Baileys/src/Defaults'
 import { AnyMediaMessageContent } from '../../Baileys/src/Types'
+import { audioProcessor } from '../layers/audio'
 
 export type FileTypeCheckResult = {
   content: AnyMediaMessageContent
@@ -74,7 +75,9 @@ export class FileTypeChecker {
       case MEDIA_PATH.ptt:
       case MEDIA_PATH.audio:
         content = {
-          audio: { stream: response.data },
+          audio: {
+            stream: audioProcessor.toOGG(response.data),
+          },
           ptt: this.isPtt(mimetype),
         }
         break
