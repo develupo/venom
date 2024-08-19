@@ -39,8 +39,8 @@ export class AudioProcessor {
         '-f',
         'ogg',
         'pipe:1',
-        // '-avoid_negative_ts',
-        // 'make_zero',
+        '-avoid_negative_ts',
+        'make_zero',
       ],
       'toOGG'
     )
@@ -61,6 +61,8 @@ export class AudioProcessor {
         '-f',
         'mp3',
         'pipe:1',
+        '-avoid_negative_ts',
+        'make_zero',
       ],
       'toMP3'
     )
@@ -83,6 +85,8 @@ export class AudioProcessor {
         '-f',
         'adts',
         'pipe:1',
+        '-avoid_negative_ts',
+        'make_zero',
       ],
       'toAAC'
     )
