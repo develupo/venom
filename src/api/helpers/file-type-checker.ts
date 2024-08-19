@@ -2,6 +2,8 @@ import { AxiosResponse } from 'axios'
 import { MEDIA_PATH } from '../../Baileys/src/Defaults'
 import { AnyMediaMessageContent } from '../../Baileys/src/Types'
 import { audioProcessor } from '../layers/audio'
+import path from 'path'
+import { logger } from '../../utils/logger'
 
 export type FileTypeCheckResult = {
   content: AnyMediaMessageContent
@@ -9,6 +11,30 @@ export type FileTypeCheckResult = {
 }
 
 export class FileTypeChecker {
+  extensionMap = {
+    ico: 'image/x-icon',
+    gif: 'image/gif',
+    webp: 'image/webp',
+    png: 'image/png',
+    bmp: 'image/bmp',
+    apng: 'image/apng',
+    jpeg: 'image/jpeg',
+    jpg: 'image/jpeg',
+    pjpeg: 'image/jpeg',
+    jfif: 'image/jpeg',
+    jfi: 'image/jpeg',
+    pjp: 'image/jpeg',
+    avif: 'image/avif',
+    m4v: 'video/x-m4v',
+    mp4: 'video/mp4',
+    '3gp': 'video/3gpp',
+    mov: 'video/quicktime',
+    ogg: 'audio/ogg',
+    wav: 'audio/wav',
+    aac: 'audio/aac',
+    mp3: 'audio/mp3',
+  }
+
   mimeTypeList = {
     image: [
       'image/x-xbitmap',
@@ -55,10 +81,15 @@ export class FileTypeChecker {
 
   getFileContent(
     response: AxiosResponse<any, any>,
-    mediaType: MEDIA_PATH
+    mediaType: MEDIA_PATH,
+    filename: string
   ): FileTypeCheckResult {
     const mimetype = response.headers['content-type'] as string
-    const normalizedMediaType = this.normalizeMediaType(mediaType, mimetype)
+    const normalizedMediaType = this.normalizeMediaType(
+      mediaType,
+      mimetype,
+      filename
+    )
 
     let content: AnyMediaMessageContent
     switch (normalizedMediaType) {
@@ -94,39 +125,53 @@ export class FileTypeChecker {
 
   getFileInformation(
     mediaType: MEDIA_PATH,
-    mimetype: string
-  ): {
-    mediaType: MEDIA_PATH
-    mimeTypeList: string[]
-  } {
-    const fileMimeType = mimetype.split('/')[0]
-
-    let resultMediaType = fileMimeType as MEDIA_PATH
-
-    if (!(resultMediaType in MEDIA_PATH)) {
-      resultMediaType = mediaType
+    mimetype: string,
+    filename: string
+  ): MEDIA_PATH {
+    const fileMimeTypeFromMimeType = mimetype.split('/')[0] as MEDIA_PATH
+    if (fileMimeTypeFromMimeType in MEDIA_PATH) {
+      return fileMimeTypeFromMimeType
     }
 
-    if (!(resultMediaType in MEDIA_PATH)) {
-      resultMediaType = MEDIA_PATH.document
+    if (filename) {
+      try {
+        const fileExtensionFromFileName = path
+          .extname(filename)
+          .replace(`.`, ``)
+        const fileMediaTypeFromFileName =
+          this.extensionMap[fileExtensionFromFileName]?.split('/')[0]
+
+        if (!fileMediaTypeFromFileName) {
+          throw new Error(`[getFileInformation] file extension not found`)
+        }
+
+        return fileMediaTypeFromFileName
+      } catch (error) {
+        logger.error(`[getFileInformation] failed to get file extension`)
+      }
     }
 
-    return {
-      mediaType: resultMediaType,
-      mimeTypeList: this.mimeTypeList[resultMediaType],
+    if (mediaType in MEDIA_PATH) {
+      return mediaType
     }
+
+    return MEDIA_PATH.document
   }
 
-  normalizeMediaType(mediaType: MEDIA_PATH, mimetype: string): MEDIA_PATH {
-    const fileInformation = this.getFileInformation(mediaType, mimetype)
+  normalizeMediaType(
+    mediaType: MEDIA_PATH,
+    mimetype: string,
+    filename: string
+  ): MEDIA_PATH {
+    const fileMediaType = this.getFileInformation(mediaType, mimetype, filename)
 
-    const isAudio = fileInformation.mediaType === MEDIA_PATH.audio
+    const isAudio = fileMediaType === MEDIA_PATH.audio
 
     if (isAudio && this.isPtt(mimetype)) {
       return MEDIA_PATH.ptt
     }
 
-    const mimeTypeMatchesMediaType = fileInformation.mimeTypeList?.some(
+    const mimeTypeMatchesMediaType = this.mimeTypeList[fileMediaType]?.some(
       (checkMimeType) => checkMimeType === mimetype
     )
 
@@ -134,7 +179,7 @@ export class FileTypeChecker {
       return MEDIA_PATH.document
     }
 
-    return mediaType
+    return fileMediaType
   }
 
   isPtt(mimeType: string): boolean {

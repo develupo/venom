@@ -1742,7 +1742,8 @@ export class SenderLayer extends AutomateLayer {
     const response = await axios.get(url, { responseType: 'stream' })
     const fileTypeCheckResult = fileTypeChecker.getFileContent(
       response,
-      mediaType
+      mediaType,
+      filename
     )
 
     const fullMessage = await generateWAMessage(
