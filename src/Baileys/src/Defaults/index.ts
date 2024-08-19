@@ -84,11 +84,12 @@ export const DEFAULT_CONNECTION_CONFIG: SocketConfig = {
 	makeSignalRepository: makeLibSignalRepository
 }
 
-export const MEDIA_PATH = {
-	image: 'image',
-	video: 'video',
-	document: 'document',
-	audio: 'audio',
+export enum MEDIA_PATH {
+	image = 'image',
+	video = 'video',
+	document = 'document',
+	audio = 'audio',
+	ptt = 'ptt',
 }
 
 export const MEDIA_PATH_MAP: { [T in MediaType]?: string } = {
