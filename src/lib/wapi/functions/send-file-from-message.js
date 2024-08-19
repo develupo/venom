@@ -26,9 +26,9 @@ export async function sendFileFromMessage(message, chatId, passId) {
 
     const messageToSend = {
       ...message,
-      id: newMsgId, // TODO - Talvez remover por meio de serialização
-      from: fromwWid, // TODO - Talvez remover por meio de serialização
-      to: chat.id, // TODO - Talvez remover por meio de serialização
+      id: newMsgId,
+      from: fromwWid,
+      to: chat.id,
     }
 
     const result = await Promise.all(
