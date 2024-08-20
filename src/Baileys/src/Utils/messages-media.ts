@@ -16,6 +16,7 @@ import { BaileysEventMap, DownloadableMessage, MediaConnInfo, MediaDecryptionKey
 import { BinaryNode, getBinaryNodeChild, getBinaryNodeChildBuffer, jidNormalizedUser } from '../WABinary'
 import { aesDecryptGCM, aesEncryptGCM, hkdf } from './crypto'
 import { generateMessageID } from './generics'
+import logger from './logger'
 
 const getTmpFilesDirectory = () => tmpdir()
 
@@ -37,13 +38,8 @@ const getImageProcessingLibrary = async() => {
 		})()
 	])
 
-	if(sharp) {
-		return { sharp }
-	}
-
-	const jimp = _jimp
-	if(jimp) {
-		return { jimp }
+	if (sharp || _jimp){
+		return { sharp, jimp: _jimp }
 	}
 
 	throw new Boom('No image processing library available')
@@ -90,14 +86,8 @@ const extractVideoThumb = async(
     	})
 }) as Promise<void>
 
-export const extractImageThumb = async(bufferOrFilePath: Readable | Buffer | string, width = 32) => {
-	if(bufferOrFilePath instanceof Readable) {
-		bufferOrFilePath = await toBuffer(bufferOrFilePath)
-	}
-
-	const lib = await getImageProcessingLibrary()
-	if('sharp' in lib && typeof lib.sharp?.default === 'function') {
-		const img = lib.sharp!.default(bufferOrFilePath)
+const extractImageAsSharp = async (lib, bufferOrFilePath: Readable | Buffer | string, width: number) => {
+	const img = lib.sharp!.default(bufferOrFilePath)
 		const dimensions = await img.metadata()
 
 		const buffer = await img
@@ -111,8 +101,10 @@ export const extractImageThumb = async(bufferOrFilePath: Readable | Buffer | str
 				height: dimensions.height,
 			},
 		}
-	} else if('jimp' in lib && typeof lib.jimp?.read === 'function') {
-		const { read, MIME_JPEG, RESIZE_BILINEAR, AUTO } = lib.jimp
+}
+
+const extractImageAsJimp = async (lib, bufferOrFilePath: Readable | Buffer | string, width: number) => {
+	const { read, MIME_JPEG, RESIZE_BILINEAR, AUTO } = lib.jimp
 
 		const jimp = await read(bufferOrFilePath as any)
 		const dimensions = {
@@ -127,6 +119,26 @@ export const extractImageThumb = async(bufferOrFilePath: Readable | Buffer | str
 			buffer,
 			original: dimensions
 		}
+}
+
+export const extractImageThumb = async(bufferOrFilePath: Readable | Buffer | string, width = 32) => {
+	if(bufferOrFilePath instanceof Readable) {
+		bufferOrFilePath = await toBuffer(bufferOrFilePath)
+	}
+
+	const lib = await getImageProcessingLibrary()
+	if(lib.sharp && typeof lib.sharp?.default === 'function') {
+		try {
+			return await extractImageAsSharp(lib, bufferOrFilePath, width)
+		} catch(error){
+			if (lib.jimp) {
+				logger.error({ error }, 'failed to extract image thumb using sharp, falling back to jimp')
+				return extractImageAsJimp(lib, bufferOrFilePath, width)
+			}
+			throw error
+		}
+	} else if(lib.jimp && typeof lib.jimp?.read === 'function') {
+		return extractImageAsJimp(lib, bufferOrFilePath, width)
 	} else {
 		throw new Boom('No image processing library available')
 	}
@@ -153,14 +165,14 @@ export const generateProfilePicture = async(mediaUpload: WAMediaUpload) => {
 
 	const lib = await getImageProcessingLibrary()
 	let img: Promise<Buffer>
-	if('sharp' in lib && typeof lib.sharp?.default === 'function') {
+	if(lib.sharp && typeof lib.sharp?.default === 'function') {
 		img = lib.sharp!.default(bufferOrFilePath)
 			.resize(640, 640)
 			.jpeg({
 				quality: 50,
 			})
 			.toBuffer()
-	} else if('jimp' in lib && typeof lib.jimp?.read === 'function') {
+	} else if(lib.jimp && typeof lib.jimp?.read === 'function') {
 		const { read, MIME_JPEG, RESIZE_BILINEAR } = lib.jimp
 		const jimp = await read(bufferOrFilePath as any)
 		const min = Math.min(jimp.getWidth(), jimp.getHeight())
