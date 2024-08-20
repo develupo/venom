@@ -1944,7 +1944,7 @@ export class SenderLayer extends AutomateLayer {
 
       caption: undefined,
       filename: undefined,
-      preview: undefined,
+      body: undefined, // preview
       height: undefined,
       width: undefined,
       waveform: undefined,
@@ -1955,7 +1955,7 @@ export class SenderLayer extends AutomateLayer {
       case MEDIA_PATH.image:
       case MEDIA_PATH.video:
         result.caption = caption
-        result.preview = this.bufferToBase64(generatedMessage.jpegThumbnail)
+        result.body = this.bufferToBase64(generatedMessage.jpegThumbnail) // preview
         result.height = generatedMessage.height
         result.width = generatedMessage.width
         break
