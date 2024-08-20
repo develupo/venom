@@ -1,3 +1,10 @@
+## [1.22.1](https://github.com/develupo/venom/compare/v1.22.0...v1.22.1) (2024-08-20)
+
+
+### Bug Fixes
+
+* not alloweed mimetypes and preview ([83ba160](https://github.com/develupo/venom/commit/83ba160f272dd0e531df698db49eb872e70a93bf))
+
 # [1.22.0](https://github.com/develupo/venom/compare/v1.21.1...v1.22.0) (2024-08-19)
 
 
