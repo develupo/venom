@@ -1,3 +1,5 @@
+## [1.22.2](https://github.com/develupo/venom/compare/v1.22.1...v1.22.2) (2024-08-22)
+
 ## [1.22.1](https://github.com/develupo/venom/compare/v1.22.0...v1.22.1) (2024-08-20)
 
 
