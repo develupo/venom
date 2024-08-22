@@ -27,7 +27,7 @@ export async function deleteMessages(chatId, messageArray) {
     return sendScopeError(412, 'some.messages.are.not.valid')
   }
 
-  let error, result
+  let result
 
   try {
     result = await Store.sendRevokeMsgs(
@@ -38,11 +38,13 @@ export async function deleteMessages(chatId, messageArray) {
       true
     )
   } catch (e) {
-    error = e?.message || 'messages.has.not.been.deleted'
-    return sendScopeError(500, error)
+    return sendScopeError(
+      500,
+      JSON.stringify(e?.message) || 'messages.has.not.been.deleted'
+    )
   }
 
-  const scope = await WAPI.scope(chat.id, false, result, error)
+  const scope = await WAPI.scope(chat.id, false, result, null)
 
   return { type: 'deleteMessages', ...scope }
 }
