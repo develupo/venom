@@ -2,8 +2,11 @@ export const _serializeMessageObj = async (obj) => {
   if (obj === undefined) {
     return null
   }
-  const _chat = obj['chat'] ? await WAPI._serializeChatObj(obj['chat']) : {}
-  const chats = await WAPI.getAllChats()
+
+  const chat = await WAPI.getChatById(obj.from._serialized)
+  const isGroupMsg = obj?.to?.server === 'g.us' || obj?.from?.server === 'g.us'
+  const groupInfo = isGroupMsg ? chat.contact : null
+
   return {
     ...window.WAPI._serializeRawObj(obj),
     id: obj?.id?._serialized,
@@ -31,9 +34,9 @@ export const _serializeMessageObj = async (obj) => {
     isNotification: obj?.isNotification,
     isPSA: obj?.isPSA,
     type: obj?.type,
-    chat: _chat,
-    isOnline: _chat?.isOnline,
-    lastSeen: _chat?.lastSeen,
+    chat: chat,
+    isOnline: chat?.isOnline,
+    lastSeen: chat?.lastSeen,
     quotedMsgObj: obj?.quotedMsg,
     quotedStanzaId: obj?.quotedStanzaID ? obj?.quotedStanzaID : undefined,
     mediaData: window.WAPI._serializeRawObj(obj?.mediaData),
@@ -66,13 +69,8 @@ export const _serializeMessageObj = async (obj) => {
     dynamicReplyButtons: null,
     buttons: null,
     hydratedButtons: null,
-    isGroupMsg:
-      obj?.to?.server === 'g.us' || obj?.from?.server === 'g.us' ? true : false,
-    groupInfo:
-      obj?.to?.server === 'g.us' || obj?.from?.server === 'g.us'
-        ? chats.find((chat) => chat.id._serialized === obj.from._serialized)
-            .contact
-        : null,
-    reply: (body) => window.WAPI.reply(_chat.id._serialized, body, obj),
+    isGroupMsg: isGroupMsg,
+    groupInfo: groupInfo,
+    reply: (body) => window.WAPI.reply(chat.id._serialized, body, obj),
   }
 }

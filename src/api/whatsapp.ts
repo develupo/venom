@@ -80,14 +80,6 @@ export class Whatsapp extends ControlsLayer {
       await this.page.evaluate(js)
 
       await this.initialize()
-
-      const middleware_script = await fs.readFile(
-        require.resolve(
-          path.join(__dirname, '../lib/middleware', 'middleware.js')
-        ),
-        'utf-8'
-      )
-      await this.page.evaluate(middleware_script)
     } catch (error) {
       logger.error(error)
     }

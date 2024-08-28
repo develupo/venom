@@ -138,20 +138,20 @@ import {
   injectConfig,
 } from './helper'
 import {
-  addNewMessagesListener,
-  addOnAddedToGroup,
-  addOnLiveLocation,
   addOnNewAcks,
-  addOnPoll,
-  addOnParticipantsChange,
   addOnStateChange,
   initNewMessagesListener,
   addOnStreamChange,
-  addonFilePicThumb,
-  addonUnreadMessage,
   addonChatState,
   addOnStream,
   addOnNewRevokes,
+  // addNewMessagesListener, // moved
+  // addOnAddedToGroup,
+  // addOnLiveLocation,
+  // addOnPoll,
+  // addOnParticipantsChange,
+  // addonFilePicThumb,
+  // addonUnreadMessage,
 } from './listeners'
 import {
   _serializeChatObj,
@@ -430,19 +430,6 @@ if (typeof window.WAPI === 'undefined') {
   window.WAPI.killServiceWorker = killServiceWorker
   window.WAPI.sendMute = sendMute
 
-  // Listeners initialization
-  window.WAPI._newMessagesQueue = []
-  window.WAPI._newMessagesBuffer =
-    sessionStorage.getItem('saved_msgs') != null
-      ? JSON.parse(sessionStorage.getItem('saved_msgs'))
-      : []
-  window.WAPI._newMessagesDebouncer = null
-  window.WAPI._newMessagesCallbacks = []
-
-  // Listeners
-  window.addEventListener('unload', window.WAPI._unloadInform, false)
-  window.addEventListener('beforeunload', window.WAPI._unloadInform, false)
-  window.addEventListener('pageunload', window.WAPI._unloadInform, false)
   // On-work below:
 
   /**
@@ -607,14 +594,7 @@ if (typeof window.WAPI === 'undefined') {
     return await all
   }
 
-  addOnPoll()
-
-  addNewMessagesListener()
-
-  addonUnreadMessage()
-  addonFilePicThumb()
   addonChatState()
-
   addOnStreamChange()
   addOnStateChange()
   addOnStream()
@@ -622,8 +602,12 @@ if (typeof window.WAPI === 'undefined') {
   initNewMessagesListener()
 
   addOnNewAcks()
-  addOnAddedToGroup()
-  addOnLiveLocation()
-  addOnParticipantsChange()
   addOnNewRevokes()
+
+  // addOnPoll()
+  // addonUnreadMessage()
+  // addOnAddedToGroup()
+  // addonFilePicThumb()
+  // addOnLiveLocation()
+  // addOnParticipantsChange()
 }
