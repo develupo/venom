@@ -1,3 +1,10 @@
+# [1.23.0](https://github.com/develupo/venom/compare/v1.22.2...v1.23.0) (2024-08-28)
+
+
+### Features
+
+* improve on message performance ([c7a001b](https://github.com/develupo/venom/commit/c7a001be100efe429fd8924958997876da86e816))
+
 ## [1.22.2](https://github.com/develupo/venom/compare/v1.22.1...v1.22.2) (2024-08-22)
 
 ## [1.22.1](https://github.com/develupo/venom/compare/v1.22.0...v1.22.1) (2024-08-20)
