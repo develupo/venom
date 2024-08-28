@@ -1,5 +1,4 @@
 //import { Browser, Page } from 'puppeteer';
-import { checkUpdates } from './check-up-to-date'
 import { options, defaultOptions } from '../config'
 //import { initWhatsapp, initBrowser } from './browser';
 //import { CallbackOnStatus } from '../api/layers';
@@ -17,10 +16,6 @@ export async function connect(options?: options) {
     } else {
       mergeOptionsDefault.session = defaultOptions.session
     }
-  }
-
-  if (mergeOptionsDefault.updatesLog) {
-    await checkUpdates()
   }
 
   // const wpage: Browser | boolean = await initBrowser(mergeOptionsDefault);

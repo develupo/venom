@@ -9,7 +9,6 @@ import {
 } from '../api/model/enum'
 import { InterfaceChangeMode } from '../api/model'
 import { Browser, Page } from 'puppeteer'
-import { checkUpdates } from './check-up-to-date'
 import { configureLogger, logger } from '../utils/logger'
 import { Status, statusManagement } from './status-management'
 import {
@@ -167,9 +166,6 @@ export async function create(
     logger.debug(
       `[node-version-${session}] Node.js version verified successfully!`
     )
-
-    // NOTE - Is this really necessary? However, maybe could be used to check our updates
-    await checkUpdates()
 
     statusManagement.setStatus('initBrowser', session)
 

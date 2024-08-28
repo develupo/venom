@@ -17,7 +17,6 @@ import { InterfaceChangeMode } from '../model'
 import { InterfaceMode } from '../model/enum/interface-mode'
 import { InterfaceState } from '../model/enum/interface-state'
 import { ProfileLayer } from './profile.layer'
-import { callbackWile } from '../helpers'
 import { logger } from '../../utils/logger'
 
 declare global {
@@ -43,9 +42,6 @@ declare global {
 
 export class ListenerLayer extends ProfileLayer {
   private listenerEmitter = new EventEmitter()
-  // TODO - Study and refactor these callbacks
-  private callonMessage = new callbackWile()
-  private callOnack = new callbackWile()
 
   constructor(
     public browser: Browser,
@@ -103,16 +99,8 @@ export class ListenerLayer extends ProfileLayer {
         window.WAPI.onStateChange((e: any) => {
           window.onStateChange(e)
         })
-        window.WAPI.onUnreadMessage((e: any) => {
-          window.onUnreadMessage(e)
-        })
-        window.WAPI.waitNewMessages(false, (data: any) => {
-          data.forEach((message: any) => {
-            window.onMessage(message)
-          })
-        })
-        window.WAPI.onAddedToGroup((e: any) => {
-          window.onAddedToGroup(e)
+        window.WAPI.waitNewMessages((data: any) => {
+          window.onMessage(data)
         })
         window.WAPI.onAck((e: any) => {
           window.onAck(e)
@@ -120,9 +108,15 @@ export class ListenerLayer extends ProfileLayer {
         window.WAPI.onRevoked((e: any) => {
           window.onRevoked(e)
         })
-        window.WAPI.onPoll((e: any) => {
-          window.onPoll(e)
-        })
+        // window.WAPI.onUnreadMessage((e: any) => {
+        //   window.onUnreadMessage(e)
+        // })
+        // window.WAPI.onAddedToGroup((e: any) => {
+        //   window.onAddedToGroup(e)
+        // })
+        // window.WAPI.onPoll((e: any) => {
+        //   window.onPoll(e)
+        // })
       })
     } catch (error) {
       logger.error(
@@ -248,7 +242,6 @@ export class ListenerLayer extends ProfileLayer {
     }
   }
 
-  //////////////////////////////////////PRO
   /**
    * @returns Returns new UnreadMessage
    */
@@ -278,20 +271,16 @@ export class ListenerLayer extends ProfileLayer {
    * @returns Observable stream of messages
    */
   public async onMessage(fn: (message: Message) => void) {
-    this.listenerEmitter.on(ExposedFn.OnMessage, (state: Message) => {
-      if (!this.callonMessage.checkObj(state.from, state.id)) {
-        this.callonMessage.addObjects(state.from, state.id)
-        fn(state)
-      }
-    })
+    const onMessageEventListener = async (messageList: Message[]) => {
+      const promiseList = messageList.map(fn)
+      await Promise.all(promiseList)
+    }
+
+    this.listenerEmitter.on(ExposedFn.OnMessage, onMessageEventListener)
+
     return {
       dispose: () => {
-        this.listenerEmitter.off(ExposedFn.OnMessage, (state: Message) => {
-          if (!this.callonMessage.checkObj(state.from, state.id)) {
-            this.callonMessage.addObjects(state.from, state.id)
-            fn(state)
-          }
-        })
+        this.listenerEmitter.off(ExposedFn.OnMessage, onMessageEventListener)
       },
     }
   }
@@ -301,33 +290,15 @@ export class ListenerLayer extends ProfileLayer {
    * @returns Observable stream of messages
    */
   public async onAck(fn: (ack: Ack) => void) {
-    this.listenerEmitter.on(ExposedFn.onAck, (e: Ack) => {
-      if (!this.callOnack.checkObj(e.ack, e.id._serialized)) {
-        const key = this.callOnack.getObjKey(e.id._serialized)
-        if (key) {
-          this.callOnack.module[key].id = e.ack
-          fn(e)
-        } else {
-          this.callOnack.addObjects(e.ack, e.id._serialized)
-          fn(e)
-        }
-      }
-    })
+    const onAckEventListener = (state: Ack) => {
+      fn(state)
+    }
+
+    this.listenerEmitter.on(ExposedFn.onAck, onAckEventListener)
 
     return {
       dispose: () => {
-        this.listenerEmitter.off(ExposedFn.onAck, (e: Ack) => {
-          if (!this.callOnack.checkObj(e.ack, e.id._serialized)) {
-            const key = this.callOnack.getObjKey(e.id._serialized)
-            if (key) {
-              this.callOnack.module[key].id = e.ack
-              fn(e)
-            } else {
-              this.callOnack.addObjects(e.ack, e.id._serialized)
-              fn(e)
-            }
-          }
-        })
+        this.listenerEmitter.off(ExposedFn.onAck, onAckEventListener)
       },
     }
   }
