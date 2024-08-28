@@ -1,3 +1,29 @@
+## [1.22.2](https://github.com/develupo/venom/compare/v1.22.1...v1.22.2) (2024-08-22)
+
+## [1.22.1](https://github.com/develupo/venom/compare/v1.22.0...v1.22.1) (2024-08-20)
+
+
+### Bug Fixes
+
+* not alloweed mimetypes and preview ([83ba160](https://github.com/develupo/venom/commit/83ba160f272dd0e531df698db49eb872e70a93bf))
+
+# [1.22.0](https://github.com/develupo/venom/compare/v1.21.1...v1.22.0) (2024-08-19)
+
+
+### Bug Fixes
+
+* add avoid negative ts on audio processing ([4b76090](https://github.com/develupo/venom/commit/4b7609014bfafcecb6f9efe6f67a2b53705107a7))
+* file processing ([3f1364a](https://github.com/develupo/venom/commit/3f1364adf3fa1a63466938321739d84e3d694fe7))
+* file type check for mimetype ([b8ecb91](https://github.com/develupo/venom/commit/b8ecb9172e894fd048117f699267934b0da71814))
+* improve file processing ([a580093](https://github.com/develupo/venom/commit/a580093d5cf739c1954f90a8602c48075898c387))
+
+
+### Features
+
+* change to document if not allowed ([665b3f4](https://github.com/develupo/venom/commit/665b3f4aee1f501fd1d052f0a1944f15c1df7333))
+* improve file type check ([6734605](https://github.com/develupo/venom/commit/67346058486d28b84034322b471b82aaced01649))
+* process audio to agg ([29d664e](https://github.com/develupo/venom/commit/29d664ecf05924e00f6fe0b31a976ad2eb092efb))
+
 ## [1.21.1](https://github.com/develupo/venom/compare/v1.21.0...v1.21.1) (2024-08-15)
 
 

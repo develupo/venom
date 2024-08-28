@@ -8,16 +8,14 @@ export function addNewMessagesListener() {
  * @param done - function - Callback function to be called when a new message arrives.
  * @returns {boolean}
  */
-function waitNewMessages(rmCallbackAfterUse = true, done) {
-  window.WAPI._newMessagesCallbacks.push({
-    callback: (e) => {
-      try {
-        done(e)
-      } catch (e) {
-        console.error(e)
-      }
-    },
-    rmAfterUse: rmCallbackAfterUse,
-  })
+function waitNewMessages(done) {
+  window.WAPI._newMessagesCallbacks = (e) => {
+    try {
+      done(e)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   return true
 }
