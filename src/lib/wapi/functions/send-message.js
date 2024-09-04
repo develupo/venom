@@ -5,9 +5,7 @@ export async function sendMessage(
   content,
   status = false,
   passId,
-  checkNumber = true,
-  forcingReturn = false,
-  delSend = true
+  checkNumber = true
 ) {
   if (status && content.length > 700) {
     return WAPI.scope(undefined, true, null, 'Use a maximum of 700 characters')
@@ -74,43 +72,6 @@ export async function sendMessage(
       t: parseInt(new Date().getTime() / 1000),
       isNewMsg: !0,
       type: 'chat',
-    }
-
-    if (forcingReturn) {
-      if (delSend) {
-        while (true) {
-          const connection = Store.State.Socket.state
-          if (connection === 'CONNECTED') {
-            const result = await Store.addAndSendMsgToChat(chat, message)
-            await WAPI.sleep(5000)
-            const statusMsg = chat.msgs._models.filter(
-              (e) => e.id === newMsgId._serialized && e.ack > 0
-            )
-            if (statusMsg.length === 0) {
-              await WAPI.deleteMessages(to, [newMsgId._serialized])
-            } else {
-              const obj = WAPI.scope(
-                newMsgId,
-                false,
-                WAPI._serializeForcing(result),
-                content
-              )
-              Object.assign(obj, m)
-              return obj
-            }
-          }
-        }
-      } else {
-        const result = await Store.addAndSendMsgToChat(chat, message)
-        const obj = WAPI.scope(
-          newMsgId,
-          false,
-          WAPI._serializeForcing(result),
-          content
-        )
-        Object.assign(obj, m)
-        return obj
-      }
     }
 
     try {

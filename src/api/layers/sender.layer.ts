@@ -354,15 +354,12 @@ export class SenderLayer extends AutomateLayer {
    * @param content text message
    * @param passId new id
    * @param checkNumber the number when submitting!
-   * @param forcingReturn return without sending the message to the server!
    */
   public async sendText(
     to: string,
     content: string,
     passId?: any,
-    checkNumber?: boolean,
-    forcingReturn?: boolean,
-    delSend?: boolean
+    checkNumber?: boolean
   ): Promise<Object> {
     const typeFunction = 'sendText'
     const type = 'string'
@@ -395,19 +392,9 @@ export class SenderLayer extends AutomateLayer {
         content,
         passId,
         checkNumber,
-        forcingReturn,
-        delSend,
       },
-      ({ to, content, passId, checkNumber, forcingReturn, delSend }) => {
-        return WAPI.sendMessage(
-          to,
-          content,
-          undefined,
-          passId,
-          checkNumber,
-          forcingReturn,
-          delSend
-        )
+      ({ to, content, passId, checkNumber }) => {
+        return WAPI.sendMessage(to, content, undefined, passId, checkNumber)
       }
     )
   }
