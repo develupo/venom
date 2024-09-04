@@ -7,7 +7,7 @@ export async function checkChat(id) {
         id.includes('@broadcast'))
     ) {
       const chat = await Store.Chat.get(id)
-      if (!!chat && chat.t) {
+      if (chat) {
         return WAPI.scope(
           undefined,
           false,
