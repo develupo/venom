@@ -1,3 +1,10 @@
+## [1.23.1](https://github.com/develupo/venom/compare/v1.23.0...v1.23.1) (2024-09-04)
+
+
+### Bug Fixes
+
+* chat validation breaking chats that are not loaded on whatsapp web ([feb272c](https://github.com/develupo/venom/commit/feb272ce52c045cf6ef7c2d975f00464b3aa85dd))
+
 # [1.23.0](https://github.com/develupo/venom/compare/v1.22.2...v1.23.0) (2024-08-28)
 
 
