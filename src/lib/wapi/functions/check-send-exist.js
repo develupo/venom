@@ -215,7 +215,7 @@ export async function sendExist(chatId, returnChat = true, Send = true) {
     }
   }
 
-  if (!ck.numberExists && !chat.t && chat.isUser) {
+  if (!ck.numberExists && chat.isUser) {
     return WAPI.scope(
       chatId,
       true,
@@ -224,13 +224,16 @@ export async function sendExist(chatId, returnChat = true, Send = true) {
     )
   }
 
-  if (!ck.numberExists && !chat.t && chat.isGroup) {
+  if (
+    chat?.id?.server === 'g.us' &&
+    !chat?.groupMetadata?.owner &&
+    !chat?.groupMetadata?.creation
+  ) {
     return WAPI.scope(chatId, true, ck.status, GROUP_ERRORS.INVALID_GROUP_ID)
   }
 
   if (
     !ck.numberExists &&
-    !chat.t &&
     chat.id &&
     chat.id.user != 'status' &&
     chat.isBroadcast

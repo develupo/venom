@@ -218,9 +218,7 @@ interface WAPI {
     content: string,
     status?: boolean,
     passId?: Object,
-    checkNumber?: boolean,
-    forcingReturn?: boolean,
-    delSend?: boolean
+    checkNumber?: boolean
   ) => Promise<Object>
   sendButtons: (
     to: string,
