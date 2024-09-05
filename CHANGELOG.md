@@ -1,3 +1,10 @@
+# [1.24.0](https://github.com/develupo/venom/compare/v1.23.1...v1.24.0) (2024-09-05)
+
+
+### Features
+
+* add functions to process ciphertext ([7ba0979](https://github.com/develupo/venom/commit/7ba0979a0c7cd54767dc97697800334954254035))
+
 ## [1.23.1](https://github.com/develupo/venom/compare/v1.23.0...v1.23.1) (2024-09-04)
 
 
