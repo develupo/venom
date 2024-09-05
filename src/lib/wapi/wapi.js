@@ -82,6 +82,7 @@ import {
   presenceUnavailable,
   openChat,
   openChatAt,
+  closeChat,
   getGroupInfoFromInviteLink,
   joinGroup,
   markUnseenMessage,
@@ -365,6 +366,7 @@ if (typeof window.WAPI === 'undefined') {
   window.WAPI.sendLocation = sendLocation
   window.WAPI.openChat = openChat
   window.WAPI.openChatAt = openChatAt
+  window.WAPI.closeChat = closeChat
   window.WAPI.markUnseenMessage = markUnseenMessage
   window.WAPI.markMarkSeenMessage = markMarkSeenMessage
   window.WAPI.sendLinkPreview = sendLinkPreview

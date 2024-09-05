@@ -5,7 +5,7 @@
 export async function openChat(chatId, force = false) {
   if (force) {
     const chat = await WAPI.getChat(chatId)
-    const result = await Store.Cmd.openChatBottom(chat)
+    const result = await Store.Cmd.Cmd.openChatBottom(chat)
     return WAPI.scope(undefined, false, result)
   }
 
@@ -16,13 +16,23 @@ export async function openChat(chatId, force = false) {
   const chat = await WAPI.sendExist(chatId)
   if (chat && chat.status != 404 && chat.id) {
     const chat = Store.Chat.get(chatId)
-    const result = Store.Cmd.default.openChatBottom(chat)
+    const result = Store.Cmd.Cmd.openChatBottom(chat)
     return WAPI.scope(undefined, false, result)
   }
   if (!chat.erro) {
     chat.erro = true
   }
   return chat
+}
+
+/**
+ * close chat!
+ * @param {string} chatId Chat id
+ */
+export async function closeChat(chatId) {
+  const chat = await WAPI.getChat(chatId)
+  const result = await Store.Cmd.Cmd.closeChat(chat)
+  return WAPI.scope(undefined, false, result)
 }
 
 /**
@@ -34,12 +44,14 @@ export async function openChat(chatId, force = false) {
  */
 export async function openChatAt(chatId, messageId) {
   const chat = Store.Chat.get(chatId)
-  const atMessage = chat.msgs.models.find((model) => model.id.id === messageId)
+  const atMessage = chat.msgs?._models?.find(
+    (model) => model.id._serialized === messageId
+  )
   const args = {
     collection: chat.msgs,
     msg: atMessage,
     isUnreadDivider: false,
   }
-  const result = await Store.Cmd.default._openChat(chat, args)
+  const result = await Store.Cmd.Cmd.openChatAt(chat, args)
   return result
 }

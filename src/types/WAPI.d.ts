@@ -115,6 +115,7 @@ interface WAPI {
     chatId: string,
     messageId: string
   ) => { wasVisible: boolean; alignAt: string }
+  closeChat: (chatId: string) => any
   pinChat: (
     chatId: string,
     option: boolean,

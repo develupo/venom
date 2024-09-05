@@ -73,14 +73,32 @@ export class UILayer extends GroupLayer {
   }
 
   /**
+   * @param chatId
+   */
+  public async closeChat(chatId: string) {
+    return new Promise(async (resolve, reject) => {
+      const result = await this.page.evaluate(
+        ({ chatId }) => WAPI.closeChat(chatId),
+        { chatId }
+      )
+
+      if (result['erro'] == true) {
+        return reject(result)
+      } else {
+        return resolve(result)
+      }
+    })
+  }
+
+  /**
    * Opens chat at given message position
    * @param chatId Chat id
    * @param messageId Message id (For example: '06D3AB3D0EEB9D077A3F9A3EFF4DD030')
    */
   public async openChatAt(chatId: string, messageId: string) {
     return this.page.evaluate(
-      (chatId: string) => WAPI.openChatAt(chatId, messageId),
-      chatId
+      ({ chatId, messageId }) => WAPI.openChatAt(chatId, messageId),
+      { chatId, messageId }
     )
   }
 }
