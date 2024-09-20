@@ -19,7 +19,7 @@ export async function getChat(id) {
           merge: true,
         }
       )
-      found = Store.Chat.find(ConstructChat) || false
+      found = (await Store.Chat.find(ConstructChat)) || false
     }
   }
   if (found) {
