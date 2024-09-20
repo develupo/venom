@@ -1,3 +1,10 @@
+# [1.25.0](https://github.com/develupo/venom/compare/v1.24.0...v1.25.0) (2024-09-20)
+
+
+### Features
+
+* scrape img ([13a9ddf](https://github.com/develupo/venom/commit/13a9ddf0bb53282a17ef42b86258dd099204c8fa))
+
 # [1.24.0](https://github.com/develupo/venom/compare/v1.23.1...v1.24.0) (2024-09-05)
 
 
