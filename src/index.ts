@@ -29,3 +29,4 @@ export {
   InterfaceStatus,
   interfaceStatusManagement,
 } from './controllers/interface-management'
+export { scrapeImg } from './api/helpers'
