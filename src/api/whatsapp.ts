@@ -195,10 +195,6 @@ export class Whatsapp extends ControlsLayer {
     logContext: string
   ) {
     const options = makeOptions(useragentOverride)
-    message.clientUrl =
-      message.clientUrl !== undefined
-        ? message.clientUrl
-        : message.deprecatedMms3Url
 
     if (message.size > maxSize) {
       throw new FileSizeExceededError(
@@ -209,16 +205,30 @@ export class Whatsapp extends ControlsLayer {
       )
     }
 
-    if (!message.clientUrl) {
+    if (
+      !message.deprecatedMms3Url &&
+      !message.directPath &&
+      !message.clientUrl
+    ) {
       throw new Error('missing.file.url')
     }
 
-    // Not all messages come with correct url, need to address this issue
-    if (message.clientUrl === 'https://web.whatsapp.net') {
-      message.clientUrl = `https://mmg.whatsapp.net${message.directPath}`
+    let buildedUrl = message.clientUrl
+
+    if (
+      !message.clientUrl ||
+      message.clientUrl === 'https://web.whatsapp.net'
+    ) {
+      buildedUrl = `https://mmg.whatsapp.net${message.directPath}`
     }
 
-    const res = await axios.get(message.clientUrl.trim(), options)
+    let res
+    try {
+      res = await axios.get(buildedUrl.trim(), options)
+    } catch (error) {
+      res = await axios.get(message.deprecatedMms3Url.trim(), options)
+    }
+
     if (res.status !== 200) {
       throw new Error(`error.downloading.file`)
     }
