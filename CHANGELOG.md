@@ -1,3 +1,10 @@
+## [1.25.1](https://github.com/develupo/venom/compare/v1.25.0...v1.25.1) (2024-10-09)
+
+
+### Bug Fixes
+
+* process to get file ([bf8a069](https://github.com/develupo/venom/commit/bf8a069617757d047407960acc86be12d9a33086))
+
 # [1.25.0](https://github.com/develupo/venom/compare/v1.24.0...v1.25.0) (2024-09-20)
 
 
