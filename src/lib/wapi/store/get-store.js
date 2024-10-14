@@ -1,299 +1,157 @@
-const { storeObjects } = require('./store-objects')
+import { createMsgProtobufInject } from './create-msg-protobuf.inject'
+import { mediaTypeFromProtobufInject } from './media-type-from-protobuf.inject'
+import { typeAttributeFromProtobufInject } from './type-attribute-from-protobuf.inject'
+import { createFanoutMsgStanzaInject } from './create-fanout-msg-stanza.inject'
 
-export async function getStore(modules) {
-  let foundCount = 0
-  const neededObjects = storeObjects
-  for (const idx in modules) {
-    if (typeof modules[idx] === 'object' && modules[idx] !== null) {
-      neededObjects.forEach((needObj) => {
-        if (!needObj.conditions || needObj.foundedModule) return
-        // console.log(needObj.id);
-        const neededModule = needObj.conditions(modules[idx])
-        if (neededModule !== null) {
-          foundCount++
-          needObj.foundedModule = neededModule
-          console.log(neededModule)
-        }
-      })
-      if (foundCount === neededObjects.length) {
-        break
+// NOTE - Maybe this could be needed
+/* function getModule(moduleName) {
+  const module = window.__debug.modulesMap[moduleName]
+  let result = {}
+  if (module) {
+    result = {
+      default: module.defaultExport,
+      factory: module.factory,
+    }
+    if (Object.keys(result.default).length === 0) {
+      try {
+        self.ErrorGuard.skipGuardGlobal(true)
+        Object.assign(result, self.importNamespace(moduleName))
+      } catch (error) {
+        console.error('Error on importNamespace', error)
       }
     }
   }
 
-  neededObjects.forEach((needObj) => {
-    if (needObj.foundedModule) {
-      if (needObj.id !== 'module') {
-        window.Store[needObj.id] = needObj.foundedModule
-        console.log(needObj.id)
-        console.log(needObj.foundedModule)
-      }
-    }
-  })
+  return result
+} */
 
-  const module = neededObjects.filter((e) => e.id === 'module')[0].foundedModule
-  Object.keys(module).forEach((key) => {
+function injectToFunctions() {
+  const injectToFunctionMapping = [
+    {
+      id: 'createMsgProtobuf',
+      module: 'WAWebE2EProtoGenerator',
+      newFunction: createMsgProtobufInject,
+    },
+    {
+      id: 'mediaTypeFromProtobuf',
+      module: 'WAWebBackendJobsCommon',
+      newFunction: mediaTypeFromProtobufInject,
+    },
+    {
+      id: 'typeAttributeFromProtobuf',
+      module: 'WAWebE2EProtoUtils',
+      newFunction: typeAttributeFromProtobufInject,
+    },
+    {
+      id: 'createFanoutMsgStanza',
+      module: 'WAWebSendMsgCreateFanoutStanza',
+      newFunction: createFanoutMsgStanzaInject,
+    },
+  ]
+
+  injectToFunctionMapping.forEach((inject) => {
+    window[inject.id] = self.importNamespace(inject.module)
+    const module = window[inject.id]
+    const oldFunction = module[inject.id]
+    module[inject.id] = (...args) => inject.newFunction(oldFunction, args)
+  })
+}
+
+export async function getStore() {
+  window.Store.UserConstructor = self.importNamespace('WAWebWid').default
+  window.Store.WidFactory = self.importNamespace('WAWebWidFactory')
+  window.Store.ChatLoadMessages = self.importNamespace('WAWebChatLoadMessages')
+  window.Store.MsgKey = self.importNamespace('WAWebMsgKey').default
+  window.Store.Cmd = self.importNamespace('WAWebCmd').Cmd
+  window.Store.Cmd = self.importNamespace('WAWebCmd')
+  window.Store.Websocket = self.importNamespace('WASmaxJsx')
+  window.Store.Wap = self.importNamespace('WAWap')
+  window.Store.State = self.importNamespace('WAWebSocketModel')
+  window.Store.Theme = self.importNamespace('WAWebUserPrefsGeneral')
+  window.Store.Stream = self.importNamespace('WAWebStreamModel').Stream
+  window.Store.MaybeMeUser = self.importNamespace('WAWebUserPrefsMeUser')
+  window.Store.UploadUtils = self.importNamespace('WAWebUploadManager').default
+  window.Store.genId = self.importNamespace(
+    'WAWebFeatureDetectionRedirectIfMissingCapabilities'
+  )
+  window.Store.SendSocket = self.importNamespace('WADeprecatedSendIq')
+  window.Store.Jid = self.importNamespace('WAWapJid')
+  window.Store.Validators = self.importNamespace('WALinkify')
+  window.Store.Contacts = self.importNamespace('WAWebContactCollection')
+  window.Store.userJidToUserWid = self.importNamespace('WAWebJidToWid')
+  window.Store.MyStatus = self.importNamespace('WAWebStatusContactAction')
+  window.Store.PresenceCollection = self.importNamespace(
+    'WAWebPresenceCollection'
+  ).default
+  window.Store.Profile = self.importNamespace(
+    'WAWebContactProfilePicThumbBridge'
+  )
+  window.Store.Login = self.importNamespace('WAWebCompanionRegUtils')
+  window.Store.CheckWid = self.importNamespace('WAWebWidValidator')
+  window.Store.Parser = self.importNamespace('WAWebE2EProtoUtils').default
+  window.Store.Archive = self.importNamespace('WAWebChatDbUpdatesApi')
+  window.Store.ChatUtil = self.importNamespace('WAWebChatClearBridge')
+  window.Store.SendMute = self.importNamespace('WAWebChatMuteBridge')
+  window.Store.BlockList = self.importNamespace('WAWebBlocklistCollection')
+  window.Store.ChatStates = self.importNamespace('WAWebChatStateBridge')
+  window.Store.Presence = self.importNamespace('WAWebContactPresenceBridge')
+  window.Store.SetStatusChat = self.importNamespace('WAWebPresenceChatAction')
+  window.Store.ReadSeen = self.importNamespace('WAWebUpdateUnreadChatAction')
+  window.Store.blob = self.importNamespace('WAWebMediaOpaqueData')
+  window.Store.MediaProcess = self.importNamespace('WAWebImageUtils')
+  window.Store.MediaObject = self.importNamespace('WAWebMediaStorage')
+  window.Store.addAndSendMsgToChat = self.importNamespace(
+    'WAWebSendMsgChatAction'
+  ).addAndSendMsgToChat
+  window.Store.createNewsletterQuery = self.importNamespace(
+    'WAWebNewsletterCreateQueryJob'
+  )
+  window.Store.SendTextMsgToChat = self.importNamespace(
+    'WAWebSendTextMsgChatAction'
+  ).sendTextMsgToChat
+  window.Store.createTextMsgData = self.importNamespace(
+    'WAWebSendTextMsgChatAction'
+  ).createTextMsgData
+  window.Store.Sticker = self.importNamespace('WAWebStickerCollection')
+  window.Store.Block = self.importNamespace('WAWebBlockContactAction')
+  window.Store.ButtonCollection = self.importNamespace(
+    'WAWebButtonCollection'
+  ).ButtonCollection
+  window.Store.TemplateButtonCollection = self.importNamespace(
+    'WAWebTemplateButtonCollection'
+  ).TemplateButtonCollection
+  window.Store.module = self.importNamespace('WAWebCollections').default
+  window.Store.ProfileBusiness = self.importNamespace(
+    'WAWebBusinessProfileModel'
+  )
+  window.Store.sendDelete = self.importNamespace(
+    'WAWebDeleteChatAction'
+  ).sendDelete
+  window.Store.pinChat = self.importNamespace('WAWebSetPinChatAction')
+  window.Store.Survey = self.importNamespace(
+    'WAWebPollsSendPollCreationMsgAction'
+  )
+  window.Store.Reactions = self.importNamespace('WAWebSendReactionMsgAction')
+  window.Store.MediaCollection = self.importNamespace(
+    'WAWebAttachMediaCollection'
+  ).default
+  window.Store.onlySendAdmin = self.importNamespace('WAWebGroupModifyInfoJob')
+  window.Store.SendCommunity = self.importNamespace('WAWebGroupCommunityJob')
+  window.Store.Wap = self.importNamespace('WAWebGroupCreateJob')
+
+  Object.keys(window.Store.module).forEach((key) => {
     if (!['Chat'].includes(key)) {
       if (window.Store[key]) {
-        window.Store[key + '_'] = module[key]
+        window.Store[key + '_'] = window.Store.module[key]
       } else {
-        window.Store[key] = module[key]
+        window.Store[key] = window.Store.module[key]
       }
     }
   })
 
-  if (window.Store.MediaCollection) {
-    window.Store.MediaCollection.prototype.processFiles =
-      window.Store.MediaCollection.prototype.processFiles ||
-      window.Store.MediaCollection.prototype.processAttachments
-  }
+  window.Store.MediaCollection.prototype.processFiles =
+    window.Store.MediaCollection.prototype.processFiles ||
+    window.Store.MediaCollection.prototype.processAttachments
 
-  window.mR = async (find) => {
-    return new Promise((resolve) => {
-      if (window.__debug) {
-        for (const idx in window.getModuleList()) {
-          if (typeof modules[idx] === 'object' && modules[idx] !== null) {
-            const module = modules[idx]
-
-            var evet = module[find] ? module : null
-            if (evet) {
-              window[find] = evet
-              return resolve(window[find])
-            }
-          }
-        }
-      } else {
-        const parasite = `parasite${Date.now()}`
-        window['webpackChunkwhatsapp_web_client'].push([
-          [parasite],
-          {},
-          function (o) {
-            const modules = []
-            for (const idx in o.m) {
-              modules.push(o(idx))
-            }
-
-            for (const idx in modules) {
-              if (typeof modules[idx] === 'object' && modules[idx] !== null) {
-                const module = modules[idx]
-
-                var evet = module[find] ? module : null
-                if (evet) {
-                  window[find] = evet
-                  return resolve(window[find])
-                }
-              }
-            }
-          },
-        ])
-      }
-    })
-  }
-
-  window.injectToFunction = (selector, callback) => {
-    ;(async () => {
-      const Nr = await window.mR(selector)
-      const oldFunct = Nr[selector]
-      //console.log(selector, oldFunct);
-      Nr[selector] = (...args) => callback(oldFunct, args)
-    })()
-  }
-
-  window.injectToFunction('createMsgProtobuf', (func, args) => {
-    const proto = func(...args)
-    const [message] = args
-
-    if (proto.listMessage) {
-      proto.viewOnceMessage = {
-        message: {
-          listMessage: proto.listMessage,
-        },
-      }
-      delete proto.listMessage
-    }
-
-    if (proto.buttonsMessage) {
-      proto.viewOnceMessage = {
-        message: {
-          buttonsMessage: proto.buttonsMessage,
-        },
-      }
-      delete proto.buttonsMessage
-    }
-
-    if (proto.templateMessage) {
-      proto.viewOnceMessage = {
-        message: {
-          templateMessage: proto.templateMessage,
-        },
-      }
-      delete proto.templateMessage
-    }
-
-    if (message.hydratedButtons) {
-      const hydratedTemplate = {
-        hydratedButtons: message.hydratedButtons,
-      }
-
-      if (message.footer) {
-        hydratedTemplate.hydratedFooterText = message.footer
-      }
-
-      if (message.caption) {
-        hydratedTemplate.hydratedContentText = message.caption
-      }
-
-      if (message.title) {
-        hydratedTemplate.hydratedTitleText = message.title
-      }
-
-      if (proto.conversation) {
-        hydratedTemplate.hydratedContentText = proto.conversation
-        delete proto.conversation
-      } else if (proto.extendedTextMessage?.text) {
-        hydratedTemplate.hydratedContentText = proto.extendedTextMessage.text
-        delete proto.extendedTextMessage
-      } else {
-        // Search media part in message
-        let found
-        const mediaPart = [
-          'documentMessage',
-          'imageMessage',
-          'locationMessage',
-          'videoMessage',
-        ]
-        for (const part of mediaPart) {
-          if (part in proto) {
-            found = part
-            break
-          }
-        }
-
-        if (!found) {
-          return proto
-        }
-
-        // Media message doesn't allow title
-        hydratedTemplate[found] = proto[found]
-
-        // Copy title to caption if not setted
-        if (
-          hydratedTemplate.hydratedTitleText &&
-          !hydratedTemplate.hydratedContentText
-        ) {
-          hydratedTemplate.hydratedContentText =
-            hydratedTemplate.hydratedTitleText
-        }
-
-        // Remove title for media messages
-        delete hydratedTemplate.hydratedTitleText
-
-        if (found === 'locationMessage') {
-          if (
-            !hydratedTemplate.hydratedContentText &&
-            (proto[found].name || proto[found].address)
-          ) {
-            hydratedTemplate.hydratedContentText =
-              proto[found].name && proto[found].address
-                ? `${proto[found].name}\n${proto[found].address}`
-                : proto[found].name || proto[found].address || ''
-          }
-        }
-
-        // Ensure a content text;
-        hydratedTemplate.hydratedContentText =
-          hydratedTemplate.hydratedContentText || ' '
-
-        delete proto[found]
-      }
-
-      proto.templateMessage = {
-        hydratedTemplate,
-      }
-    }
-
-    return proto
-  })
-
-  window.injectToFunction('mediaTypeFromProtobuf', (func, ...args) => {
-    const [proto] = args
-    if (proto.viewOnceMessage?.message.templateMessage.hydratedTemplate) {
-      return func(
-        proto.viewOnceMessage?.message.templateMessage.hydratedTemplate
-      )
-    }
-    return func(...args)
-  })
-
-  window.injectToFunction('typeAttributeFromProtobuf', (func, args) => {
-    const [proto] = args
-    console.log(`proto`, proto)
-
-    if (proto.viewOnceMessage?.message.listMessage) {
-      return 'text'
-    }
-
-    if (proto.imageMessage || proto.audioMessage) {
-      return 'text'
-    }
-
-    if (
-      proto.viewOnceMessage?.message?.buttonsMessage?.headerType === 1 ||
-      proto.viewOnceMessage?.message?.buttonsMessage?.headerType === 2
-    ) {
-      return 'text'
-    }
-
-    if (proto.viewOnceMessage?.message.templateMessage.hydratedTemplate) {
-      return 'text'
-    }
-
-    return 'text'
-  })
-
-  window.injectToFunction('createFanoutMsgStanza', async (func, args) => {
-    const [, proto] = args
-
-    let buttonNode = null
-
-    if (proto.viewOnceMessage?.message.listMessage) {
-      const listType = proto.viewOnceMessage?.message.listMessage?.listType || 0
-
-      const types = ['unknown', 'single_select', 'product_list']
-
-      buttonNode = Store.Websocket.smax('list', {
-        v: '2',
-        type: types[listType],
-      })
-    }
-
-    const node = await func(...args)
-
-    if (!buttonNode) {
-      return node
-    }
-
-    const content = node.content
-
-    let bizNode = content.find((c) => c.tag === 'biz')
-
-    if (!bizNode) {
-      bizNode = Store.Websocket.smax('biz', {}, null)
-      content.push(bizNode)
-    }
-
-    let hasButtonNode = false
-
-    if (Array.isArray(bizNode.content)) {
-      hasButtonNode = !!bizNode.content.find((c) => c.tag === buttonNode?.tag)
-    } else {
-      bizNode.content = []
-    }
-
-    if (!hasButtonNode) {
-      bizNode.content.push(buttonNode)
-    }
-
-    return node
-  })
+  injectToFunctions()
 }

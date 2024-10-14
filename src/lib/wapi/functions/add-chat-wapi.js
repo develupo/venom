@@ -1,47 +1,29 @@
-import { injectConfig, filterModule, filterObjects } from '../helper'
-
 export async function addChatWapi() {
-  if (window.__debug) {
-    const filterMod = await filterModule(filterObjects, window.getModuleList())
+  window.Store.MaybeMeUser = self.importNamespace('WAWebUserPrefsMeUser')
+  window.Store.WAWebMediaHosts =
+    self.importNamespace('WAWebMediaHosts').mediaHosts
+  window.Store.checkNumber = self.importNamespace('WAWebQueryExistsJob')
+  window.Store.checkNumberBeta = self.importNamespace('WAWebQueryExistsJob')
+  window.Store.Chat = self.importNamespace('WAWebCollections').default.Chat
+  window.Store.sendDeleteMsgs = self.importNamespace(
+    'WAWebChatSendMessages'
+  ).sendDeleteMsgs
+  window.Store.sendRevokeMsgs = self.importNamespace(
+    'WAWebChatSendMessages'
+  ).sendRevokeMsgs
+  window.Store.Participants = self.importNamespace(
+    'WAWebModifyParticipantsGroupAction'
+  )
+  window.Store.GroupModifyParticipantsJob = self.importNamespace(
+    'WAWebGroupModifyParticipantsJob'
+  )
+  window.Store.GroupCreateJob = self.importNamespace('WAWebGroupCreateJob')
+  window.Store.infoGroup = self.importNamespace('WAWebQueryGroupAction')
+  window.Store.GroupInvite = self.importNamespace('WAWebGroupInviteAction')
+  window.Store.Vcard = self.importNamespace('WAWebFrontendVcardUtils')
 
-    filterMod.forEach((needObj) => {
-      if (needObj.yesModule) {
-        if (!window.Store[needObj.type]) {
-          window.Store[needObj.type] = needObj.yesModule
-        }
-      }
-    })
-
-    if (Store && Store.BusinessProfile) {
-      Store.Chat._findAndParse = Store.BusinessProfile._findAndParse
-      Store.Chat._find = Store.BusinessProfile._find
-    }
-  } else {
-    // old webpack
-    window[injectConfig.webpack].push([
-      [injectConfig.parasite],
-      {},
-      async function (o) {
-        const modules = []
-        for (const idx in o.m) {
-          modules.push(o(idx))
-        }
-
-        const filterMod = await filterModule(filterObjects, modules)
-
-        filterMod.forEach((needObj) => {
-          if (needObj.yesModule) {
-            if (!window.Store[needObj.type]) {
-              window.Store[needObj.type] = needObj.yesModule
-            }
-          }
-        })
-
-        if (Store && Store.BusinessProfile) {
-          Store.Chat._findAndParse = Store.BusinessProfile._findAndParse
-          Store.Chat._find = Store.BusinessProfile._find
-        }
-      },
-    ])
+  if (window.Store?.BusinessProfile) {
+    Store.Chat._findAndParse = Store.BusinessProfile._findAndParse
+    Store.Chat._find = Store.BusinessProfile._find
   }
 }
