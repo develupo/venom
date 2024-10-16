@@ -1,3 +1,16 @@
+# [1.26.0](https://github.com/develupo/venom/compare/v1.25.1...v1.26.0) (2024-10-16)
+
+
+### Features
+
+* code review ([663c45a](https://github.com/develupo/venom/commit/663c45abe089ca1c55e14a12255d6e32fa25aba8))
+* force deploy ([12568ec](https://github.com/develupo/venom/commit/12568ec2e290a2c89e5a534cc89d6af33a2cb7b3))
+
+
+### Performance Improvements
+
+* rework inject ([fbde2fa](https://github.com/develupo/venom/commit/fbde2faec19767c50488aa6c99d26221c1b27258))
+
 ## [1.25.1](https://github.com/develupo/venom/compare/v1.25.0...v1.25.1) (2024-10-09)
 
 
