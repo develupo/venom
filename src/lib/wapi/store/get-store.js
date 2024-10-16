@@ -2,28 +2,7 @@ import { createMsgProtobufInject } from './create-msg-protobuf.inject'
 import { mediaTypeFromProtobufInject } from './media-type-from-protobuf.inject'
 import { typeAttributeFromProtobufInject } from './type-attribute-from-protobuf.inject'
 import { createFanoutMsgStanzaInject } from './create-fanout-msg-stanza.inject'
-
-// NOTE - Maybe this could be needed
-/* function getModule(moduleName) {
-  const module = window.__debug.modulesMap[moduleName]
-  let result = {}
-  if (module) {
-    result = {
-      default: module.defaultExport,
-      factory: module.factory,
-    }
-    if (Object.keys(result.default).length === 0) {
-      try {
-        self.ErrorGuard.skipGuardGlobal(true)
-        Object.assign(result, self.importNamespace(moduleName))
-      } catch (error) {
-        console.error('Error on importNamespace', error)
-      }
-    }
-  }
-
-  return result
-} */
+import { customImportNamespace } from './custom-import-namespace'
 
 function injectToFunctions() {
   const injectToFunctionMapping = [
@@ -50,94 +29,99 @@ function injectToFunctions() {
   ]
 
   injectToFunctionMapping.forEach((inject) => {
-    window[inject.id] = self.importNamespace(inject.module)
+    window[inject.id] = customImportNamespace(inject.module)
     const module = window[inject.id]
+    if (!module) {
+      console.error(`Module ${inject.module} not found`)
+      return
+    }
     const oldFunction = module[inject.id]
     module[inject.id] = (...args) => inject.newFunction(oldFunction, args)
   })
 }
 
 export async function getStore() {
-  window.Store.UserConstructor = self.importNamespace('WAWebWid').default
-  window.Store.WidFactory = self.importNamespace('WAWebWidFactory')
-  window.Store.ChatLoadMessages = self.importNamespace('WAWebChatLoadMessages')
-  window.Store.MsgKey = self.importNamespace('WAWebMsgKey').default
-  window.Store.Cmd = self.importNamespace('WAWebCmd').Cmd
-  window.Store.Cmd = self.importNamespace('WAWebCmd')
-  window.Store.Websocket = self.importNamespace('WASmaxJsx')
-  window.Store.Wap = self.importNamespace('WAWap')
-  window.Store.State = self.importNamespace('WAWebSocketModel')
-  window.Store.Theme = self.importNamespace('WAWebUserPrefsGeneral')
-  window.Store.Stream = self.importNamespace('WAWebStreamModel').Stream
-  window.Store.MaybeMeUser = self.importNamespace('WAWebUserPrefsMeUser')
-  window.Store.UploadUtils = self.importNamespace('WAWebUploadManager').default
-  window.Store.genId = self.importNamespace(
+  window.Store.UserConstructor = customImportNamespace('WAWebWid')?.default
+  window.Store.WidFactory = customImportNamespace('WAWebWidFactory')
+  window.Store.ChatLoadMessages = customImportNamespace('WAWebChatLoadMessages')
+  window.Store.MsgKey = customImportNamespace('WAWebMsgKey')?.default
+  window.Store.Cmd = customImportNamespace('WAWebCmd')?.Cmd
+  window.Store.Cmd = customImportNamespace('WAWebCmd')
+  window.Store.Websocket = customImportNamespace('WASmaxJsx')
+  window.Store.Wap = customImportNamespace('WAWap')
+  window.Store.State = customImportNamespace('WAWebSocketModel')
+  window.Store.Theme = customImportNamespace('WAWebUserPrefsGeneral')
+  window.Store.Stream = customImportNamespace('WAWebStreamModel')?.Stream
+  window.Store.MaybeMeUser = customImportNamespace('WAWebUserPrefsMeUser')
+  window.Store.UploadUtils =
+    customImportNamespace('WAWebUploadManager')?.default
+  window.Store.genId = customImportNamespace(
     'WAWebFeatureDetectionRedirectIfMissingCapabilities'
   )
-  window.Store.SendSocket = self.importNamespace('WADeprecatedSendIq')
-  window.Store.Jid = self.importNamespace('WAWapJid')
-  window.Store.Validators = self.importNamespace('WALinkify')
-  window.Store.Contacts = self.importNamespace('WAWebContactCollection')
-  window.Store.userJidToUserWid = self.importNamespace('WAWebJidToWid')
-  window.Store.MyStatus = self.importNamespace('WAWebStatusContactAction')
-  window.Store.PresenceCollection = self.importNamespace(
+  window.Store.SendSocket = customImportNamespace('WADeprecatedSendIq')
+  window.Store.Jid = customImportNamespace('WAWapJid')
+  window.Store.Validators = customImportNamespace('WALinkify')
+  window.Store.Contacts = customImportNamespace('WAWebContactCollection')
+  window.Store.userJidToUserWid = customImportNamespace('WAWebJidToWid')
+  window.Store.MyStatus = customImportNamespace('WAWebStatusContactAction')
+  window.Store.PresenceCollection = customImportNamespace(
     'WAWebPresenceCollection'
-  ).default
-  window.Store.Profile = self.importNamespace(
+  )?.default
+  window.Store.Profile = customImportNamespace(
     'WAWebContactProfilePicThumbBridge'
   )
-  window.Store.Login = self.importNamespace('WAWebCompanionRegUtils')
-  window.Store.CheckWid = self.importNamespace('WAWebWidValidator')
-  window.Store.Parser = self.importNamespace('WAWebE2EProtoUtils').default
-  window.Store.Archive = self.importNamespace('WAWebChatDbUpdatesApi')
-  window.Store.ChatUtil = self.importNamespace('WAWebChatClearBridge')
-  window.Store.SendMute = self.importNamespace('WAWebChatMuteBridge')
-  window.Store.BlockList = self.importNamespace('WAWebBlocklistCollection')
-  window.Store.ChatStates = self.importNamespace('WAWebChatStateBridge')
-  window.Store.Presence = self.importNamespace('WAWebContactPresenceBridge')
-  window.Store.SetStatusChat = self.importNamespace('WAWebPresenceChatAction')
-  window.Store.ReadSeen = self.importNamespace('WAWebUpdateUnreadChatAction')
-  window.Store.blob = self.importNamespace('WAWebMediaOpaqueData')
-  window.Store.MediaProcess = self.importNamespace('WAWebImageUtils')
-  window.Store.MediaObject = self.importNamespace('WAWebMediaStorage')
-  window.Store.addAndSendMsgToChat = self.importNamespace(
+  window.Store.Login = customImportNamespace('WAWebCompanionRegUtils')
+  window.Store.CheckWid = customImportNamespace('WAWebWidValidator')
+  window.Store.Parser = customImportNamespace('WAWebE2EProtoUtils')?.default
+  window.Store.Archive = customImportNamespace('WAWebChatDbUpdatesApi')
+  window.Store.ChatUtil = customImportNamespace('WAWebChatClearBridge')
+  window.Store.SendMute = customImportNamespace('WAWebChatMuteBridge')
+  window.Store.BlockList = customImportNamespace('WAWebBlocklistCollection')
+  window.Store.ChatStates = customImportNamespace('WAWebChatStateBridge')
+  window.Store.Presence = customImportNamespace('WAWebContactPresenceBridge')
+  window.Store.SetStatusChat = customImportNamespace('WAWebPresenceChatAction')
+  window.Store.ReadSeen = customImportNamespace('WAWebUpdateUnreadChatAction')
+  window.Store.blob = customImportNamespace('WAWebMediaOpaqueData')
+  window.Store.MediaProcess = customImportNamespace('WAWebImageUtils')
+  window.Store.MediaObject = customImportNamespace('WAWebMediaStorage')
+  window.Store.addAndSendMsgToChat = customImportNamespace(
     'WAWebSendMsgChatAction'
-  ).addAndSendMsgToChat
-  window.Store.createNewsletterQuery = self.importNamespace(
+  )?.addAndSendMsgToChat
+  window.Store.createNewsletterQuery = customImportNamespace(
     'WAWebNewsletterCreateQueryJob'
   )
-  window.Store.SendTextMsgToChat = self.importNamespace(
+  window.Store.SendTextMsgToChat = customImportNamespace(
     'WAWebSendTextMsgChatAction'
-  ).sendTextMsgToChat
-  window.Store.createTextMsgData = self.importNamespace(
+  )?.sendTextMsgToChat
+  window.Store.createTextMsgData = customImportNamespace(
     'WAWebSendTextMsgChatAction'
-  ).createTextMsgData
-  window.Store.Sticker = self.importNamespace('WAWebStickerCollection')
-  window.Store.Block = self.importNamespace('WAWebBlockContactAction')
-  window.Store.ButtonCollection = self.importNamespace(
+  )?.createTextMsgData
+  window.Store.Sticker = customImportNamespace('WAWebStickerCollection')
+  window.Store.Block = customImportNamespace('WAWebBlockContactAction')
+  window.Store.ButtonCollection = customImportNamespace(
     'WAWebButtonCollection'
-  ).ButtonCollection
-  window.Store.TemplateButtonCollection = self.importNamespace(
+  )?.ButtonCollection
+  window.Store.TemplateButtonCollection = customImportNamespace(
     'WAWebTemplateButtonCollection'
-  ).TemplateButtonCollection
-  window.Store.module = self.importNamespace('WAWebCollections').default
-  window.Store.ProfileBusiness = self.importNamespace(
+  )?.TemplateButtonCollection
+  window.Store.module = customImportNamespace('WAWebCollections')?.default
+  window.Store.ProfileBusiness = customImportNamespace(
     'WAWebBusinessProfileModel'
   )
-  window.Store.sendDelete = self.importNamespace(
+  window.Store.sendDelete = customImportNamespace(
     'WAWebDeleteChatAction'
-  ).sendDelete
-  window.Store.pinChat = self.importNamespace('WAWebSetPinChatAction')
-  window.Store.Survey = self.importNamespace(
+  )?.sendDelete
+  window.Store.pinChat = customImportNamespace('WAWebSetPinChatAction')
+  window.Store.Survey = customImportNamespace(
     'WAWebPollsSendPollCreationMsgAction'
   )
-  window.Store.Reactions = self.importNamespace('WAWebSendReactionMsgAction')
-  window.Store.MediaCollection = self.importNamespace(
+  window.Store.Reactions = customImportNamespace('WAWebSendReactionMsgAction')
+  window.Store.MediaCollection = customImportNamespace(
     'WAWebAttachMediaCollection'
-  ).default
-  window.Store.onlySendAdmin = self.importNamespace('WAWebGroupModifyInfoJob')
-  window.Store.SendCommunity = self.importNamespace('WAWebGroupCommunityJob')
-  window.Store.Wap = self.importNamespace('WAWebGroupCreateJob')
+  )?.default
+  window.Store.onlySendAdmin = customImportNamespace('WAWebGroupModifyInfoJob')
+  window.Store.SendCommunity = customImportNamespace('WAWebGroupCommunityJob')
+  window.Store.Wap = customImportNamespace('WAWebGroupCreateJob')
 
   Object.keys(window.Store.module).forEach((key) => {
     if (!['Chat'].includes(key)) {

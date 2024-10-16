@@ -183,7 +183,7 @@ async function waitForObjects() {
 
 ;(async () => {
   await waitForObjects()
-  getStore().catch()
+  getStore().finally()
 })()
 
 if (typeof window.WAPI === 'undefined') {
